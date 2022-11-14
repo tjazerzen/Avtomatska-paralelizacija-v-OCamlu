@@ -1,0 +1,233 @@
+\documentclass[12pt,a4paper]{amsart}
+% ukazi za delo s slovenscino -- izberi kodiranje, ki ti ustreza
+\usepackage[slovene]{babel}
+\usepackage[cp1250]{inputenc}
+%\usepackage[T1]{fontenc}
+%\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{url}
+%\usepackage[normalem]{ulem}
+\usepackage[dvipsnames,usenames]{color}
+
+% ne spreminjaj podatkov, ki vplivajo na obliko strani
+\textwidth 15cm
+\textheight 24cm
+\oddsidemargin.5cm
+\evensidemargin.5cm
+\topmargin-5mm
+\addtolength{\footskip}{10pt}
+\pagestyle{plain}
+\overfullrule=15pt % oznaci predlogo vrstico
+
+
+% ukazi za matematicna okolja
+\theoremstyle{definition} % tekst napisan pokoncno
+\newtheorem{definicija}{Definicija}[section]
+\newtheorem{primer}[definicija]{Primer}
+\newtheorem{opomba}[definicija]{Opomba}
+
+\renewcommand\endprimer{\hfill$\diamondsuit$}
+
+
+\theoremstyle{plain} % tekst napisan posevno
+\newtheorem{lema}[definicija]{Lema}
+\newtheorem{izrek}[definicija]{Izrek}
+\newtheorem{trditev}[definicija]{Trditev}
+\newtheorem{posledica}[definicija]{Posledica}
+
+
+% za stevilske mnozice uporabi naslednje simbole
+\newcommand{\R}{\mathbb R}
+\newcommand{\N}{\mathbb N}
+\newcommand{\Z}{\mathbb Z}
+\newcommand{\C}{\mathbb C}
+\newcommand{\Q}{\mathbb Q}
+
+% ukaz za slovarsko geslo
+\newlength{\odstavek}
+\setlength{\odstavek}{\parindent}
+\newcommand{\geslo}[2]{\noindent\textbf{#1}\hspace*{3mm}\hangindent=\parindent\hangafter=1 #2}
+
+% naslednje ukaze ustrezno popravi
+\newcommand{\program}{Matematika} % ime studijskega programa: Matematika/Finan"cna matematika
+\newcommand{\imeavtorja}{Ime Priimek} % ime avtorja
+\newcommand{\imementorja}{prof.~dr./doc.~dr. Ime Priimek} % akademski naziv in ime mentorja
+\newcommand{\naslovdela}{Naslov dela diplomskega seminarja}
+\newcommand{\letnica}{2012} %letnica diplome
+
+
+% vstavi svoje definicije ...
+
+
+
+
+\begin{document}
+
+% od tod do povzetka ne spreminjaj nicesar
+\thispagestyle{empty}
+\noindent{\large
+UNIVERZA V LJUBLJANI\\[1mm]
+FAKULTETA ZA MATEMATIKO IN FIZIKO\\[5mm]
+\program\ -- 1.~stopnja}
+\vfill
+
+\begin{center}{\large
+\imeavtorja\\[2mm]
+{\bf \naslovdela}\\[10mm]
+Delo diplomskega seminarja\\[1cm]
+Mentor: \imementorja}
+\end{center}
+\vfill
+
+\noindent{\large
+Ljubljana, \letnica}
+\pagebreak
+
+\thispagestyle{empty}
+\tableofcontents
+\pagebreak
+
+\thispagestyle{empty}
+\begin{center}
+{\bf \naslovdela}\\[3mm]
+{\sc Povzetek}
+\end{center}
+% tekst povzetka v slovenscini
+V povzetku na kratko opi"site vsebinske rezultate dela. Sem ne sodi razlaga organizacije dela -- v katerem poglavju/razdelku je kaj, pa"c pa le opis vsebine.
+\vfill
+\begin{center}
+{\bf Angle"ski naslov dela}\\[3mm] % prevod slovenskega naslova dela 
+{\sc Abstract}
+\end{center}
+% tekst povzetka v anglescini
+Prevod zgornjega povzetka v angle"s"cino.
+
+\vfill\noindent
+{\bf Math. Subj. Class. (2010):} navedite vsaj eno klasifikacijsko oznako -- dostopne so na \url{www.ams.org/mathscinet/msc/msc2010.html}  \\[1mm]  
+{\bf Klju"cne besede:} navedite nekaj klju"cnih pojmov, ki nastopajo v delu  \\[1mm]  
+{\bf Keywords:} angle"ski prevod klju"cnih besed
+\pagebreak
+
+
+
+% tu se zacne tekst seminarja
+\section{Naslov prvega razdelka}
+Na za"cetku prvega poglavja/razdelka (ali v samostojnem razdelku z naslovom Uvod) napi"site kratek zgodovinski in matemati"cni uvod. Pojasnite motivacijo za problem, kje nastopa, kje vse je bil obravnavan. Na koncu opi"site tudi organizacijo dela -- kaj je v kak"snem razdelku.
+
+"Ce se uvod naravno nadaljuje v besedilo prvega poglavja, lahko nadaljujete z besedilom v istem razdelku, sicer za"cnete novega. Na za"cetku vsakega razdelka/podraz\-delka povete, "cemu se bomo posvetili v nadaljevanju. Pri pisanju uporabljajte ukaze za matemati"cna okolja, med formalnimi enotami dodajte vezni razlagalni tekst.
+
+\begin{definicija}
+Funkcija $f\colon [a,b]\to\R$ je {\em zvezna}, "ce...
+\end{definicija}
+
+Osnovne rezultate o zveznih funkcijah najdemo v \cite{glob}. Navedimo le naslednji izrek.
+
+\begin{izrek}\label{izr:enakomerno}
+Zvezna funkcija na zaprtem intervalu je enakomerno zvezna.
+\end{izrek}
+
+\proof
+Na za"cetku dokaza, "ce je to le mogo"ce in smiselno, razlo"zite idejo dokaza. 
+
+Dokazovali bomo s protislovjem. Pomagali si bomo z definicijo zveznosti in s kompaktnostjo intervala.
+Izberimo $\varepsilon>0$. "Ce $f$ ni enakomerno zvezna, potem za vsak $\delta>0$ obstajata $x, y$, ki zado"s"cata
+\begin{equation}\label{eq:razlika}
+|x-y|<\delta\quad \text{in}\quad |f(x)-f(y)| \ge \varepsilon.
+\end{equation}
+\endproof
+
+Na ena"cbe se sklicujemo takole: Oglejmo si "se enkrat neena"cbi \eqref{eq:razlika}.\\
+
+"Ce dokaz trditve ne sledi neposredno formulaciji trditve, moramo povedati, kaj bomo dokazovali. To naredimo tako, da ob ukazu za izpis besede \emph{Dokaz} dodamo neobvezni parameter, v katerem napi"semo tekst, ki se bo izpisal namesto besede \emph{Dokaz}.
+
+\proof[Dokaz izreka \ref{izr:enakomerno}]
+Dokazovanja te trditve se lahko lotimo tudi takole...
+\endproof
+
+\subsection{Naslov morebitnega podrazdelka} Besedilo naj se nadaljuje v vrstici naslova, torej za ukazom \verb|\subsection{}| ne smete izpustiti prazne vrstice.
+
+V tem podrazdelku si bomo ogledali "se nekatere posledice zveznosti. 
+
+\begin{lema}
+Naj bo $f$ zvezna in ...
+\end{lema}
+
+$$\vdots$$
+
+Na konec dela sodita angle"sko-slovenski slovar"cek strokovnih izrazov in seznam uporabljene literature. Slovar naj vsebuje vse pojme, ki ste jih spoznali ob pripravi dela, pa tudi "ze znane pojme, ki ste jih spoznali pri izbirnih predmetih. Najprej navedite angle"ski pojem (ti naj bodo urejeni po abecedi) in potem ustrezni slovenski prevod; za"zeleno je, da temu sledi tudi opis pojma, lahko komentar ali pojasnilo. Slovarska gesla navajajte z ukazom \verb|\geslo{}{}|. Med zaporednima geselskima ukazoma v \LaTeX\ datoteki mora biti prazna vrstica, da so gesla izpisana vsako v svoji vrstici.
+
+Pri navajanju literature si pomagajte s spodnjimi primeri; najprej je opisano pravilo za vsak tip vira, nato so podani primeri. Posebej opozarjam, da spletni viri uporabljajo paket url, ki je vklju"cen v preambuli. Polje ``ogled'' pri spletnih virih je obvezno; "ce je kak podatek neznan, ustrezno ``polje'' seveda izpustimo. Literaturo je potrebno urediti po abecednem vrstnem redu; najprej navedemo vse vire z znanimi avtorji po abecednem redu avtorjev (po priimkih, nato imenih), nato pa spletne vire, urejene po naslovih strani. "Ce isti vir citiramo v dveh oblikah, kot tiskani in spletni vir, najprej navedemo tiskani vir, nato pa "se podatek o tem, kje je dostopen v elektronski obliki.
+
+% slovar
+\section*{Slovar strokovnih izrazov}
+
+\geslo{glide reflection}{zrcalni zdrs ali zrcalni pomik -- tip ravninske evklidske izometrije, ki je kompozitum zrcaljenja in translacije vzdol"z iste premice}
+
+\geslo{lattice}{mre"za}
+
+\geslo{link}{splet}
+
+\geslo{partition}{\textbf{$\sim$ of a set} razdelitev mno"zice; \textbf{$\sim$ of a number} raz"clenitev "stevila}
+
+
+% seznam uporabljene literature
+\begin{thebibliography}{99}
+
+\bibitem{referenca-clanek}
+I.~Priimek, \emph{Naslov "clanka}, okraj"sano ime revije \textbf{letnik revije} (leto izida) strani od--do.
+
+\bibitem{navodilaOMF}
+C.~Velkovrh, \emph{Nekaj navodil avtorjem za pripravo rokopisa}, Obzornik mat.\ fiz.\ \textbf{21} (1974) 62--64.
+
+\bibitem{vec-avtorjev}
+P.~Angelini, F.~Frati in M.~Kaufmann, \emph{Straight-line rectangular drawings of clustered graphs}, Discrete Comput.\ Geom.\ \textbf{45} (2011) 88--140.
+
+
+
+\bibitem{referenca-knjiga}
+I.~Priimek, \emph{Naslov knjige}, morebitni naslov zbirke  \textbf{zaporedna "stevilka}, zalo"zba, kraj, leto izdaje.
+
+\bibitem{glob}
+J.~Globevnik in M.~Brojan, \emph{Analiza I}, Matemati"cni rokopisi \textbf{25}, DMFA -- zalo"zni"stvo, Ljubljana, 2010.
+
+\bibitem{glob-vse}
+J.~Globevnik in M.~Brojan, \emph{Analiza I}, Matemati"cni rokopisi \textbf{25}, DMFA -- zalo"zni"stvo, Ljubljana, 2010; dostopno tudi na
+\url{http://www.fmf.uni-lj.si/~globevnik/skripta.pdf}.
+
+\bibitem{lang}
+S.~Lang, \emph{Fundamentals of differential geometry}, Graduate Texts in Mathematics {\bf 191}, Springer-Verlag, New York, 1999.
+
+
+
+\bibitem{referenca-clanek-v-zborniku}
+I.~Priimek, \emph{Naslov "clanka}, v: naslov zbornika (ur.\ ime urednika), morebitni naslov zbirke  \textbf{zaporedna "stevilka}, zalo"zba, kraj, leto izdaje, str.\ od--do.
+
+\bibitem{zbornik}
+S.~Cappell in J.~Shaneson, \emph{An introduction to embeddings, immersions and singularities in codimension two}, v: Algebraic and geometric topology, Part 2 (ur.\ R.~Milgram), Proc.\ Sympos.\ Pure Math.\ \textbf{XXXII}, Amer.\ Math.\ Soc., Providence, 1978, str.\ 129--149.
+
+
+
+\bibitem{diploma-magisterij}
+I.~Priimek, \emph{Naslov dela}, diplomsko/magistrsko delo, ime fakultete, ime univerze, leto.
+
+\bibitem{kalisnik}
+J.~Kali"snik, \emph{Upodobitev orbiterosti}, diplomsko delo, Fakulteta za matematiko in fiziko, Univerza v Ljubljani, 2004.
+
+
+
+\bibitem{referenca-spletni-vir}
+I.~Priimek, \emph{Naslov spletnega vira}, v: ime morebitne zbirke/zbornika, ki vsebuje vir, verzija "stevilka/datum, [ogled datum], dostopno na \url{spletni.naslov}.
+
+\bibitem{glob-splet}
+J.~Globevnik in M.~Brojan, \emph{Analiza 1}, verzija 15.~9.~2010, [ogled 12.~5.~2011], dostopno na \url{http://www.fmf.uni-lj.si/~globevnik/skripta.pdf}.
+
+\bibitem{wiki}
+\emph{Matrix (mathematics)}, v: Wikipedia: The Free Encyclopedia, [ogled 12.~5.~2011], dostopno na \url{http://en.wikipedia.org/wiki/Matrix_(mathematics)}.
+
+
+
+
+\end{thebibliography}
+
+\end{document}
+

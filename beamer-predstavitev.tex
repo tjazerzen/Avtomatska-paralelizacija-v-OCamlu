@@ -1,0 +1,363 @@
+% $Header: /cvsroot/latex-beamer/latex-beamer/solutions/generic-talks/generic-ornate-15min-45min.en.tex,v 1.4 2004/10/07 20:53:08 tantau Exp $
+
+\documentclass{beamer}
+
+% This file is a solution template for:
+
+% - Giving a talk on some subject.
+% - The talk is between 15min and 45min long.
+% - Style is ornate.
+
+
+
+% Copyright 2004 by Till Tantau <tantau@users.sourceforge.net>.
+%
+% In principle, this file can be redistributed and/or modified under
+% the terms of the GNU Public License, version 2.
+%
+% However, this file is supposed to be a template to be modified
+% for your own needs. For this reason, if you use this file as a
+% template and not specifically distribute it as part of a another
+% package/program, I grant the extra permission to freely copy and
+% modify this file as you see fit and even to delete this copyright
+% notice. 
+
+
+\mode<presentation>
+{
+  \usetheme{Warsaw}
+  % or ...
+
+  \setbeamercovered{transparent}
+  % or whatever (possibly just delete it)
+}
+
+
+\usepackage[english]{babel}
+% or whatever
+
+\usepackage[latin1]{inputenc}
+% or whatever
+
+\usepackage{times}
+\usepackage[T1]{fontenc}
+% Or whatever. Note that the encoding and the font should match. If T1
+% does not look nice, try deleting the line with the fontenc.
+
+\newcommand{\bx}{\mathbf{x}}
+\DeclareMathOperator{\Gl}{Gl}
+\DeclareMathOperator{\adj}{adj}
+%\newcommand{\Gl}{{\mathrm {GL}}\,}
+\newtheorem{proposition}[theorem]{Proposition}
+
+
+\title[] % (optional, use only with long paper titles)
+{Prenova \v studijskih programov na Fakulteti za matematiko in fiziko Univerze v Ljubljani - Matematika}
+
+%\subtitle
+%{Presentation Subtitle} % (optional)
+
+\author[T. Ko\v sir] % (optional, use only with lots of authors)
+{Toma\v z Ko\v sir%\inst{1} \and S.~Another\inst{2}
+}
+% - Use the \inst{?} command only if the authors have different
+%   affiliation.
+
+%\institute[] % (optional, but mostly needed)
+%{
+%  \inst{1}%
+%  Department of Mathematics\\
+%  University of Ljubljana\\
+%  Slovenia
+%  \and
+%  \inst{2}%
+%  Department of Theoretical Philosophy\\
+%  University of Elsewhere
+%}
+% - Use the \inst command only if there are several affiliations.
+% - Keep it simple, no one is interested in your street address.
+
+\date[9. november 2007] % (optional)
+{Ob\v cni zbor DMFA Slovenije, Pod\v cetrtek\\ 9. november  2007}
+
+\subject{Talks}
+% This is only inserted into the PDF information catalog. Can be left
+% out. 
+
+
+
+% If you have a file called "university-logo-filename.xxx", where xxx
+% is a graphic format that can be processed by latex or pdflatex,
+% resp., then you can add a logo as follows:
+
+% \pgfdeclareimage[height=0.5cm]{university-logo}{university-logo-filename}
+% \logo{\pgfuseimage{university-logo}}
+
+
+
+% Delete this, if you do not want the table of contents to pop up at
+% the beginning of each subsection:
+%\AtBeginSubsection[]
+%{
+%  \begin{frame}<beamer>
+%    \frametitle{Outline}
+%    \tableofcontents[currentsection,currentsubsection]
+%  \end{frame}
+%}
+
+
+% If you wish to uncover everything in a step-wise fashion, uncomment
+% the following command: 
+
+%\beamerdefaultoverlayspecification{<+->}
+
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+%\begin{frame}
+%  \frametitle{Outline}
+%  \tableofcontents
+%  % You might wish to add the option [pausesections]
+%\end{frame}
+
+
+% Since this a solution template for a generic talk, very little can
+% be said about how it should be structured. However, the talk length
+% of between 15min and 45min and the theme suggest that you stick to
+% the following rules:  
+
+% - Exactly two or three sections (other than the summary).
+% - At *most* three subsections per section.
+% - Talk about 30s to 2min per frame. So there should be between about
+%   15 and 30 frames, all told.
+
+%\section{Determinantal Representations}
+
+%\subsection[Definition]{Definition}
+
+\begin{frame}
+  \frametitle{Prenovljeni \v studijski programi na OM FMF}
+%  \framesubtitle{Subtitles are optional.}
+  % - A title should summarize the slide in an understandable fashion
+  %   for anyone how does not follow everything on the slide itself.
+
+\begin{columns}
+\begin{column}{5.7cm}
+Na Oddelku za matematiko FMF v Ljubljani smo pripravili univerzitetne \v studijske programe:
+\begin{itemize}
+
+\item \alert{Matematika} 1. in 2. stopnje (3+2),\pause
+\item \alert{Finan\v cna matematika} 1. in 2. stopnje (3+2),\pause
+\item \alert{Pedago\v ska matematika} 1. in 2. stopnje (4+1),\pause
+\end{itemize}
+in visoko\v solski strokovni \v studijski program:
+\begin{itemize}
+\item \alert{Prakti\v cna matematika} (3-letni program).
+\end{itemize}
+\end{column}
+\begin{column}{5.3cm}
+\begin{figure}
+
+\only<3-4>{
+\includegraphics[width=5.3cm]{vhod0} }
+
+\only<1-2>
+{\includegraphics[width=5.8cm]{napis2} }
+\end{figure}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}\frametitle{Pri\v cetek izvajanja}
+\begin{itemize}
+\item<1-> Programa \alert{Matematika} in \alert{Finan\v cna matematika} 1. stopnje smo pri\v celi izvajati letos. \pause
+\item<2-> Program \alert{Prakti\v cna matematika} bomo predvidoma za\v celi izvajati v \v studijskem letu 2008/09.\pause
+\item<3> Program \alert{Pedago\v ska matematika} \v se \v caka na akreditacijo. Malo verjetno, da se pri\v cne 
+izvajati v 2008/09.
+\end{itemize}
+
+\begin{columns}
+\begin{column}{5.4cm}
+\only<1-2>{
+\begin{figure}
+\includegraphics[width=5.4cm]{vhod3} 
+\end{figure}}
+
+\only<3>{
+\begin{figure}
+\includegraphics[width=5.4cm]{vhod4} 
+\end{figure}}
+
+\end{column}
+\begin{column}{5.4cm}
+
+\only<2-3>{
+\begin{figure}
+\includegraphics[width=5.4cm]{ucenje}
+\end{figure}}
+
+\only<1>{
+\begin{figure}
+\includegraphics[width=5.4cm]{predavalnica}
+\end{figure}}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}\frametitle{Osnovno o programih}
+
+\begin{itemize}
+\item Program \alert{Matematika} (3+2) je nadomestil Uporabno smer in Teoreti\v cno smer starega 
+programa Matematika. \pause
+\item Program \alert{Pedago\v ska matematika} bo nadomestil Pedago\v sko smer starega programa Matematika. 
+Do njegovega sprejema se po starem izvajata \v se dve smeri
+- Pedago\v ska smer in smer Ra\v cunalni\v stvo z matematiko.\pause
+\item Program \alert{Finan\v cna matematika} je povsem nov \v studijski program.\pause
+\item Visoko\v solski strokovni program ostaja en sam z enakim imenom \alert{Prakti\v cna matematika}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Kaj je novega?}
+\begin{columns}
+\begin{column}{5.4cm}
+\only<1-2>{
+\begin{figure}
+\includegraphics[width=5.4cm]{Knjiznica} 
+\end{figure}}
+\only<3->{
+\begin{figure}
+\includegraphics[width=5.4cm]{avla2} 
+\end{figure}}
+\end{column}
+\begin{column}{5.4cm}
+\only<1>{
+\begin{figure}
+\includegraphics[width=5.4cm]{tabla2}
+\end{figure}}
+
+\only<2>{
+\begin{figure}
+\includegraphics[width=5.4cm]{zapiski}
+\end{figure}}
+
+\only<3->{
+\begin{figure}
+\includegraphics[width=5.4cm]{tabla}
+\end{figure}}
+\end{column}
+\end{columns}
+
+\vskip 0.45cm
+{\bf \large{Ve\v cja izbirnost:}}
+\begin{itemize}
+\item V 3. letniku in na 2. stopnji lahko \v student
+v veliki meri izbere predmete po svojih \v zeljah.\pause
+\item Na 2. stopnji poleg matemati\v cnih predmetov obvezno izbere \v se nematemati\v cne predmete.\pause 
+Tako lahko pridobi znanja, ki mu pomagajo pri iskanju zaposlitve.
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Kaj je novega?}
+
+\begin{columns}
+\begin{column}{6.5cm}
+{\bf \large{Povezava s prakso:}}
+
+\begin{itemize}
+\item Prakti\v cno usposabljanje je lahko del programa na 2. stopnji programa \alert{Matematika},\pause in je obvezno na 2. 
+stopnji programa \alert{Finan\v cna matematika} in na programu \alert{Prakti\v cna matematika} (to zadnje je enako, kot doslej).\pause
+\item Obvezna praksa pouka v obsegu 15 ECTS na programu \alert{Pedago\v ska matematika}.
+\end{itemize}
+\end{column}
+
+\begin{column}{4.5cm}
+\only<1->{
+\begin{figure}
+\includegraphics[width=4.5cm]{racunalnica} 
+\end{figure}}
+
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}
+\frametitle{Kaj je novega?}
+{\bf \large{Sproten \v studij:}}
+\begin{itemize}
+\item doma\v ce naloge, kvizi, tutorstvo, proseminar, projektne naloge\ldots.\pause
+\item semestrski predmeti, kjer so bile te\v zave s prehodnostjo, drugje celoletni, saj obilica semstrskih predmetov ne
+pospe\v suje prehodnosti po tujih izku\v snjah.\pause
+\end{itemize}
+\begin{columns}
+\begin{column}{5.4cm}
+\only<1->{
+\begin{figure}
+\includegraphics[width=5.4cm]{vega} 
+\end{figure}}
+\end{column}
+\begin{column}{5.4cm}
+\only<1->{
+\begin{figure}
+\includegraphics[width=5.4cm]{avlav}
+\end{figure}}
+\end{column}
+\end{columns}
+\end{frame}
+
+
+\end{document}
+
+
+
+
+\begin{columns}
+\begin{column}{5.4cm}
+\only<1-2>{
+\begin{figure}
+\includegraphics[width=5.4cm]{Knjiznica} 
+\end{figure}}
+
+\end{column}
+\begin{column}{5.4cm}
+
+\only<1-2>{
+\begin{figure}
+\includegraphics[width=5.4cm]{ucenje}
+\end{figure}}
+
+\end{column}
+\end{columns}
+
+
+
+
+
+
+
+
+
+\begin{frame}
+  \frametitle{Druga orodja}
+\begin{columns}
+\begin{column}{5.7cm}
+  \begin{itemize}
+  \item numeri\v cne metode,
+    \item iz matemati\v cne analize - diferencialne ena\v cbe, iskanje negibnih to\v ck\ldots
+  \item iz kombinatorike in diskretne matematike,
+  \item iz teorije iger, itd.
+  \end{itemize}
+\end{column}
+\begin{column}{5.3cm}
+\begin{figure}
+\includegraphics[scale=0.4]{bloomberg} 
+\end{figure}
+\end{column}
+\end{columns}
+\end{frame}
