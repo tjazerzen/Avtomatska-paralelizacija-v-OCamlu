@@ -1,115 +1,37 @@
-% $Header: /cvsroot/latex-beamer/latex-beamer/solutions/generic-talks/generic-ornate-15min-45min.en.tex,v 1.4 2004/10/07 20:53:08 tantau Exp $
-
 \documentclass{beamer}
-
-% This file is a solution template for:
-
-% - Giving a talk on some subject.
-% - The talk is between 15min and 45min long.
-% - Style is ornate.
-
-
-
-% Copyright 2004 by Till Tantau <tantau@users.sourceforge.net>.
-%
-% In principle, this file can be redistributed and/or modified under
-% the terms of the GNU Public License, version 2.
-%
-% However, this file is supposed to be a template to be modified
-% for your own needs. For this reason, if you use this file as a
-% template and not specifically distribute it as part of a another
-% package/program, I grant the extra permission to freely copy and
-% modify this file as you see fit and even to delete this copyright
-% notice. 
-
 
 \mode<presentation>
 {
-  \usetheme{Warsaw}
-  % or ...
-
+  \usetheme{Madrid}
   \setbeamercovered{transparent}
-  % or whatever (possibly just delete it)
 }
 
+\setbeamertemplate{navigation symbols}{}
 
-\usepackage[english]{babel}
-% or whatever
+
+\usepackage[slovene]{babel}
 
 \usepackage[latin1]{inputenc}
-% or whatever
+\usepackage{listings}
 
 \usepackage{times}
 \usepackage[T1]{fontenc}
-% Or whatever. Note that the encoding and the font should match. If T1
-% does not look nice, try deleting the line with the fontenc.
 
 \newcommand{\bx}{\mathbf{x}}
 \DeclareMathOperator{\Gl}{Gl}
 \DeclareMathOperator{\adj}{adj}
-%\newcommand{\Gl}{{\mathrm {GL}}\,}
 \newtheorem{proposition}[theorem]{Proposition}
 
 
-\title[] % (optional, use only with long paper titles)
-{Prenova \v studijskih programov na Fakulteti za matematiko in fiziko Univerze v Ljubljani - Matematika}
+\title[]
+{Avtomatska paralelizacija v OCamlu}
 
-%\subtitle
-%{Presentation Subtitle} % (optional)
-
-\author[T. Ko\v sir] % (optional, use only with lots of authors)
-{Toma\v z Ko\v sir%\inst{1} \and S.~Another\inst{2}
-}
-% - Use the \inst{?} command only if the authors have different
-%   affiliation.
-
-%\institute[] % (optional, but mostly needed)
-%{
-%  \inst{1}%
-%  Department of Mathematics\\
-%  University of Ljubljana\\
-%  Slovenia
-%  \and
-%  \inst{2}%
-%  Department of Theoretical Philosophy\\
-%  University of Elsewhere
-%}
-% - Use the \inst command only if there are several affiliations.
-% - Keep it simple, no one is interested in your street address.
-
-\date[9. november 2007] % (optional)
-{Ob\v cni zbor DMFA Slovenije, Pod\v cetrtek\\ 9. november  2007}
-
-\subject{Talks}
-% This is only inserted into the PDF information catalog. Can be left
-% out. 
+\author[]
+{Avtor: Tja\v z Er\v zen, Mentor: doc. dr. Matija Pretnar}
 
 
-
-% If you have a file called "university-logo-filename.xxx", where xxx
-% is a graphic format that can be processed by latex or pdflatex,
-% resp., then you can add a logo as follows:
-
-% \pgfdeclareimage[height=0.5cm]{university-logo}{university-logo-filename}
-% \logo{\pgfuseimage{university-logo}}
-
-
-
-% Delete this, if you do not want the table of contents to pop up at
-% the beginning of each subsection:
-%\AtBeginSubsection[]
-%{
-%  \begin{frame}<beamer>
-%    \frametitle{Outline}
-%    \tableofcontents[currentsection,currentsubsection]
-%  \end{frame}
-%}
-
-
-% If you wish to uncover everything in a step-wise fashion, uncomment
-% the following command: 
-
-%\beamerdefaultoverlayspecification{<+->}
+\date[12. december 2022] % (optional)
+{Kratka predstavitev pri Diplomskem seminarju, 12. december 2022}
 
 
 \begin{document}
@@ -118,246 +40,110 @@
   \titlepage
 \end{frame}
 
-%\begin{frame}
-%  \frametitle{Outline}
-%  \tableofcontents
-%  % You might wish to add the option [pausesections]
-%\end{frame}
-
-
-% Since this a solution template for a generic talk, very little can
-% be said about how it should be structured. However, the talk length
-% of between 15min and 45min and the theme suggest that you stick to
-% the following rules:  
-
-% - Exactly two or three sections (other than the summary).
-% - At *most* three subsections per section.
-% - Talk about 30s to 2min per frame. So there should be between about
-%   15 and 30 frames, all told.
-
-%\section{Determinantal Representations}
-
-%\subsection[Definition]{Definition}
-
 \begin{frame}
-  \frametitle{Prenovljeni \v studijski programi na OM FMF}
-%  \framesubtitle{Subtitles are optional.}
-  % - A title should summarize the slide in an understandable fashion
-  %   for anyone how does not follow everything on the slide itself.
+  \frametitle{Uvod}
+  \tableofcontents
+\end{frame}
 
-\begin{columns}
-\begin{column}{5.7cm}
-Na Oddelku za matematiko FMF v Ljubljani smo pripravili univerzitetne \v studijske programe:
-\begin{itemize}
+\section{Zakaj porazdeljeni sistemi?}
 
-\item \alert{Matematika} 1. in 2. stopnje (3+2),\pause
-\item \alert{Finan\v cna matematika} 1. in 2. stopnje (3+2),\pause
-\item \alert{Pedago\v ska matematika} 1. in 2. stopnje (4+1),\pause
-\end{itemize}
-in visoko\v solski strokovni \v studijski program:
-\begin{itemize}
-\item \alert{Prakti\v cna matematika} (3-letni program).
-\end{itemize}
-\end{column}
-\begin{column}{5.3cm}
-\begin{figure}
+\begin{frame}{Uvod}
+    \begin{itemize}
+        \item Hitro ni dovolj hitro?
+        \begin{itemize}
+            \item Dana\v snji ra\v cunalniki so 100-krat hitrej\v si od tistih izpred desetletja, vendar sama ra\v cunska mo\v c pogosto ni dovolj.
+            \item Dana\v snji ra\v cunalniki imajo bistveno ve\v c spominskih kapacitet od tistih izpred desetletja, vendar sama kapaciteta spomina pogosto ni dovolj.
+        \end{itemize}
+    \end{itemize}
+\end{frame}
 
-\only<3-4>{
-\includegraphics[width=5.3cm]{vhod0} }
+\begin{frame}{Uvod}
+    \begin{itemize}
+        \item Veliki izzivi ``large-scale'' sistemov:
+        \begin{itemize}
+            \item Ra\v cunalni\v sko - matemati\v cni problemi (npr. mno\v zenje matrik).
+            \item Podatkovna analitika (ve\v cinoma gre za paralelizacijo na grafi\v cnih karticah)
+            \item Modeliranje vremena in obna\v sanje okolja
+            \item Ra\v cunsko te\v zki ra\v cunski problemi v fiziki in biologiji
+            \item ...
+        \end{itemize}
+    \end{itemize}
+\end{frame}
 
-\only<1-2>
-{\includegraphics[width=5.8cm]{napis2} }
-\end{figure}
-\end{column}
-\end{columns}
+\begin{frame}{Je vzporedno programiranje sistemov res neizogibno?}
+    \begin{itemize}
+        \item Zmogljivej\v se sisteme trenutno dobimo predvsem z mno\v zenjem gradnikov
+        \item Tehnologija izdelave \v cipov po\v casi zadeva ob oviro - bo Moorov zakon zdr\v zal?
+        \begin{itemize}
+            \item Do leta 2005 $50\%$ pove\v canje tranzistorjev vsako leto ($60$x v $10$ letih)
+            \item Danes $20\%$ pove\v canje tranzistorjev vsako leto ($6$x v $10$ letih)
+        \end{itemize}
+        \item Nastane potreba po druga\v cnem na\v cinu optimizacije
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Je vzporedno programiranje sistemov res neizogibno?}
+    \begin{figure}[h!]
+    \centering
+    \caption{Fizikalno - ve\v cje oddajanje toplote v monolitnih kot v porazdeljenih sistemih}
+    \includegraphics[width=10cm]{slike/paralelizacija-fizikalno.png}
+    \label{fig:paralelizacija-fizikalno}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Cilj paralelnega programa}
+    Nekatere podatkovne strukture se da paralelizirati, medtem ko se drugih ne.
+    \begin{figure}
+    \caption{Paralelni programi so z ve\v canjem stevila jeder hitrej\v si.}
+    \includegraphics[width=6cm]{slike/cilj-casovne-zahtevnosti-paralelizacije.png}
+    \label{fig:cilj-casovne-zahtevnosti-paralelizacije}
+    \end{figure}
+\end{frame}
+
+\section{OCaml}
+
+\begin{frame}{OCaml}
+    \begin{itemize}
+        \item Funkcijski jezik
+        \item Leto\v snji release verzije \textit{5.0.0}, ki (med drugim) vpelje knji\v znico \textbf{systhreads}.
+    \end{itemize}
+    
+    \begin{figure}
+    \caption{Paralelizacija ra\v cunanja Fibonaccijevih \v stevil v OCamlu}
+    \includegraphics[width=6cm]{slike/OCaml-primer.png}
+    \label{fig:OCaml-fibonacci}
+    \end{figure}
 
 \end{frame}
 
-\begin{frame}\frametitle{Pri\v cetek izvajanja}
-\begin{itemize}
-\item<1-> Programa \alert{Matematika} in \alert{Finan\v cna matematika} 1. stopnje smo pri\v celi izvajati letos. \pause
-\item<2-> Program \alert{Prakti\v cna matematika} bomo predvidoma za\v celi izvajati v \v studijskem letu 2008/09.\pause
-\item<3> Program \alert{Pedago\v ska matematika} \v se \v caka na akreditacijo. Malo verjetno, da se pri\v cne 
-izvajati v 2008/09.
-\end{itemize}
 
-\begin{columns}
-\begin{column}{5.4cm}
-\only<1-2>{
-\begin{figure}
-\includegraphics[width=5.4cm]{vhod3} 
-\end{figure}}
+\section{Moja diplomska naloga}
 
-\only<3>{
-\begin{figure}
-\includegraphics[width=5.4cm]{vhod4} 
-\end{figure}}
-
-\end{column}
-\begin{column}{5.4cm}
-
-\only<2-3>{
-\begin{figure}
-\includegraphics[width=5.4cm]{ucenje}
-\end{figure}}
-
-\only<1>{
-\begin{figure}
-\includegraphics[width=5.4cm]{predavalnica}
-\end{figure}}
-\end{column}
-\end{columns}
-
+\begin{frame}{Zakaj pisati vzporedne programe?}
+    \begin{itemize}
+        \item Programi za eno-jedrne sisteme ne znajo izkori\v s\v cati ve\v c jeder --> s paralelizacijo dobimo ve\v cjo u\v cinkovitost
+        \item Bad news: Potrebno znanje paralelizacije ra\v cunalni\v skih sistemov
+        \item Good news: Razvoj prevajalnikov, ki bi znali na\v se zaporedne programe samostojno pretvoriti v vzporedno obliko. Ideja: I\v s\v cejo se tipi\v cni programski konstrukti, ki se jih pretvarja v paralelno obliko
+    \end{itemize}
 \end{frame}
 
-\begin{frame}\frametitle{Osnovno o programih}
-
-\begin{itemize}
-\item Program \alert{Matematika} (3+2) je nadomestil Uporabno smer in Teoreti\v cno smer starega 
-programa Matematika. \pause
-\item Program \alert{Pedago\v ska matematika} bo nadomestil Pedago\v sko smer starega programa Matematika. 
-Do njegovega sprejema se po starem izvajata \v se dve smeri
-- Pedago\v ska smer in smer Ra\v cunalni\v stvo z matematiko.\pause
-\item Program \alert{Finan\v cna matematika} je povsem nov \v studijski program.\pause
-\item Visoko\v solski strokovni program ostaja en sam z enakim imenom \alert{Prakti\v cna matematika}.
-\end{itemize}
+\begin{frame}{Cilji diplomske naloge}
+    \begin{itemize}
+        \item Paralelizacija ra\v cunalni\v skega procesorja v funkcijskem jeziku OCaml
+        \item Se spoznati s paralelizacijo funkcijskih jezikov
+        \item Pregled \v ze obstoje\v cih paralelnih knji\v znic v drugih funkcijskih jezikih (npr. Haskell) in implementacija le-teh v OCamlu
+        \item Analiza podatkovnih struktur, primernih za paralelizacijo
+    \end{itemize}
+    
 \end{frame}
 
-\begin{frame}
-\frametitle{Kaj je novega?}
-\begin{columns}
-\begin{column}{5.4cm}
-\only<1-2>{
-\begin{figure}
-\includegraphics[width=5.4cm]{Knjiznica} 
-\end{figure}}
-\only<3->{
-\begin{figure}
-\includegraphics[width=5.4cm]{avla2} 
-\end{figure}}
-\end{column}
-\begin{column}{5.4cm}
-\only<1>{
-\begin{figure}
-\includegraphics[width=5.4cm]{tabla2}
-\end{figure}}
+\begin{frame}{Za\v cetni plan}
+    \begin{itemize}
+        \item Implementacija osnovnih matemati\v cnih funkcij z ``naivno'' paralelizacijo (\textit{map, apply, sum, ...})
+        \item Ugotoviti, kdaj se nekaj spla\v ca paralelizirati in kdaj ne
+        \item Implementacija/ razvoj manj trivialnih paralelnih algoritmov
+    \end{itemize}
 
-\only<2>{
-\begin{figure}
-\includegraphics[width=5.4cm]{zapiski}
-\end{figure}}
-
-\only<3->{
-\begin{figure}
-\includegraphics[width=5.4cm]{tabla}
-\end{figure}}
-\end{column}
-\end{columns}
-
-\vskip 0.45cm
-{\bf \large{Ve\v cja izbirnost:}}
-\begin{itemize}
-\item V 3. letniku in na 2. stopnji lahko \v student
-v veliki meri izbere predmete po svojih \v zeljah.\pause
-\item Na 2. stopnji poleg matemati\v cnih predmetov obvezno izbere \v se nematemati\v cne predmete.\pause 
-Tako lahko pridobi znanja, ki mu pomagajo pri iskanju zaposlitve.
-\end{itemize}
 \end{frame}
-
-\begin{frame}\frametitle{Kaj je novega?}
-
-\begin{columns}
-\begin{column}{6.5cm}
-{\bf \large{Povezava s prakso:}}
-
-\begin{itemize}
-\item Prakti\v cno usposabljanje je lahko del programa na 2. stopnji programa \alert{Matematika},\pause in je obvezno na 2. 
-stopnji programa \alert{Finan\v cna matematika} in na programu \alert{Prakti\v cna matematika} (to zadnje je enako, kot doslej).\pause
-\item Obvezna praksa pouka v obsegu 15 ECTS na programu \alert{Pedago\v ska matematika}.
-\end{itemize}
-\end{column}
-
-\begin{column}{4.5cm}
-\only<1->{
-\begin{figure}
-\includegraphics[width=4.5cm]{racunalnica} 
-\end{figure}}
-
-\end{column}
-\end{columns}
-\end{frame}
-
-\begin{frame}
-\frametitle{Kaj je novega?}
-{\bf \large{Sproten \v studij:}}
-\begin{itemize}
-\item doma\v ce naloge, kvizi, tutorstvo, proseminar, projektne naloge\ldots.\pause
-\item semestrski predmeti, kjer so bile te\v zave s prehodnostjo, drugje celoletni, saj obilica semstrskih predmetov ne
-pospe\v suje prehodnosti po tujih izku\v snjah.\pause
-\end{itemize}
-\begin{columns}
-\begin{column}{5.4cm}
-\only<1->{
-\begin{figure}
-\includegraphics[width=5.4cm]{vega} 
-\end{figure}}
-\end{column}
-\begin{column}{5.4cm}
-\only<1->{
-\begin{figure}
-\includegraphics[width=5.4cm]{avlav}
-\end{figure}}
-\end{column}
-\end{columns}
-\end{frame}
-
 
 \end{document}
-
-
-
-
-\begin{columns}
-\begin{column}{5.4cm}
-\only<1-2>{
-\begin{figure}
-\includegraphics[width=5.4cm]{Knjiznica} 
-\end{figure}}
-
-\end{column}
-\begin{column}{5.4cm}
-
-\only<1-2>{
-\begin{figure}
-\includegraphics[width=5.4cm]{ucenje}
-\end{figure}}
-
-\end{column}
-\end{columns}
-
-
-
-
-
-
-
-
-
-\begin{frame}
-  \frametitle{Druga orodja}
-\begin{columns}
-\begin{column}{5.7cm}
-  \begin{itemize}
-  \item numeri\v cne metode,
-    \item iz matemati\v cne analize - diferencialne ena\v cbe, iskanje negibnih to\v ck\ldots
-  \item iz kombinatorike in diskretne matematike,
-  \item iz teorije iger, itd.
-  \end{itemize}
-\end{column}
-\begin{column}{5.3cm}
-\begin{figure}
-\includegraphics[scale=0.4]{bloomberg} 
-\end{figure}
-\end{column}
-\end{columns}
-\end{frame}
