@@ -1,2 +1,3 @@
-# Avtomatska paralelizacija v OCamlu
- Za diplomsko temo bom raziskoval avtomatsko paralelizacijo v funkcijskem jeziku OCaml
+# Paralelizacija grafovskih algoritmov v funkcijskih jezikih
+
+V okviru diplomskega seminarja bom raziskoval paralelizacijo grafovskih algoritmov v funkcijskih jezikih
