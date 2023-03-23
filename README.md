@@ -1,3 +1,3 @@
-# Paralelizacija grafovskih algoritmov v funkcijskih jezikih
+# Parallelisation of Graph Algorithms in Functional Programming Languages
 
-V okviru diplomskega seminarja bom raziskoval paralelizacijo grafovskih algoritmov v funkcijskih jezikih
+In the scope of my bachelor's thesis I'll research parallelisation of graph algorithms in functional programming languages. Text is written in Slovene.
