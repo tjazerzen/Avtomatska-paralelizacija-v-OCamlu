@@ -2,7 +2,7 @@
 
 \mode<presentation>
 {
-  \usetheme{Madrid}
+  \usetheme{Berlin}
   \setbeamercovered{transparent}
 }
 
@@ -24,7 +24,7 @@
 
 
 \title[]
-{Avtomatska paralelizacija v OCamlu}
+{Paralelizacija grafovskih algoritmov v funkcijskih jezikih}
 
 \author[]
 {Avtor: Tja\v z Er\v zen, Mentor: doc. dr. Matija Pretnar}
@@ -61,7 +61,7 @@
     \begin{itemize}
         \item Veliki izzivi ``large-scale'' sistemov:
         \begin{itemize}
-            \item Ra\v cunalni\v sko - matemati\v cni problemi (npr. mno\v zenje matrik).
+            \item Ra\v cunalni\v sko-matemati\v cni problemi (npr. mno\v zenje matrik).
             \item Podatkovna analitika (ve\v cinoma gre za paralelizacijo na grafi\v cnih karticah)
             \item Modeliranje vremena in obna\v sanje okolja
             \item Ra\v cunsko te\v zki ra\v cunski problemi v fiziki in biologiji
@@ -105,7 +105,7 @@
 \begin{frame}{OCaml}
     \begin{itemize}
         \item Funkcijski jezik
-        \item Leto\v snji release verzije \textit{5.0.0}, ki (med drugim) vpelje knji\v znico \textbf{systhreads}.
+        \item Leto\v snja razli\v cica verzije \textit{5.0.0}, ki (med drugim) vpelje knji\v znico za delo z vzporednimi procesi.
     \end{itemize}
     
     \begin{figure}
@@ -121,9 +121,9 @@
 
 \begin{frame}{Zakaj pisati vzporedne programe?}
     \begin{itemize}
-        \item Programi za eno-jedrne sisteme ne znajo izkori\v s\v cati ve\v c jeder --> s paralelizacijo dobimo ve\v cjo u\v cinkovitost
-        \item Bad news: Potrebno znanje paralelizacije ra\v cunalni\v skih sistemov
-        \item Good news: Razvoj prevajalnikov, ki bi znali na\v se zaporedne programe samostojno pretvoriti v vzporedno obliko. Ideja: I\v s\v cejo se tipi\v cni programski konstrukti, ki se jih pretvarja v paralelno obliko
+        \item U\v cinkovitost
+        \item Dobra novica: Potrebno znanje paralelizacije ra\v cunalni\v skih sistemov
+        \item Slaba novica: Razvoj prevajalnikov, ki bi znali na\v se zaporedne programe samostojno pretvoriti v vzporedno obliko. Ideja: I\v s\v cejo se tipi\v cni programski konstrukti, ki se jih pretvarja v paralelno obliko
     \end{itemize}
 \end{frame}
 
@@ -132,7 +132,7 @@
         \item Paralelizacija ra\v cunalni\v skega procesorja v funkcijskem jeziku OCaml
         \item Se spoznati s paralelizacijo funkcijskih jezikov
         \item Pregled \v ze obstoje\v cih paralelnih knji\v znic v drugih funkcijskih jezikih (npr. Haskell) in implementacija le-teh v OCamlu
-        \item Analiza podatkovnih struktur, primernih za paralelizacijo
+        \item Analiza podatkovnih struktur in algoritmov, primernih za paralelizacijo
     \end{itemize}
     
 \end{frame}
@@ -141,7 +141,7 @@
     \begin{itemize}
         \item Implementacija osnovnih matemati\v cnih funkcij z ``naivno'' paralelizacijo (\textit{map, apply, sum, ...})
         \item Ugotoviti, kdaj se nekaj spla\v ca paralelizirati in kdaj ne
-        \item Implementacija/ razvoj manj trivialnih paralelnih algoritmov
+        \item Implementacija/ razvoj manj trivialnih paralelnih algoritmov (grafi)
     \end{itemize}
 
 \end{frame}
