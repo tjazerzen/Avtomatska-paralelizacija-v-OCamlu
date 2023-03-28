@@ -1,9 +1,9 @@
 \documentclass[12pt,a4paper]{amsart}
 % ukazi za delo s slovenscino -- izberi kodiranje, ki ti ustreza
 \usepackage[slovene]{babel}
-\usepackage[cp1250]{inputenc}
+% \usepackage[cp1250]{inputenc}
 %\usepackage[T1]{fontenc}
-%\usepackage[utf8]{inputenc}
+\usepackage[utf8]{inputenc}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{url}
 %\usepackage[normalem]{ulem}
@@ -50,10 +50,10 @@
 
 % naslednje ukaze ustrezno popravi
 \newcommand{\program}{Matematika} % ime studijskega programa: Matematika/Finan"cna matematika
-\newcommand{\imeavtorja}{Ime Priimek} % ime avtorja
-\newcommand{\imementorja}{prof.~dr./doc.~dr. Ime Priimek} % akademski naziv in ime mentorja
-\newcommand{\naslovdela}{Naslov dela diplomskega seminarja}
-\newcommand{\letnica}{2012} %letnica diplome
+\newcommand{\imeavtorja}{Tjaž Eržen} % ime avtorja
+\newcommand{\imementorja}{prof.~dr./doc.~dr. Matija Pretnar} % akademski naziv in ime mentorja
+\newcommand{\naslovdela}{Paralelizacija grafovskih algoritmov v funkcijskih programskih jezikih}
+\newcommand{\letnica}{2023} %letnica diplome
 
 
 % vstavi svoje definicije ...
@@ -93,28 +93,105 @@ Ljubljana, \letnica}
 {\sc Povzetek}
 \end{center}
 % tekst povzetka v slovenscini
-V povzetku na kratko opi"site vsebinske rezultate dela. Sem ne sodi razlaga organizacije dela -- v katerem poglavju/razdelku je kaj, pa"c pa le opis vsebine.
+TODO
 \vfill
 \begin{center}
-{\bf Angle"ski naslov dela}\\[3mm] % prevod slovenskega naslova dela 
+{\bf Paralellisation of Graph Algorithms in Functional Programming Languages}\\[3mm] % prevod slovenskega naslova dela 
 {\sc Abstract}
 \end{center}
 % tekst povzetka v anglescini
-Prevod zgornjega povzetka v angle"s"cino.
+TODO.
 
 \vfill\noindent
 {\bf Math. Subj. Class. (2010):} navedite vsaj eno klasifikacijsko oznako -- dostopne so na \url{www.ams.org/mathscinet/msc/msc2010.html}  \\[1mm]  
-{\bf Klju"cne besede:} navedite nekaj klju"cnih pojmov, ki nastopajo v delu  \\[1mm]  
-{\bf Keywords:} angle"ski prevod klju"cnih besed
+{\bf Klju"cne besede:} Grafovski algoritmi, paralelizacija, funkcijski programski jeziki, večjedrno procesorsko računanje, OCaml 5  \\[1mm]  
+{\bf Keywords:} Graph algorithms, paralellisation, functional programming languages, OCaml 5
 \pagebreak
 
 
 
 % tu se zacne tekst seminarja
-\section{Naslov prvega razdelka}
-Na za"cetku prvega poglavja/razdelka (ali v samostojnem razdelku z naslovom Uvod) napi"site kratek zgodovinski in matemati"cni uvod. Pojasnite motivacijo za problem, kje nastopa, kje vse je bil obravnavan. Na koncu opi"site tudi organizacijo dela -- kaj je v kak"snem razdelku.
+\section{Uvod}
+\label{uvod-poglavje}
 
-"Ce se uvod naravno nadaljuje v besedilo prvega poglavja, lahko nadaljujete z besedilom v istem razdelku, sicer za"cnete novega. Na za"cetku vsakega razdelka/podraz\-delka povete, "cemu se bomo posvetili v nadaljevanju. Pri pisanju uporabljajte ukaze za matemati"cna okolja, med formalnimi enotami dodajte vezni razlagalni tekst.
+Grafovski algoritmi so dan danes ključni pri modeliranju širokega nabora vsakdanjih problemov: Družbena omrežja, računalniška omrežja in računalniške komunikacije ter podatkovna analitika. Splošno, z grafi lahko abstrahiramo kakršno koli množico odnosov med danimi entitetami, vse od računanja razdalj med mesti, pa do računanje vodnega pretoka od enega kraja do drugega.
+
+Ker velikost grafov raste nelinearno z večanjem podatkov, z računanjem pogosto trčimo ob računsko prezahtevno oviro. Načinov za reševanje tega je več, pogosto pa je ena izmed najpogostejših ozkih grl to, da našega programa nismo napisali paralelno ter s tem izkoristili celotne kapacitete računalnika, temveč smo naš program poganjali zgolj na enem jedru. Posledično je paralelizacija tovrstnih algoritmov v zadnjih letih postala zanimiva in aplikativna raziskovalna tema. V moji diplomski nalogi se bom tako ukvarjal z paralelizacijo grafovksih algoritmov.
+
+Funkcijski programski jeziki zagotavljajo matematične abstrakcije na višjem nivoju, kot so jih to sposobni navadni imperativni programski jeziki, kot so na primer Python, C++ in Java. Ena izmed prednosti funkcijskih programskih jezikov je, da omogočajo deklarativno programiranje, kar jih naredi bolj paralelizabilne (več o tem v nadaljevanju). Tako me je zanimanje za matematične grafe, algoritme in funkcijske jezike pripeljalo v združevanje vseh teh tem hkrati: V svoji diplomski nalogi se bom tako ukvarjal s \textit{paralelizacijo grafovskih algoritmov v funkcijskih programskih jezikih}.
+
+Vzporednost na nivoju pomnilnika je moč doseči na dva načina: Tako, da je pomnilnik vsem računalniškim jedrom skupen, ali pa da je pomnilnik \textit{porazdeljen}. V tej diplomski nalogi se bom osredotočal na sisteme s skupnim pomnilnikom. V tej diplomski nalogi se bom osredotočal zgolj na sisteme s skupnim pomnilnikom.
+
+Vse več funkcijskih programskih jezikov, kot so Scala, F\# ter Haskell ima implementirane knjižnice in ogrodja za paralelizacijo grafovskih algoritmov:
+\begin{itemize}
+    \item knjižnica \textit{Graphalyze} v Haskellu zagotavlja vzporedne algoritme za najkrajšo pot ter iskanje krepko povezanih komponent.
+    \item \textit{GraphX} v Scali ponuja implementacijo paralelnega Googlovega PageRank algoritma.
+    \item \textit{Alea.cuBase} nam ponuja osnovne paralelne algoritme v jeziku F\#.
+\end{itemize}
+
+Od konca lanskega leta pa imamo nov funkcijski programski jezik, ki je postal ``multicore'' - to je OCaml, ki se med drugim poučuje na naši fakulteti v sklopu računalniško-orientiranih predmetov. Zato sem to priložnost izoristil, da svoje računalniške programe pišem v tem funkcijskem jeziku. V tej diplomski naloge se bom tako spustil v tovrstne knjižnice v funkcijskih jezikih, ki že obstajajo, pregledal novejše raziskave kar se tiče grafovskih algoritmov v imperativnih jezikih, to prevedel v deklarativni jezik ter vse to skupaj povezav v zaključeno celovito knjižnico v OCamlu.
+
+
+\section{Kratek uvod v funkcijsko programiranje}
+
+\subsection{Zakaj funkcijski programski jeziki}
+
+\begin{definicija}
+Stranski učinki so v programiranju kakršen koli odklon med čistimi matematičnimi funkcijami ter našim programom.
+\end{definicija}
+
+Funkcijsko programiranje je računalniški koncept, znotraj katerega programe pišemo komponiranjem in apliciranjem matematičnih funkcij. Programiranje take vrste uporabnika preko zasnove samega jezika spodbudi, da piše t.i. programe brez stranskih učinkov oz. jih omeji kakor se le da. Primer stranskega učinka bi bilo spreminjanje uporabniškega pomnilnika, ali pa branje tekstovnih datotek.
+
+Kot rečeno, v splošnem se stranskim učinkom želimo kakor se le da izogniti, saj zmanjšajo preglednost naše kode, prav tako pa lahko uporabnika zmede, če večkrat požene isto. 
+
+Kot rečeno, v splošnem se stranskim učinkov želimo izogniti, saj pogosto zbegajo tako razvijalca kot tudi uporabnika: Sorazvijalcu zmanjšajo preglednost naše kode ter privedejo do bolj pogostih napak, iz uporabniškega stališča pa se kakšen podatek v ozadju nehote spremeni, kar uporabnika pogosto zbega. Tiste dele kode, ki pa stranske učinke imajo, pa izoliramo v smislu da dodatno ne počnejo še drugih čistih matematičnih operacij.
+
+% TODO: Dodaj code snippet, kjer pokažeš, zakaj stranski učinki niso zaželjeni.
+
+Zadnjih par let funkcijski programski jeziki zaradi svojih lastnosti pridobivajo na popularnosti. Zaradi zasnove funkcijskih programskih jezikov so tovrstni programi tipično lepše razdeljeni v manjše kose kode, znotraj katerih vsak kos počne natanko eno vlogo, kar omogoči lažjo uporabo iste programske kode na več različnih problemih. Zaradi takih učinkov ter drugih razlik, ki ločijo funkcijske ter imperativne jezike (npr. preverjanje tipov pred izvajanjem programa) pa je naš program prav tako precej lažje testirati, razhroščevati in vzdrževati. Funkcijski programer se pogosto pošali, da mu program njegovo napako sporoči že preden je program sploh zagnal. Tako je uporabnik ``prisiljen'' pisati bolj robustne ter zanesljive programe, manj izpostavljene potencialnim napakam ter sesutjem.
+
+Zadnja prednost, ki bi jo izpostavil, je razlika v hitrosti visokonivojskih imperativnih (Python, Ruby, Java) ter funkcijskih programskih jezikov. 
+
+Zadnja prednost, ki bi jo izpostavil, je razlika v hitrosti funkcijskih jezikov - le-ti so po eni strani precej bolj ekpresivni od nižjenivojskih imperativnih jezikov (C++, C) ter le malo počasnejši kar se tiče izvajanja, po drugi strani pa precej  hitrejši od visokonivojskih programskih jezikov (Python, Ruby, Java), s čimer imajo dobro uporabno nišo v industriji, kjer sta važna tako hitrost kot ekspresivnost jezika (npr. uporaba takih jezikov za visoko-frekvenčno trgovanje s finančnimi instrumenti).
+
+Kot že omenjeno v poglavju \ref{uvod-poglavje}, pa funkcijski jeziki prav tako omogočajo lažjo sočasnost ter paralelizabilnost programa. Vse to funkcijske jezike naredi primerne za t.i. \textit{visoko performančne sisteme z večnitinimi programi}.
+
+% TODO: Dodaj še kaj o paralelizabilnosti tukajle.
+
+\subsection{Funkcijske podatkovne strukture}
+
+Ko potrebujem npr. implementacijo vrste s prednostjo v Pythonu, je pogosto dovolj, da v splošnem učbeniku najdem njeno implementacijo ter to prepišem. Razvijalci, ki pa svojo kodo pišejo v funkcijskih programskih jezikih, pa pogosto te sreče nimajo. Razloga sta dva: Prvi bi bil, da funkcijski jeziki niso tako razširjeni kot imperativni, drugi pa je, da se funkcijski jeziki med sabo bolj razlikujejo kot se med sabo razlikujejo imperativni. Poljubno psevdokodo, napisano v imperativnem smislu, je lažje prirediti v Python, kot pa je npr. poljubno psevdokodo, napisano v funkcijskem smislu prirediti v na primer OCaml.
+
+\begin{definicija}
+Podatkovna struktura je \textbf{vztrajna}, če lahko vidimo njeno zgodovino spreminjanja. Taka podatkovna struktura hrani svoje prejšne verzije.
+Podatkovna struktura je \textbf{minljiva}, je podatkovna struktura, ki ne pomni svojih prejšnih verzij.
+\end{definicija}
+
+Funkcijski programski jeziki imajo zanimivo lastnost, da so vse podatkovne strukture avtomatsko \textit{vztrajne}, medtem ko je v imperativnih programskih jezikih vztrajne podatkovne strukture tipično težje implementirati, prav tako pa so asimptotsko počasnejše kot ``minljive'' podatkovne strukture. Prednost vztrajnih podatkovnih struktur očitno ta, da lahko dostopamo do svojih prejšnjih različic, prednost minljivih struktur pa je, da da so hitrejše na pram vztrajnih. Posledično so v splošnem podatkovne strukture v funkcijskih jezikih asimptotsko počasnejše kot pri imperativnih jezikih.
+
+% TODO (kasneje): Podaj primer podatkovne strukture, ki se je na funkcijski način ne da učinkovito implementirati.
+Še ena slabost podatkovnih struktur v funkcijskih jezikih je, da se nekaterih podatkovnih struktur preprosto ne da učinkovito implementirati na funkcijski način.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \begin{definicija}
 Funkcija $f\colon [a,b]\to\R$ je {\em zvezna}, "ce...
@@ -161,20 +238,25 @@ Pri navajanju literature si pomagajte s spodnjimi primeri; najprej je opisano pr
 % slovar
 \section*{Slovar strokovnih izrazov}
 
-\geslo{glide reflection}{zrcalni zdrs ali zrcalni pomik -- tip ravninske evklidske izometrije, ki je kompozitum zrcaljenja in translacije vzdol"z iste premice}
+\geslo{funkcijsko programiranje}{računalniški koncept, znotraj katerega programe pišemo s komponiranjem in apliciranjem matematičnih funkcij}
 
-\geslo{lattice}{mre"za}
+\geslo{stranski učinki programov}{odklon med čistimi matematičnimi funkcijami ter našim programom.}
 
-\geslo{link}{splet}
+% TODO: Je vztrajno dober prevod ``persistent''?
+\geslo{Vztrajna podatkovna struktura}{}
 
-\geslo{partition}{\textbf{$\sim$ of a set} razdelitev mno"zice; \textbf{$\sim$ of a number} raz"clenitev "stevila}
+% TODO: Je minljivo dober prevod ``ephemeral''?
+\geslo{Minljiva podatkovna struktura}{}
 
 
 % seznam uporabljene literature
 \begin{thebibliography}{99}
 
+\bibitem{FP-Scala}
+P.~Chiusano, R.~Bjarnason, \emph{Functional Programming in Scala}  \textbf{1}, Manning Publications Co., New York, 2015.
+
 \bibitem{referenca-clanek}
-I.~Priimek, \emph{Naslov "clanka}, okraj"sano ime revije \textbf{letnik revije} (leto izida) strani od--do.
+P.~Chiusano, R.~Bjarnason \emph{Naslov "clanka}, okraj"sano ime revije \textbf{letnik revije} (leto izida) strani od--do.
 
 \bibitem{navodilaOMF}
 C.~Velkovrh, \emph{Nekaj navodil avtorjem za pripravo rokopisa}, Obzornik mat.\ fiz.\ \textbf{21} (1974) 62--64.
