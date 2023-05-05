@@ -85,62 +85,104 @@
 
 \section{Uvod}
 
-Grafovski algoritmi so dan danes ključni pri modeliranju širokega nabora vsakdanjih problemov: Družbena omrežja, računalniška omrežja in računalniške komunikacije ter podatkovna analitika. Splošno, z grafi lahko abstrahiramo kakršno koli množico odnosov med danimi entitetami, vse od računanja razdalj med mesti, pa do računanje vodnega pretoka od enega kraja do drugega.
+Grafovski algoritmi so dan danes ključni pri modeliranju širokega nabora vsakdanjih problemov: 
+Igrajo pomembno vlogo pri modeliranju družbenih ter računalniških omrežjih, z njimi pa se prav tako razrešujejo problemi na področjih računalniške komunikacije ter podatkovne analitike. 
+Splošno, z grafi lahko abstrahiramo kakršno koli množico odnosov med danimi entitetami, vse od računanja razdalj med mesti, pa do računanje vodnega pretoka od enega kraja do drugega.
 
-Ker velikost grafov raste nelinearno z večanjem podatkov, z računanjem pogosto trčimo ob računsko prezahtevno oviro. Načinov za reševanje tega je več, pogosto pa je ena izmed najpogostejših ozkih grl to, da našega programa nismo napisali paralelno ter s tem izkoristili celotne kapacitete računalnika, temveč smo naš program poganjali zgolj na enem jedru. Posledično je paralelizacija tovrstnih algoritmov v zadnjih letih postala zanimiva in aplikativna raziskovalna tema. V moji diplomski nalogi se bom tako ukvarjal z paralelizacijo grafovksih algoritmov.
+Ker kompleksnost grafov raste nelinearno z večanjem podatkov, z njihovim računanjem ter procesiranjem pogosto trčimo ob računsko prezahtevno oviro.
+Načinov za reševanje tega je več, pogosto pa je ena izmed najpogostejših ozkih grl to, da našega programa nismo napisali paralelno ter s tem izkoristili celotne kapacitete računalnika, 
+temveč smo naš program poganjali zgolj na enem jedru. 
+Posledično je paralelizacija tovrstnih algoritmov v zadnjih letih postala zanimiva in aplikativna raziskovalna tema. 
+V svoji diplomski nalogi se bom tako ukvarjal z paralelizacijo grafovksih algoritmov.
 
-Funkcijski programski jeziki zagotavljajo matematične abstrakcije na višjem nivoju, kot so jih to sposobni navadni imperativni programski jeziki, kot so na primer Python, C++ in Java. Ena izmed prednosti funkcijskih programskih jezikov je, da omogočajo deklarativno programiranje, kar jih naredi bolj paralelizabilne (več o tem v nadaljevanju). Tako me je zanimanje za matematične grafe, algoritme in funkcijske jezike pripeljalo v združevanje vseh teh tem hkrati: V svoji diplomski nalogi se bom tako ukvarjal s \textit{paralelizacijo grafovskih algoritmov v funkcijskih programskih jezikih}.
+Funkcijski programski jeziki zagotavljajo matematične abstrakcije na višjem nivoju, kot so jih to sposobni navadni imperativni programski jeziki, kot so na primer Python, C++ in Java. 
+Ena izmed prednosti funkcijskih programskih jezikov je, da omogočajo deklarativno programiranje, kar jih naredi bolj paralelizabilne (več o tem v nadaljevanju). 
+Tako me je zanimanje za matematične grafe, algoritme in funkcijske jezike pripeljalo v združevanje vseh teh tem hkrati: 
+V svoji diplomski nalogi se bom zato osredotočil na \textit{paralelizacijo grafovskih algoritmov v funkcijskih programskih jezikih}.
 
-Vzporednost na nivoju pomnilnika je moč doseči na dva načina: Tako, da je pomnilnik vsem računalniškim jedrom skupen, ali pa da je pomnilnik \textit{porazdeljen}. V tej diplomski nalogi se bom osredotočal na sisteme s skupnim pomnilnikom. V tej diplomski nalogi se bom osredotočal zgolj na sisteme s skupnim pomnilnikom.
+\begin{definicija}
+  \textbf{Deklarativni programski jezik} je vrsta programskega jezika, kjer razvijalec opišie kaj naj program stori, namesto kako naj to stori. Programi so tipično strukturirani kot nizi deklaracij, 
+  ki določajo razmerja in omejitve med med različnimi entitetami znotraj problema. Nasprotno, \textbf{imperativni programski jezik} je vrsta programskega jezika, kjer programer navede zaporedje ukazov,
+  ki naj jih računalnik izvrši za rešitev problema.
+\end{definicija}
 
-Vse več funkcijskih programskih jezikov, kot so Scala, F\# ter Haskell ima implementirane knjižnice in ogrodja za paralelizacijo grafovskih algoritmov:
+Vzporednost na nivoju pomnilnika je moč doseči na dva načina: 
+Tako, da je pomnilnik vsem računalniškim jedrom skupen, ali pa da je pomnilnik \textit{porazdeljen}. 
+V tej diplomski nalogi se bom osredotočal na sisteme s skupnim pomnilnikom. 
+V tej diplomski nalogi se bom osredotočal zgolj na sisteme s skupnim pomnilnikom ter porazdeljeno procesorsko močjo.
+
+Vse več funkcijskih programskih jezikov, kot so na primer Scala, F\# ter Haskell ima implementirane knjižnice in ogrodja za paralelizacijo grafovskih algoritmov:
 \begin{itemize}
     \item knjižnica \textit{Graphalyze} v Haskellu zagotavlja vzporedne algoritme za najkrajšo pot ter iskanje krepko povezanih komponent.
     \item \textit{GraphX} v Scali ponuja implementacijo paralelnega Googlovega PageRank algoritma.
     \item \textit{Alea.cuBase} nam ponuja osnovne paralelne algoritme v jeziku F\#.
 \end{itemize}
 
-Od konca lanskega leta pa imamo nov funkcijski programski jezik, ki je postal ``multicore'' - to je OCaml, ki se med drugim poučuje na naši fakulteti v sklopu računalniško-orientiranih predmetov. Zato sem to priložnost izoristil, da svoje računalniške programe pišem v tem funkcijskem jeziku. V tej diplomski naloge se bom tako spustil v tovrstne knjižnice v funkcijskih jezikih, ki že obstajajo, pregledal novejše raziskave kar se tiče grafovskih algoritmov v imperativnih jezikih, to prevedel v deklarativni jezik ter vse to skupaj povezav v zaključeno celovito knjižnico v OCamlu.
-
+Od konca lanskega leta pa imamo nov funkcijski programski jezik, ki je postal ``multicore'' - to je OCaml, ki se med drugim poučuje na naši fakulteti v sklopu računalniško-orientiranih predmetov. 
+Zato sem to priložnost izoristil, da svoje računalniške programe pišem v tem funkcijskem jeziku. 
+V tej diplomski naloge se bom tako spustil v tovrstne knjižnice v funkcijskih jezikih, ki že obstajajo, 
+pregledal novejše raziskave kar se tiče grafovskih algoritmov v imperativnih jezikih, to prevedel v deklarativni jezik ter vse to skupaj povezav v zaključeno celovito knjižnico v OCamlu.
 
 \section{Kratek uvod v funkcijsko programiranje}
 
 \subsection{Zakaj funkcijski programski jeziki}
 
 \begin{definicija}
-Stranski učinki so v programiranju kakršen koli odklon med čistimi matematičnimi funkcijami ter našim programom.
+\textbf{Stranski učinki} so v programiranju kakršen koli odklon med čistimi matematičnimi funkcijami ter našim programom.
 \end{definicija}
 
-Funkcijsko programiranje je računalniški koncept, znotraj katerega programe pišemo komponiranjem in apliciranjem matematičnih funkcij. Programiranje take vrste uporabnika preko zasnove samega jezika spodbudi, da piše t.i. programe brez stranskih učinkov oz. jih omeji kakor se le da. Primer stranskega učinka bi bilo spreminjanje uporabniškega pomnilnika, ali pa branje tekstovnih datotek.
+\begin{definicija}
+  \textbf{Funkcijsko programiranje} je računalniški koncept, znotraj katerega programe pišemo komponiranjem in apliciranjem matematičnih funkcij. 
+  .
+\end{definicija}
 
-Kot rečeno, v splošnem se stranskim učinkom želimo kakor se le da izogniti, saj zmanjšajo preglednost naše kode, prav tako pa lahko uporabnika zmede, če večkrat požene isto. 
+Že po definiciji je moč čutiti, da bo taka vrsta programov v splošnem bolj podobna pisanju čistih matematičnih funkcij. Posledično programiranje take vrste uporabnika preko zasnove samega jezika
+spodbudi, piše programe z manj stranskimi učinki.
 
-Kot rečeno, v splošnem se stranskim učinkov želimo izogniti, saj pogosto zbegajo tako razvijalca kot tudi uporabnika: Sorazvijalcu zmanjšajo preglednost naše kode ter privedejo do bolj pogostih napak, iz uporabniškega stališča pa se kakšen podatek v ozadju nehote spremeni, kar uporabnika pogosto zbega. Tiste dele kode, ki pa stranske učinke imajo, pa izoliramo v smislu da dodatno ne počnejo še drugih čistih matematičnih operacij.
+Programiranje take vrste uporabnika preko zasnove samega jezika spodbudi, da piše t.i. programe brez stranskih učinkov oz. jih omeji kakor se le da. 
+Primer stranskega učinka bi bilo spreminjanje uporabniškega pomnilnika, ali pa branje tekstovnih datotek.
+
+Kot rečeno, v splošnem se stranskim učinkov želimo izogniti, saj pogosto zbegajo tako razvijalca kot tudi uporabnika: 
+Sorazvijalcu zmanjšajo preglednost naše kode ter privedejo do bolj pogostih napak, iz uporabniškega stališča pa se kakšen podatek v ozadju nehote spremeni, kar uporabnika pogosto zbega. 
+Tiste dele kode, ki pa stranske učinke imajo, pa izoliramo v smislu da dodatno ne počnejo še drugih čistih matematičnih operacij.
 
 % TODO: Dodaj code snippet, kjer pokažeš, zakaj stranski učinki niso zaželjeni.
 
-Zadnjih par let funkcijski programski jeziki zaradi svojih lastnosti pridobivajo na popularnosti. Zaradi zasnove funkcijskih programskih jezikov so tovrstni programi tipično lepše razdeljeni v manjše kose kode, znotraj katerih vsak kos počne natanko eno vlogo, kar omogoči lažjo uporabo iste programske kode na več različnih problemih. Zaradi takih učinkov ter drugih razlik, ki ločijo funkcijske ter imperativne jezike (npr. preverjanje tipov pred izvajanjem programa) pa je naš program prav tako precej lažje testirati, razhroščevati in vzdrževati. Funkcijski programer se pogosto pošali, da mu program njegovo napako sporoči že preden je program sploh zagnal. Tako je uporabnik ``prisiljen'' pisati bolj robustne ter zanesljive programe, manj izpostavljene potencialnim napakam ter sesutjem.
+Zadnjih par let funkcijski programski jeziki zaradi svojih lastnosti pridobivajo na popularnosti. 
+Zaradi zasnove funkcijskih programskih jezikov so tovrstni programi tipično lepše razdeljeni v manjše kose kode, znotraj ima vsak kot kode natanko eno funkcijo, 
+kar omogoči lažjo uporabo iste programske kode na več različnih problemih. 
+Zaradi takih učinkov ter drugih razlik, ki ločijo funkcijske ter imperativne jezike (npr. preverjanje tipov pred izvajanjem programa) pa je naš program prav tako precej lažje testirati, razhroščevati in vzdrževati. 
+Funkcijski programer se pogosto pošali, da mu program njegovo napako sporoči že preden je program sploh zagnal. 
+Tako je uporabnik ``prisiljen'' pisati bolj robustne ter zanesljive programe, manj izpostavljene potencialnim napakam ter sesutjem.
 
-Zadnja prednost, ki bi jo izpostavil, je razlika v hitrosti visokonivojskih imperativnih (Python, Ruby, Java) ter funkcijskih programskih jezikov. 
+Zadnja prednost, ki bi jo izpostavil, je razlika v hitrosti funkcijskih jezikov - le-ti so po eni strani precej bolj ekpresivni od nižjenivojskih imperativnih jezikov (C++, C) 
+ter le malo počasnejši kar se tiče izvajanja, po drugi strani pa precej  hitrejši od visokonivojskih programskih jezikov (Python, Ruby, Java), 
+s čimer imajo dobro uporabno nišo v industriji, kjer sta važna tako hitrost kot ekspresivnost jezika (npr. uporaba takih jezikov za visoko-frekvenčno trgovanje s finančnimi instrumenti).
 
-Zadnja prednost, ki bi jo izpostavil, je razlika v hitrosti funkcijskih jezikov - le-ti so po eni strani precej bolj ekpresivni od nižjenivojskih imperativnih jezikov (C++, C) ter le malo počasnejši kar se tiče izvajanja, po drugi strani pa precej  hitrejši od visokonivojskih programskih jezikov (Python, Ruby, Java), s čimer imajo dobro uporabno nišo v industriji, kjer sta važna tako hitrost kot ekspresivnost jezika (npr. uporaba takih jezikov za visoko-frekvenčno trgovanje s finančnimi instrumenti).
-
-Kot že omenjeno v poglavju 
-\\ref uvod-poglavje, 
-pa funkcijski jeziki prav tako omogočajo lažjo sočasnost ter paralelizabilnost programa. Vse to funkcijske jezike naredi primerne za t.i. \textit{visoko performančne sisteme z večnitinimi programi}.
+Kot že omenjeno v uvodu, pa funkcijski jeziki prav tako omogočajo lažjo sočasnost ter paralelizabilnost programa. 
+Vse to funkcijske jezike naredi primerne za t.i. \textit{visoko performančne sisteme z večnitinimi programi} (ang. high performance computing).
 
 % TODO: Dodaj še kaj o paralelizabilnosti tukajle.
 
 \subsection{Funkcijske podatkovne strukture}
 
-Ko potrebujem npr. implementacijo vrste s prednostjo v Pythonu, je pogosto dovolj, da v splošnem učbeniku najdem njeno implementacijo ter to prepišem. Razvijalci, ki pa svojo kodo pišejo v funkcijskih programskih jezikih, pa pogosto te sreče nimajo. Razloga sta dva: Prvi bi bil, da funkcijski jeziki niso tako razširjeni kot imperativni, drugi pa je, da se funkcijski jeziki med sabo bolj razlikujejo kot se med sabo razlikujejo imperativni. Poljubno psevdokodo, napisano v imperativnem smislu, je lažje prirediti v Python, kot pa je npr. poljubno psevdokodo, napisano v funkcijskem smislu prirediti v na primer OCaml.
+Ko potrebujem npr. implementacijo vrste s prednostjo v Pythonu, je pogosto dovolj, da v splošnem učbeniku najdem njeno implementacijo ter to prepišem. 
+Razvijalci, ki pa svojo kodo pišejo v funkcijskih programskih jezikih, pa pogosto te sreče nimajo. 
+Razloga sta dva: Prvi bi bil, da funkcijski jeziki niso tako razširjeni kot imperativni, drugi pa je, da se funkcijski jeziki med sabo bolj razlikujejo kot se med sabo razlikujejo imperativni. 
+Poljubno psevdokodo, napisano v imperativnem smislu, je lažje prirediti v Python, kot pa je npr. poljubno psevdokodo, napisano v funkcijskem smislu prirediti v na primer OCaml.
 
 \begin{definicija}
-Podatkovna struktura je \textbf{vztrajna}, če lahko vidimo njeno zgodovino spreminjanja. Taka podatkovna struktura hrani svoje prejšne verzije.
-Podatkovna struktura je \textbf{minljiva}, je podatkovna struktura, ki ne pomni svojih prejšnih verzij.
+V splošnem podatkovne strukture delimo na dve skupini:
+\begin{itemize}
+  \item Podatkovna struktura je \textbf{vztrajna}, če lahko vidimo njeno zgodovino spreminjanja. Taka podatkovna struktura hrani svoje prejšne verzije.
+  \item Podatkovna struktura je \textbf{minljiva}, je podatkovna struktura, ki ne pomni svojih prejšnih verzij.
+\end{itemize}
 \end{definicija}
 
-Funkcijski programski jeziki imajo zanimivo lastnost, da so vse podatkovne strukture avtomatsko \textit{vztrajne}, medtem ko je v imperativnih programskih jezikih vztrajne podatkovne strukture tipično težje implementirati, prav tako pa so asimptotsko počasnejše kot ``minljive'' podatkovne strukture. Prednost vztrajnih podatkovnih struktur očitno ta, da lahko dostopamo do svojih prejšnjih različic, prednost minljivih struktur pa je, da da so hitrejše na pram vztrajnih. Posledično so v splošnem podatkovne strukture v funkcijskih jezikih asimptotsko počasnejše kot pri imperativnih jezikih.
+Funkcijski programski jeziki imajo zanimivo lastnost, da so vse podatkovne strukture avtomatsko \textit{vztrajne}, 
+medtem ko je v imperativnih programskih jezikih vztrajne podatkovne strukture tipično težje implementirati, prav tako pa so asimptotsko počasnejše kot ``minljive'' podatkovne strukture. 
+Prednost vztrajnih podatkovnih struktur očitno ta, da lahko dostopamo do svojih prejšnjih različic, prednost minljivih struktur pa je, da da so hitrejše na pram vztrajnih. 
+Posledično so v splošnem podatkovne strukture v funkcijskih jezikih asimptotsko počasnejše kot pri imperativnih jezikih.
 
 % TODO (kasneje): Podaj primer podatkovne strukture, ki se je na funkcijski način ne da učinkovito implementirati.
 Še ena slabost podatkovnih struktur v funkcijskih jezikih je, da se nekaterih podatkovnih struktur preprosto ne da učinkovito implementirati na funkcijski način.
