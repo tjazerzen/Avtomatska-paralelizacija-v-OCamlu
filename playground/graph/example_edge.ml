@@ -1,25 +1,19 @@
 #use "edge.ml"
+(* Usage examples *)
 
-let () = 
-  let edge1 = create_edge_from_nodes 1 2 false in
-  let edge2 = create_edge_from_nodes 2 3 false in
-  let edge3 = create_edge_from_nodes 1 4 false in
-  let edge4 = create_edge_from_nodes 4 5 false in
-  let edges = [edge1; edge2; edge3; edge4] in
-  (*print the edges*)
-  List.iter (fun edge -> Printf.printf "%s\n" (edge_description edge)) edges
+(* Create nodes with IDs *)
+let node1_id = 0
+let node2_id = 1
+let node3_id = 2
 
-(*
-Prints:
-  id: 1, direction: Left
-  id: 2, direction: Right
+(* Create directed and undirected edges *)
+let (directed_edge1, _) = create_edge_from_nodes node1_id node2_id true
+let (undirected_edge1, undirected_edge2) = create_edge_from_nodes node1_id node3_id false
 
-  id: 2, direction: Left
-  id: 3, direction: Right
-
-  id: 1, direction: Left
-  id: 4, direction: Right
-
-  id: 4, direction: Left
-  id: 5, direction: Right   
-*)
+let () =
+  Printf.printf "%s" (edge_to_string (Option.get directed_edge1));
+  Printf.printf "%s" (edge_to_string (Option.get undirected_edge1));
+  Printf.printf "%s" (edge_to_string (Option.get undirected_edge2)); 
+  (* Compare edges *)
+  let edge_comparison = equal_edge (Option.get undirected_edge1) (Option.get undirected_edge2) in
+  Printf.printf "Edges are different: %B\n" edge_comparison
