@@ -1,6 +1,8 @@
 #use "edge.ml"
 #use "node.ml"
 
+(* To run: #use "graph.ml";; *)
+
 type 'a graph = {
   nodes: 'a node list;
   adjacency_list: edge list list;
@@ -36,7 +38,7 @@ let add_node_with_content (graph : 'a graph) (content : 'a) : 'a graph =
   { graph with nodes = new_nodes; adjacency_list = new_adjacency_list }
 
 (*Not sure if I'll have to go more general that removed_id may be of any type*)
-let update_node_ids (nodes : 'a node List.t) (removed_id : 'b) : 'a node List.t =
+let update_node_ids (nodes : 'a node List.t) (removed_id : int) : 'a node List.t =
   List.map (
     fun node -> (if node.id > removed_id then { node with id = node.id - 1 } else node)
     ) nodes
@@ -44,56 +46,73 @@ let update_node_ids (nodes : 'a node List.t) (removed_id : 'b) : 'a node List.t 
 (*TODO: Stayed here*)
 (*Remove the node from graph*)
 let remove_node (graph : 'a graph) (node_to_remove : 'a node) : 'a graph =
-  (*Remove the node from the nodes list*)
+  (* Remove the node from the nodes list *)
   let new_nodes = List.filter (fun node -> node.id <> node_to_remove.id) graph.nodes in
-  (*Remove the corresponding adjacency list entry for the removed node*)
+  (* Remove the corresponding adjacency list entry for the removed node *)
   let new_adjacency_list = List.filteri (fun i _ -> i <> node_to_remove.id) graph.adjacency_list in
-  (*Update the adjacency list to remove any edges that were connected to the removed node*)
-  let updated_adjacency_list = List.map (fun edges ->
-    List.filter (
-      fun edge -> not (List.mem_assoc node_to_remove.id edge.directory)
-      ) edges
-  ) new_adjacency_list in
-  (*Update the node IDs in the nodes list*)
+  (* Update the adjacency list to remove any edges that were connected to the removed node *)
+  let updated_adjacency_list =
+    List.map
+      (fun edges -> List.filter (fun edge -> edge.src_id <> node_to_remove.id && edge.dest_id <> node_to_remove.id) edges)
+      new_adjacency_list
+  in
+  (* Update the node IDs in the nodes list *)
   let updated_nodes = update_node_ids new_nodes node_to_remove.id in
-  (*Reconstruct the graph with the updated nodes list and adjacency_list*)
-  let empty_graph = create_empty_graph graph.is_directed in
-  let new_graph = List.fold_left add_node_with_content empty_graph (
-    List.map (fun node -> node.value) updated_nodes
-    ) in
-  { new_graph with adjacency_list = updated_adjacency_list }
-  
-    
+  (* Update the lookup hash table *)
+  let () = Hashtbl.remove graph.lookup node_to_remove.value in
+  { graph with
+    nodes = updated_nodes;
+    adjacency_list = updated_adjacency_list;
+  }
+
 (* Connect two nodes in the graph *)
 let connect_nodes (graph : 'a graph) (node1 : 'a node) (node2 : 'a node) : 'a graph =
   (* Check if either of the nodes is not present in the graph *)
-  if not (List.mem node1 graph.nodes) || not (List.mem node2 graph.nodes) then
+  if not (List.exists (fun node -> node.id = node1.id) graph.nodes) || not (List.exists (fun node -> node.id = node2.id) graph.nodes) then
     (* If either node is not present, return the graph unmodified *)
+    let () = Printf.eprintf "Warning: One or both nodes are not present in the graph. Nodes will not be connected.\n" in
     graph
   else
-    (* Create an edge between the two nodes *)
-    let edge = create_edge_from_nodes node1.id node2.id graph.is_directed in
+    let created_edge = create_edge_from_nodes node1.id node2.id graph.is_directed in
     (* Update the adjacency list to include the new edge *)
     let new_adjacency_list = List.mapi (fun i edges ->
-      if i = node1.id then
+      match (i = node1.id, i = node2.id) with
         (* If the current index is equal to node1's ID, add the edge to the list of edges *)
-        edge :: edges
-      else if not graph.is_directed && i = node2.id then
+      | (true, _) -> created_edge :: edges
         (* If the graph is undirected and the current index is equal to node2's ID, add the edge to the list of edges *)
-        edge :: edges
-      else
-        (* Otherwise *)
-        edges
+      | (_, true) when not graph.is_directed -> {created_edge with src_id=created_edge.dest_id; dest_id=created_edge.src_id} :: edges
+        (* Otherwise *)      
+      | _ -> edges
       ) graph.adjacency_list in
     { graph with adjacency_list = new_adjacency_list }
 
 let find_node_by_id (graph : 'a graph) (id : int) : 'a node option =
-  try
-    Some (List.find (fun node -> node.id = id) graph.nodes)
-  with Not_found ->
-    None
+  List.find_opt (fun node -> node.id = id) graph.nodes
+    
     
 let connect_nodes_with_id (graph : 'a graph) (node1_id : int) (node2_id : int) : 'a graph =
-  match ((find_node_by_id graph node1_id), (find_node_by_id graph node1_id)) with
+  match ((find_node_by_id graph node1_id), (find_node_by_id graph node2_id)) with
   | (Some node1, Some node2) -> connect_nodes graph node1 node2
   | (_, _) -> graph
+
+let graph_to_string (graph : 'a graph) : string =
+  (*Converts a list of edges to string*)
+  let rec edges_to_string (edges: edge list) : string =
+    match edges with
+    | [] -> ""
+    | edge :: [] -> edge_to_string edge (*edge_to_string method is implemented in edge.ml*)
+    | edge :: rest -> Printf.sprintf "%s, %s" (edge_to_string edge) (edges_to_string rest)
+  in
+  (*Converts adjacency list to string*)
+  let rec adjacency_list_to_string (idx : int) (adj_list : edge list list) : string =
+    match adj_list with
+    | [] -> ""
+    | edges :: rest ->
+      let node_string = Printf.sprintf "Node %d: %s" idx (edges_to_string edges) in
+      let rest_string = adjacency_list_to_string (idx + 1) rest in
+      if rest_string = "" then
+        node_string
+      else
+        Printf.sprintf "%s\n%s" node_string rest_string
+  in
+  Printf.sprintf "%s %s" (adjacency_list_to_string 0 graph.adjacency_list) "\n"
