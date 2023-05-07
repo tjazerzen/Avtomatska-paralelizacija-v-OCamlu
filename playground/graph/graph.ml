@@ -10,6 +10,7 @@ type 'a graph = {
   is_directed: bool;
 }
 
+(*O(1)*)
 (* Helper function to create an empty graph *)
 let create_empty_graph (is_directed : bool) : 'a graph = {
   nodes = [];
@@ -18,8 +19,11 @@ let create_empty_graph (is_directed : bool) : 'a graph = {
   is_directed;
 }
 
+(*O(n)*)
 let node_count (graph : 'a graph) : int = List.length graph.nodes
 
+(*O(n) because of call node_count graph*)
+(*Operations on Hashtables are O(1) amortized*)
 (*Add node to existing graph with value content
    When adding node, an entirely new graph structure is created*)
 let add_node_with_content (graph : 'a graph) (content : 'a) : 'a graph =
@@ -37,13 +41,13 @@ let add_node_with_content (graph : 'a graph) (content : 'a) : 'a graph =
   (*Create the same graph but with updated nodes - new nodes; and updated adjacency list - new_adjacency_list *)
   { graph with nodes = new_nodes; adjacency_list = new_adjacency_list }
 
-(*Not sure if I'll have to go more general that removed_id may be of any type*)
-let update_node_ids (nodes : 'a node List.t) (removed_id : int) : 'a node List.t =
+(*O(n), due to List.map*)
+  let update_node_ids (nodes : 'a node List.t) (removed_id : int) : 'a node List.t =
   List.map (
     fun node -> (if node.id > removed_id then { node with id = node.id - 1 } else node)
     ) nodes
 
-(*TODO: Stayed here*)
+(*O(n^2), because we iterate over the adjacency list // over the all edges*)
 (*Remove the node from graph*)
 let remove_node (graph : 'a graph) (node_to_remove : 'a node) : 'a graph =
   (* Remove the node from the nodes list *)
@@ -60,11 +64,9 @@ let remove_node (graph : 'a graph) (node_to_remove : 'a node) : 'a graph =
   let updated_nodes = update_node_ids new_nodes node_to_remove.id in
   (* Update the lookup hash table *)
   let () = Hashtbl.remove graph.lookup node_to_remove.value in
-  { graph with
-    nodes = updated_nodes;
-    adjacency_list = updated_adjacency_list;
-  }
+  {graph with nodes = updated_nodes; adjacency_list = updated_adjacency_list; }
 
+(*O(n), because List.exists and List.mapi both take O(n)*)
 (* Connect two nodes in the graph *)
 let connect_nodes (graph : 'a graph) (node1 : 'a node) (node2 : 'a node) : 'a graph =
   (* Check if either of the nodes is not present in the graph *)
@@ -86,15 +88,17 @@ let connect_nodes (graph : 'a graph) (node1 : 'a node) (node2 : 'a node) : 'a gr
       ) graph.adjacency_list in
     { graph with adjacency_list = new_adjacency_list }
 
+(*O(n), could be O(1) if the node list was implemented with array*)
 let find_node_by_id (graph : 'a graph) (id : int) : 'a node option =
   List.find_opt (fun node -> node.id = id) graph.nodes
     
-    
+(*O(n)*)
 let connect_nodes_with_id (graph : 'a graph) (node1_id : int) (node2_id : int) : 'a graph =
   match ((find_node_by_id graph node1_id), (find_node_by_id graph node2_id)) with
   | (Some node1, Some node2) -> connect_nodes graph node1 node2
   | (_, _) -> graph
 
+(*O(n^2), because we iterate over the entire edges*)
 let graph_to_string (graph : 'a graph) : string =
   (*Converts a list of edges to string*)
   let rec edges_to_string (edges: edge list) : string =
