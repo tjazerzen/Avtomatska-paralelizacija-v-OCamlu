@@ -8,6 +8,7 @@ type edge = {
   created_time : float;
   src_id : id;
   dest_id : id;
+  is_directed : bool
 }
 
 
@@ -16,14 +17,14 @@ let hash_value (edge: edge) : int =
   int_of_float edge.created_time
 
 let edge_to_string (edge : edge) : string = 
-  "source_id: " ^ string_of_int edge.src_id ^ ", destination_id: " ^ string_of_int edge.dest_id ^ "\n"
+  Printf.sprintf "%d %s---> %d" edge.src_id (if edge.is_directed then "" else "<") edge.dest_id
 
-let create_edge_from_nodes (node1_id : id) (node2_id : id) (is_directed : bool) : (edge option * edge option) = 
-  let edge_option_from = Some {created_time = Unix.gettimeofday (); src_id = node1_id; dest_id = node2_id} in
-  let edge_option_to = Some {created_time = Unix.gettimeofday (); src_id = node2_id; dest_id = node1_id} in
-  match is_directed with
-  | true -> (edge_option_from, None)
-  | false -> (edge_option_from, edge_option_to)
+(*If the graph is not directed, return a tuple of option edges in both directions
+   If the graph is directed, return a tuple where the first element is the option of the edge
+in which direction we're going and the second is None*)
+
+let create_edge_from_nodes (node1_id : id) (node2_id : id) (is_directed : bool) : edge = 
+  {created_time = Unix.gettimeofday (); src_id = node1_id; dest_id = node2_id; is_directed = is_directed}
 
 (*May need to be changed, will see*)
 let equal_edge edge1 edge2 =
