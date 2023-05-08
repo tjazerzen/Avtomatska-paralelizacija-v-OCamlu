@@ -11,7 +11,7 @@ let example_graph () =
   let g = add_node_with_content g "B" in
   let g = add_node_with_content g "C" in
 
-  Printf.printf "Number of nodes: %d\n" (node_count g);
+  Printf.printf "Number of nodes: %d\n" g.node_count;
 
   Printf.printf "Node IDs: \n";
   List.iter (fun node -> Printf.printf "Node: %s, ID: %d\n" node.value node.id) g.nodes;
@@ -25,7 +25,7 @@ let example_graph () =
   let node_to_remove = List.find (fun node -> node.value = "B") g.nodes in
   let g = remove_node g node_to_remove in
 
-  Printf.printf "Number of nodes after removal: %d\n" (node_count g);
+  Printf.printf "Number of nodes after removal: %d\n" g.node_count;
   List.iter (fun node -> Printf.printf "Node: %s, ID: %d\n" node.value node.id) g.nodes;
 
   Printf.printf "Connecting nodes A and C...\n";

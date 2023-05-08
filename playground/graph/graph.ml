@@ -5,9 +5,10 @@
 
 type 'a graph = {
   nodes: 'a node list;
-  adjacency_list: edge list list;
-  lookup: ('a, int list) Hashtbl.t;
-  is_directed: bool;
+  adjacency_list: edge list list; (*i-th element of the outer list is a list of neighbours to the i-th node*)
+  lookup: ('a, int list) Hashtbl.t;  (*graph.lookup is a hash table with node's value as key and values as list of IDs to whom that value belongs*)
+  is_directed: bool;  (*true, if the graph is directed; false if it isn't*)
+  node_count: int;
 }
 
 (*O(1)*)
@@ -17,10 +18,8 @@ let create_empty_graph (is_directed : bool) : 'a graph = {
   adjacency_list = [];
   lookup = Hashtbl.create 16;
   is_directed;
+  node_count = 0;
 }
-
-(*O(n)*)
-let node_count (graph : 'a graph) : int = List.length graph.nodes
 
 (*O(n) because of call node_count graph*)
 (*Operations on Hashtables are O(1) amortized*)
@@ -30,16 +29,15 @@ let add_node_with_content (graph : 'a graph) (content : 'a) : 'a graph =
   (*Define new adjacency list*)
   let new_adjacency_list = [] :: graph.adjacency_list in
   (*Create new node with incremental ID and *)
-  let new_node = create_node (node_count graph) content in
+  let new_node = create_node graph.node_count content in
   let new_nodes = new_node :: graph.nodes in
-  (*graph.lookup is a hash table with ids as keys and ids of its neighbours as values*)
   let () =
     match Hashtbl.find_opt graph.lookup content with
     | Some ids -> Hashtbl.replace graph.lookup content (new_node.id :: ids)
     | None -> Hashtbl.add graph.lookup content [new_node.id]
   in
   (*Create the same graph but with updated nodes - new nodes; and updated adjacency list - new_adjacency_list *)
-  { graph with nodes = new_nodes; adjacency_list = new_adjacency_list }
+  { graph with nodes = new_nodes; adjacency_list = new_adjacency_list; node_count = graph.node_count + 1 }
 
 (*O(n), due to List.map*)
   let update_node_ids (nodes : 'a node List.t) (removed_id : int) : 'a node List.t =
@@ -50,21 +48,28 @@ let add_node_with_content (graph : 'a graph) (content : 'a) : 'a graph =
 (*O(n^2), because we iterate over the adjacency list // over the all edges*)
 (*Remove the node from graph*)
 let remove_node (graph : 'a graph) (node_to_remove : 'a node) : 'a graph =
-  (* Remove the node from the nodes list *)
-  let new_nodes = List.filter (fun node -> node.id <> node_to_remove.id) graph.nodes in
-  (* Remove the corresponding adjacency list entry for the removed node *)
-  let new_adjacency_list = List.filteri (fun i _ -> i <> node_to_remove.id) graph.adjacency_list in
-  (* Update the adjacency list to remove any edges that were connected to the removed node *)
-  let updated_adjacency_list =
-    List.map
-      (fun edges -> List.filter (fun edge -> edge.src_id <> node_to_remove.id && edge.dest_id <> node_to_remove.id) edges)
-      new_adjacency_list
-  in
-  (* Update the node IDs in the nodes list *)
-  let updated_nodes = update_node_ids new_nodes node_to_remove.id in
-  (* Update the lookup hash table *)
-  let () = Hashtbl.remove graph.lookup node_to_remove.value in
-  {graph with nodes = updated_nodes; adjacency_list = updated_adjacency_list; }
+  (* Check if the node_to_remove exists in the graph *)
+  if not (List.exists (fun node -> node.id = node_to_remove.id) graph.nodes) then
+    (* If the node doesn't exist, return the graph unmodified *)
+    let () = Printf.eprintf "Warning: Node with ID %d is not present in the graph. Node will not be removed.\n" node_to_remove.id in
+    graph
+  else
+    (* Remove the node from the nodes list *)
+    let new_nodes = List.filter (fun node -> node.id <> node_to_remove.id) graph.nodes in
+    (* Remove the corresponding adjacency list entry for the removed node *)
+    let new_adjacency_list = List.filteri (fun i _ -> i <> node_to_remove.id) graph.adjacency_list in
+    (* Update the adjacency list to remove any edges that were connected to the removed node *)
+    let updated_adjacency_list =
+      List.map
+        (fun edges -> List.filter (fun edge -> edge.src_id <> node_to_remove.id && edge.dest_id <> node_to_remove.id) edges)
+        new_adjacency_list
+    in
+    (* Update the node IDs in the nodes list *)
+    let updated_nodes = update_node_ids new_nodes node_to_remove.id in
+    (* Update the lookup hash table *)
+    let () = Hashtbl.remove graph.lookup node_to_remove.value in
+    {graph with nodes = updated_nodes; adjacency_list = updated_adjacency_list; node_count = graph.node_count - 1}
+
 
 (*O(n), because List.exists and List.mapi both take O(n)*)
 (* Connect two nodes in the graph *)
