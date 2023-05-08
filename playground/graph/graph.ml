@@ -30,7 +30,6 @@ let create_empty_graph (is_directed : bool) : 'a graph = {
   node_count = 0;
 }
 
-
 (*O(1)*)
 let add_node_with_content (graph : 'a graph) (content : 'a) : 'a graph =
   let new_node = create_node graph.node_count content in
@@ -43,13 +42,19 @@ let add_node_with_content (graph : 'a graph) (content : 'a) : 'a graph =
   { graph with node_count = graph.node_count + 1 }
 
 (*O(initial_graph_size)*)
+
 let update_node_ids (nodes : ('a node option) Array.t) (removed_id : int) =
-  Array.mapi (
-    fun i node -> match node with | None -> None | Some n -> if n.id > removed_id then Some { n with id = n.id - 1 } else Some n
-    ) nodes
+  Array.map (fun elem ->
+    match elem with
+    | None -> None
+    | Some n -> if n.id > removed_id then Some { n with id = n.id - 1 } else Some n
+  ) nodes
 
 (*O(initial_graph_size)*)
 let remove_node (graph : 'a graph) (node_to_remove : 'a node) : 'a graph =
+  let remove_ith_element_from_arr arr (i : id) replacement_value = 
+    Array.concat [Array.sub arr 0 i; Array.sub arr (i+1) (Array.length arr - (i+2)); [|replacement_value|]]
+  in
   let id = node_to_remove.id in
   if node_to_remove.id >= graph.node_count then
     let () = Printf.eprintf "Warning: Node with ID %d is not present in the graph. Node will not be removed.\n" node_to_remove.id in
@@ -63,22 +68,16 @@ let remove_node (graph : 'a graph) (node_to_remove : 'a node) : 'a graph =
       fun i set -> if i <> node_to_remove.id then new_adjacency_list.(i) <- IntSet.remove node_to_remove.id set
     ) new_adjacency_list;
 
-    (*
-    blit new_nodes (id + 1) new_nodes id (graph.node_count - id - 1)
-    copies (graph.node_count - id - 1) elements from array new_nodes, starting at element number (id + 1), 
-    back to same array new_nodes, starting at element number id
-    *)
-    Array.blit new_nodes (id + 1) new_nodes id (graph.node_count - id - 1);
-    Array.blit new_adjacency_list (id + 1) new_adjacency_list id (graph.node_count - id - 1);
-
-    update_node_ids new_nodes id;
-    let () = Array.set new_nodes (graph.node_count - 1) None in
+    (*Update the existing nodes*)
+    let new_nodes = remove_ith_element_from_arr new_nodes id None in
+    let new_nodes = update_node_ids new_nodes id in
+    (*Update the existing adjacency list*)
+    let new_adjacency_list = remove_ith_element_from_arr new_adjacency_list id IntSet.empty in
+    (*Remove the node with that value from the hash table*)
     let () = Hashtbl.remove graph.lookup node_to_remove.value in
     { graph with nodes = new_nodes; adjacency_list = new_adjacency_list; node_count = graph.node_count - 1 }
 
 
-(*O(n), because List.exists and List.mapi both take O(n)*)
-(* Connect two nodes in the graph *)
 let connect_nodes (graph : 'a graph) (node1_id : int) (node2_id : int) : 'a graph =
   if node1_id >= graph.node_count || node2_id >= graph.node_count then
     let () = Printf.eprintf "Warning: One or both nodes are not present in the graph. Nodes will not be connected.\n" in
@@ -89,7 +88,6 @@ let connect_nodes (graph : 'a graph) (node1_id : int) (node2_id : int) : 'a grap
     if not graph.is_directed then new_adjacency_list.(node2_id) <- IntSet.add node1_id graph.adjacency_list.(node2_id);
     { graph with adjacency_list = new_adjacency_list }
     
-(*O(n)*)
 let connect_nodes_with_id (graph : 'a graph) (node1_id : int) (node2_id : int) : 'a graph =
   match (graph.nodes.(node1_id), graph.nodes.(node2_id)) with
   | (Some node1, Some node2) -> connect_nodes graph node1.id node2.id
@@ -98,7 +96,20 @@ let connect_nodes_with_id (graph : 'a graph) (node1_id : int) (node2_id : int) :
 let find_node_by_value (graph : 'a graph) (value : 'a) : int list =
   match Hashtbl.find_opt graph.lookup value with
   | Some index_list -> index_list
-  | None ->
-    let () = Printf.eprintf "Warning: No nodes with value %s found in the graph.\n" (string_of_value value) in
-    []
+  | None -> Printf.eprintf "Warning: No nodes with the given value found in the graph.\n"; []
+
+let graph_to_string (graph : 'a graph) : string =
+  let buffer = Buffer.create 1024 in
+  let () = Buffer.add_string buffer "Nodes:\n" in
+
+  Array.iteri (fun i node_option ->
+    match node_option with
+    | Some node ->
+      let neighbors = IntSet.fold (fun neighbor_id acc -> Printf.sprintf "%d %s" neighbor_id acc) graph.adjacency_list.(node.id) "" in
+      let node_string = Printf.sprintf "Node: %s, ID: %d, Neighbors: %s\n" node.value node.id neighbors in
+      Buffer.add_string buffer node_string
+    | None -> ()
+  ) graph.nodes;
+
+  Buffer.contents buffer
   
