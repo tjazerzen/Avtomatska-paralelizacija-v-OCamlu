@@ -4,7 +4,7 @@ open Unix
 
 (* Each node is going to be identified with the properties created_time and its value. The values will have homogeneus type 'a *)
 type 'a node = {
-  mutable created_time: float;  (*This probably doesn't need to be mutable*)
+  created_time: float;  (*This probably doesn't need to be mutable*)
   id: int;
   mutable value: 'a;
 }
