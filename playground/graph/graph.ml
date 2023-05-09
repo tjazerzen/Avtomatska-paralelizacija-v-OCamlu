@@ -32,8 +32,10 @@ let create_empty_graph (is_directed : bool) : 'a graph = {
 
 (*O(1)*)
 let add_node_with_content (graph : 'a graph) (content : 'a) : 'a graph =
+  (*Define new_node and assign it to array graph.nodes in the next free space*)
   let new_node = create_node graph.node_count content in
   let () = Array.set graph.nodes graph.node_count (Some new_node) in
+  (*Update graph.lookup*)
   let () =
     match Hashtbl.find_opt graph.lookup content with
     | Some ids -> Hashtbl.replace graph.lookup content (new_node.id :: ids)
@@ -41,8 +43,7 @@ let add_node_with_content (graph : 'a graph) (content : 'a) : 'a graph =
   in
   { graph with node_count = graph.node_count + 1 }
 
-(*O(initial_graph_size)*)
-
+(*O(V)*)
 let update_node_ids (nodes : ('a node option) Array.t) (removed_id : int) =
   Array.map (fun elem ->
     match elem with
@@ -50,7 +51,7 @@ let update_node_ids (nodes : ('a node option) Array.t) (removed_id : int) =
     | Some n -> if n.id > removed_id then Some { n with id = n.id - 1 } else Some n
   ) nodes
 
-(*O(initial_graph_size)*)
+(*O(V)*)
 let remove_node (graph : 'a graph) (node_to_remove : 'a node) : 'a graph =
   let remove_ith_element_from_arr arr (i : id) replacement_value = 
     Array.concat [Array.sub arr 0 i; Array.sub arr (i+1) (Array.length arr - (i+2)); [|replacement_value|]]
@@ -78,6 +79,7 @@ let remove_node (graph : 'a graph) (node_to_remove : 'a node) : 'a graph =
     { graph with nodes = new_nodes; adjacency_list = new_adjacency_list; node_count = graph.node_count - 1 }
 
 
+(*O(1)*)
 let connect_nodes (graph : 'a graph) (node1_id : int) (node2_id : int) : 'a graph =
   if node1_id >= graph.node_count || node2_id >= graph.node_count then
     let () = Printf.eprintf "Warning: One or both nodes are not present in the graph. Nodes will not be connected.\n" in
@@ -88,11 +90,13 @@ let connect_nodes (graph : 'a graph) (node1_id : int) (node2_id : int) : 'a grap
     if not graph.is_directed then new_adjacency_list.(node2_id) <- IntSet.add node1_id graph.adjacency_list.(node2_id);
     { graph with adjacency_list = new_adjacency_list }
     
+(*O(1)*)
 let connect_nodes_with_id (graph : 'a graph) (node1_id : int) (node2_id : int) : 'a graph =
   match (graph.nodes.(node1_id), graph.nodes.(node2_id)) with
   | (Some node1, Some node2) -> connect_nodes graph node1.id node2.id
   | (_, _) -> Printf.eprintf "Warning: One or both nodes are not present in the graph. Nodes will not be connected.\n"; graph
 
+(*O(1)*)
 let find_node_by_value (graph : 'a graph) (value : 'a) : int list =
   match Hashtbl.find_opt graph.lookup value with
   | Some index_list -> index_list
