@@ -66,6 +66,26 @@
 \usepackage{algpseudocode}  % za psevdokodo
 \usepackage{algorithm}      % za algoritme
 \usepackage{algorithmicx}
+\usepackage{hyperref}
+\usepackage{listings}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    citecolor=red
+}
+
+% Set the font size for all listings
+\lstset{basicstyle=\footnotesize\ttfamily}
+
+\algnewcommand\algorithmicto{\textbf{to}}
+\algnewcommand\algorithmicin{\textbf{in}}
+\algnewcommand\algorithmicforeach{\textbf{for each}}
+\algrenewtext{For}[3]{\algorithmicfor\ #1 $\gets$ #2\ \algorithmicto\ #3\ \algorithmicdo}
+\algdef{S}[FOR]{ForEach}[2]{\algorithmicforeach\ #1\ \algorithmicin\ #2\ \algorithmicdo}
+
 
 \floatname{algorithm}{Algoritem}
 \renewcommand{\listalgorithmname}{Kazalo algoritmov}
@@ -187,60 +207,238 @@ Posledično so v splošnem podatkovne strukture v funkcijskih jezikih asimptotsk
 % TODO (kasneje): Podaj primer podatkovne strukture, ki se je na funkcijski način ne da učinkovito implementirati.
 Še ena slabost podatkovnih struktur v funkcijskih jezikih je, da se nekaterih podatkovnih struktur preprosto ne da učinkovito implementirati na funkcijski način.
 
+V nadaljevanju dokumenta se bom najprej posvetil vprašanju, kako graf v funkcijskih jezikih sploh predstavimo, nato pa se bom lotil algoritmov ter podatkovnih struktur na grafih.
 
-\subsection{Pisanje algoritmov}
-Za pisanje algoritmov sta na voljo okolji \texttt{algorithm} in
-\texttt{algorithmic} iz paketov \texttt{algorithm} in \texttt{algorithmix}, ki
-sodelujeta podobno kot \texttt{table} in \texttt{tabular}. Algoritmi plavajo
-med tekstom, enako kot slike in tabele, nanje se lahko tudi sklicujemo, kot
-prikazano v izvorni kodi in v algoritmu~\\ref alg:metoda. Sklicujemo se lahko
-tudi na pomembne vrstice, npr.\ na vrstico \\ref alg:pomembna-vrstica, ki
-predstavlja glavni del algoritma. Za primer pisanja algoritma se posvetujte s
-primerom v tem dokumentu, za bolj napredne primere uporabe, kot na primer
-razbijanje algoritma na več kosov, pa z (precej razumljivo) uradno
-dokumentacijo\footnote{\url{http://tug.ctan.org/macros/latex/contrib/algorithmicx/algorithmicx.pdf}}.
-Če želite vključiti izvorno kodo nekega programa, priporočamo paket
-\texttt{minted}\footnote{\url{https://github.com/gpoore/minted}}.
+\section{Predstavitev grafa na funkcijski način}
 
-\algnewcommand\algorithmicto{\textbf{to}}
-\algnewcommand\algorithmicin{\textbf{in}}
-\algnewcommand\algorithmicforeach{\textbf{for each}}
-\algrenewtext{For}[3]{\algorithmicfor\ #1 $\gets$ #2\ \algorithmicto\ #3\ \algorithmicdo}
-\algdef{S}[FOR]{ForEach}[2]{\algorithmicforeach\ #1\ \algorithmicin\ #2\ \algorithmicdo}
+Na \href{https://github.com/tjazerzen/parallelisation-of-graph-algorithms-in-functional-programming-languages}{GIT repozitoriju moje diplomske naloge}
+je spisana učinkovita predstavitev grafa. Implementacija je je razdeljena na tri datoteke: ``node.ml'', ``edge.ml'', ``graph.ml''
+Dodatno sem graf v OCamlu implementiral na dva načina: 
+\begin{itemize}
+  \item Prvi način je implementacija grafa s seznami. 
+  Najdemo jo lahko \href{https://github.com/tjazerzen/parallelisation-of-graph-algorithms-in-functional-programming-languages/tree/predstavitev_grafa_s_seznami/playground/graph}{na tem naslovu}.
+  \item Drugi način pa je implementacija grafa z OCamlovimi arrayi ter množicami.
+  To implementacijo pa lahko najdete \href{https://github.com/tjazerzen/parallelisation-of-graph-algorithms-in-functional-programming-languages/tree/predstavitev_grafa_z_arrayi_ter_mnozicami/playground/graph}{na tem naslovu}.
+\end{itemize}
 
-\begin{algorithm}[ht]
-  \caption{Opis, ki ima enako funkcionalnost kot opis pod sliko.}
-  \label{alg:metoda}
-  \raggedright
-  \textbf{Vhod:} Števili $n, m \in \N, n > m$. \\
-  \textbf{Izhod:} Decimalno število $x$, ki aproksimira rešitev enačbe $n x = m$.
-  \begin{algorithmic}[1]
-    \Function{reši}{$n$, $m$} \Comment{Vsi vhodni parametri morajo biti opisani.}
-    \State $a \gets [\,]$ \Comment{Spremenljivka $a$ naj postane prazna kopica.}
-    \For{$i$}{$1$}{$n$}
-      \If{$i \operatorname{mod} 7 = 5$}
-        \State \Call{heapop}{$a$}
-      \ElsIf{$i < 5$}
-      \State \Call{heappush}{$a, \frac{i+12}{7} + \pi$} \Comment{Lahko uporabljamo matematiko.}
-      \Else
-        \State \Call{heappush}{$a, i$}
-      \EndIf
-    \EndFor
-    \Statex  \Comment{Prazna vrstica}
-    \State $x \gets 0$  \Comment{To je primer komentarja.}
-    \ForEach{e}{a}
-      \State $x \gets 1 + \sqrt[e]{x}$
-    \EndFor
-    \While{$|x| > \varepsilon$}
-      \State $x \gets x / 2$
-    \EndWhile
-    \State $x \gets m / n$ \label{alg:pomembna-vrstica}
-    \State \Return $x$  \Comment{Vsi izhodni parametri morajo biti opisani nad algoritmom.}
-    \EndFunction
-  \end{algorithmic}
-\end{algorithm}
+Analizi vsake vrste implementacije je spodaj dodeljena svoja podsekcija.
 
-\section{Konec dela}
+\subsection{Implementacija grafa s seznami}
+\label{sec:implementacija_grafa_s_seznami}
+
+\subsubsection{Predstavitev vozlišča}
+
+Kot rečeno, je v datoteki ``node.ml'' definiran objekt vozlišča. Vsako vozlišče je identificirano z \textit{id}-jem in vsebuje informacijo homogenega tipa \textit{'a},
+ki jo poimenujem \textit{value}. V OCamlu bi tak tip zapisali takole:
+
+\begin{lstlisting}[language=Caml, caption={Definicija vozlišča v OCamlu}, label={lst:node_ocaml_type}]
+type 'a node = {
+  created_time: float;
+  id: int;
+  mutable value: 'a;
+}
+\end{lstlisting}
+
+Na intuitiven način sem definiral še metode, ki bi bilo jih pri vsakem vozlišču smiselno imeti:
+
+\begin{lstlisting}[language=Caml, caption={Preostale metode za vozlišča}, label={lst:node_ocaml_other}]
+let create_node id value = {
+  created_time = Unix.gettimeofday ();
+  id;
+  value;
+}
+
+let equal_node a b =
+  (a.created_time = b.created_time) && (a.value = b.value)
+
+let hash_node node = int_of_float node.created_time
+
+module NodeHashtbl = Hashtbl.Make(struct
+  type t = int node
+  let equal = equal_node
+  let hash = hash_node
+end)
+\end{lstlisting}
+
+Mogoče je še najbolj nova stvar definicija po meri narejene zgoščevalne tabele, ki vsako vozlišče zakodira po navodilih funkcije \textit{hash node} 
+(ki vsakemu vozlišču priredi njegov časovni žig),zapove, da sta elementa enaka, kadar metoda \textit{equal node} tako pove, ter pove , da bodo vrednosti v tej kodirni tabeli vozlišča s celoštevilskimi tipi.
+  
+
+\subsubsection{Predstavitev povezave}
+V datoteki ``edge.ml'' je definirana povezava. Povezava povezuje dve vozlišči. Povezava je lahko ali povezava ali pa nepovezana. Poleg že omenjenega atributa \textit{is directed}, povezava vsebuje še sledeče informacije:
+\textit{created time} - časovni žig ustvarjanja informacije, \textit{src id} - ID vozlišča, v katerem se povezava začne ter \textit{dest id} - ID vozlišča, v katerem se povezava zaključi
+
+Tip povezave sem sprogramiral takole: 
+
+\begin{lstlisting}[language=Caml, caption={Definicija povezave v OCamlu}, label={lst:edge_ocaml_type}]
+type edge = {
+  created_time : float;
+  src_id : id;
+  dest_id : id;
+  is_directed : bool
+}
+\end{lstlisting}
+
+Na isti način kot pri vozlišču sem dodatno še definiral metodo \textit{hash value}, poleg tega pa sem v datoteko ``edge.ml'' še dodal metodi \textit{create edge from nodes} ter \textit{equal edge} na sledeči način:
+
+\begin{lstlisting}[language=Caml, caption={Preostale metode za povezave}, label={edge_ocaml_other}]
+let create_edge_from_nodes node1_id node2_id is_directed = 
+  {created_time = Unix.gettimeofday (); 
+    src_id = node1_id; dest_id = node2_id; 
+    is_directed = is_directed}
+
+let equal_edge edge1 edge2 =
+  edge1.src_id = edge1.src_id && 
+  edge2.dest_id = edge2.dest_id
+\end{lstlisting}
+
+\subsubsection{Predstavitev grafa}
+
+V datoteki ``graph.ml'' pa je definiran graf, ki povezuje vozlišča in povezave. Vsak graf vsebuje seznam vozlišč (gre za homogen seznam, kjer je vsak element \textit{'a node}), 
+seznam sosednosti (seznam seznamov, kjer $i$-ti element tega seznama vsebuje seznam povezav, povezanih z $i$-tim vozliščem) ter binarno vrednostjo, če je graf usmerjen ali ne. 
+Dodatno sem dodal še zgoščevalno tabelo \textit{lookup}, ki kot ključe hrani vrednosti vozlišč, kot vrednosti pa seznam vseh tistih indeksov vozlišč, pri katerih se ta vrednost pojavi.
+
+\begin{lstlisting}[language=Caml, caption={Definicija grafa v OCamlu}, label={lst:graph_ocaml_type}]
+type 'a graph = {
+  nodes: 'a node list;
+  adjacency_list: edge list list;
+  lookup: ('a, int list) Hashtbl.t;
+  is_directed: bool;
+}
+\end{lstlisting}
+
+Naprej sem si zadal naloge, da implementiram osnovne metode, ki bi jih vsak graf potreboval: 
+\begin{itemize}
+  \item \textit{create\_empty\_graph} - Ustvari prazen graf.
+  \item \textit{add\_node\_with\_content} - V obstoječi graf doda novo vozlišče
+  \item \textit{remove\_node} - Iz obstoječega grafa odstrani neko vozlišče
+  \item \textit{connect\_nodes} - Poveže dani dve vozlišči
+\end{itemize}
+
+Spodaj prilagam implementacijo zgoraj navedenih metod:
+
+\begin{lstlisting}[language=Caml, caption={Preostale metode za graf}, label={lst:graph_ocaml_other}]
+let add_node_with_content graph content =
+  let new_adjacency_list = [] :: graph.adjacency_list in
+  let new_node = create_node (node_count graph) content in
+  let new_nodes = new_node :: graph.nodes in
+  let () =
+    match Hashtbl.find_opt graph.lookup content with
+    | Some ids -> 
+      Hashtbl.replace graph.lookup content (new_node.id::ids)
+    | None -> Hashtbl.add graph.lookup content [new_node.id]
+  in
+  { graph with nodes = new_nodes; 
+  adjacency_list = new_adjacency_list }
+
+let remove_node graph node_to_remove =
+  let new_nodes = List.filter (
+    fun node -> node.id <> node_to_remove.id) graph.nodes in
+  let new_adjacency_list = List.filteri (
+    fun i _ -> i <> node_to_remove.id) graph.adjacency_list in
+  let updated_adjacency_list =
+    List.map (fun edges -> List.filter (
+      fun edge -> edge.src_id <> node_to_remove.id 
+      && edge.dest_id <> node_to_remove.id) edges)
+      new_adjacency_list
+  in
+  Hashtbl.remove graph.lookup node_to_remove.value;
+  { graph with
+    nodes = update_node_ids new_nodes node_to_remove.id;
+    adjacency_list = updated_adjacency_list;}
+
+let connect_nodes graph node1 node2 =
+  if not (List.exists (fun node -> node.id = node1.id) graph.nodes
+    ) || not (
+    List.exists (fun node -> node.id = node2.id) graph.nodes) then
+    graph
+  else
+    let created_edge = create_edge_from_nodes 
+      node1.id node2.id graph.is_directed in
+    let new_adjacency_list = List.mapi (fun i edges ->
+      match (i = node1.id, i = node2.id) with
+      | (true, _) -> created_edge :: edges
+      | (_, true) when not graph.is_directed -> 
+        {created_edge with 
+        src_id=created_edge.dest_id; 
+        dest_id=created_edge.src_id} :: edges
+      | _ -> edges
+      ) graph.adjacency_list in
+    { graph with adjacency_list = new_adjacency_list }
+\end{lstlisting}
+
+
+\subsection{Implementacija grafa z OCamlovimi arrayi ter množicami}
+\label{sec:implementacija_grafa_z_ocamlovimi_arrayi_ter_mnozicami}
+
+Glavna razlika med prejšnjo in to implementacijo, ki jo imenujem ``Implementacija grafa z OCamlovimi arrayi ter množicami'' je v definiciji tipa ``graph''.
+Tipa ``node'' ter ``edge'' sta definirano enako kot v definicijah \ref{lst:node_ocaml_type} ter \ref{lst:edge_ocaml_type}
+
+Tokrat sem tip graf inicializiral z:
+\begin{itemize}
+  \item arrayem, kjer je na $i$-tem mestu tega objekta shranjeno $i$-to vozlišče. V programski kodi ta podatek imenujem \textit{nodes}
+  \item \textit{seznamom sosednosti}. Za razliko od prve implementacije, hranim seznam sosednosti kot array, kjer vsak element predstavlja množico celih števil.
+  Na $i$-tem mestu v seznamu sosednosti je prisotno celo število $j$ natanko tedaj, ko sta $i$-to in $j$-to vozlišče povezani.
+  \item Dodatno definiram podatek \textit{node\_count} (slo. število vozlišč), ki hrani informacijo o tem, koliko vozlišč imamo v našem grafu. Kadarkoli
+  bomo v graf dodajali ali odstranjevali vozlišče, se bo tudi ta podatek povečal oz. pomanjšal za $1$.
+  \item Polji \textit{lookup} ter \textit{is\_directed} sta definirani kot prej.
+\end{itemize}
+
+\begin{lstlisting}[language=Caml, caption={Definicija posodobljenega tipa graf v OCamlu}, label={lst:graph_ocaml_type_array_implementation}]
+type 'a graph = {
+  nodes: ('a node Option.t) Array.t;
+  adjacency_list: IntSet.t Array.t;
+  lookup: ('a, int list) Hashtbl.t;
+  is_directed: bool;
+  node_count: int;
+}
+\end{lstlisting}
+
+Metode ~\textit{create\_empty\_graph}, ~\textit{add\_node\_with\_content}, ~\textit{remove\_node}, ~\textit{connect\_nodes} so implementirane ter počnejo enako kot 
+v prejšnem razdelku. Implementirane metode je moč najti 
+\href{https://github.com/tjazerzen/parallelisation-of-graph-algorithms-in-functional-programming-languages/tree/predstavitev_grafa_z_arrayi_ter_mnozicami/playground/graph}{na tem naslovu}.
+
+\subsection{Primerjava časovne kompleksnosti med obema implementacijama}
+
+Vsaka implementacija ima vsebinsko svoje prednosti in slabosti ter je verjetno od konteksta odvisno, katero uporabimo.
+
+Glavna prednost implementacije \ref*{sec:implementacija_grafa_z_ocamlovimi_arrayi_ter_mnozicami} pred implementacijo \ref*{sec:implementacija_grafa_s_seznami}
+temelji na tem, da je časovna kompleksnost vpogleda poljubnega elementa v array $O(1)$, časovna kompleksnost poljubnega elementa v seznam pa $O(n)$, 
+kjer je $n$ dolžina seznama.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|}
+  \hline
+  \textbf{metoda/številka implementacije} & \textbf{Št. 1} & \textbf{Št. 2} \\
+  \hline
+  \textbf{Seznam vozlišč} & \underline{$O(V)$} & \underline{$O(V)$} \\
+  \hline
+  \textbf{Seznam povezav} & \underline{$O(V+E)$} & \underline{$O(V+E)$} \\
+  \hline
+  \textbf{Ali sta dani vozlišči sosednji} & $O(V)$ & \underline{$O(1)$} \\
+  \hline
+  \textbf{~\textit{create\_empty\_graph}} & \underline{$O(1)$} & \underline{$O(1)$} \\
+  \hline
+  \textbf{\textit{add\_node\_with\_content}} & \underline{$O(1)$} & \underline{$O(1)$} \\
+  \hline
+  \textbf{\textit{remove\_node}} & $O(E)$ & \underline{$O(V)$} \\
+  \hline
+  \textbf{~\textit{connect\_nodes}} & $O(V)$ & \underline{$O(1)$} \\
+  \hline
+\end{tabular}
+\caption{Časovna kompleksnost osnovnih grafovskih metod pri posameznih implementacijah. Za vsako metodo je podčrtana boljša implementacija}
+\label{tab:casovna_kompleksnost_osnovnih_metod_na_grafih}
+\end{table}
+  
+\textit{Opomba}: Implementacija št. $1$ označuje implementacijo grafov z seznami, implementacija št. $2$ pa označuje implementacijo grafa s seznami.
+Opaziti gre, da je implementacija št. 2 občutno boljša kot prva - gre pa omeniti sledeče: druga implementacija je spisana preko OCamlovih arrayev, ki
+zasedejo določen prostor, ko pa želimo dodati nov element, pa se treba celoten array skopirati v novega ter vanj dodati nov element. To sem v implementaciji
+delno rešil tako, da sem rezerviral dovolj velik array, da se to ne bi smelo zgoditi (od konteksta odvisno pa je, kolikšna ta številka dejansko bo).
+Vseeno, če pa to številko presežemo, bomo morali prvič, ko dodamo novo vozlišče, "plačati" $O(V)$ časovne komplekstnosti.
+Z različnimi amortizacijskimi strategijami, kot npr. da vsakič ko presežemo našo trenutno velikost arraya, to velikost podvojimo še vseeno lahko pridemo
+skozi konstantno ($O(1)$) amortizirano časovno kompleksnostjo pri dodajanju vozlišča v naš graf.
+  
 
 
 
