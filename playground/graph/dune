@@ -2,4 +2,4 @@
  (name graph_examples)
  (promote
   (until-clean))
- (flags :standard -w -A))
+  )
