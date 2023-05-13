@@ -49,10 +49,6 @@ end = struct
     edges : NodeSet.t NodeMap.t; (*edges are represented with a Map whoose keys are of type Node.t and values are NodeSet.t*)
     directed : bool;
   }
-
-  let add_node graph node =
-    let edges = NodeMap.add node NodeSet.empty graph.edges in
-    { graph with edges }
   
   let remove_node node graph =
     let edges =
