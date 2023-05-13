@@ -37,7 +37,7 @@ module Graph : sig
   val remove_node : Node.t -> t -> t
   val add_edge : Node.t -> Node.t -> t  -> t
   val remove_edge : Node.t -> Node.t -> t -> t
-  val nodes : t -> Node.t List.t
+  val nodes : t -> Node.t list
   val edges : t -> (Node.t * Node.t) list
   val to_string : t -> string
 end = struct
