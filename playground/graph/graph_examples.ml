@@ -8,15 +8,21 @@ let node3 = Node.create 6
 
 let () = print_endline "Creating graph with nodes: {node1, node2, node3} and creating edges node1-node2 and node2-node3..."
 let my_graph = 
-  Graph.empty ~directed:true
+  Graph.empty ~directed:false
   |> Graph.add_node node1 
   |> Graph.add_node node2 
   |> Graph.add_node node3
   |> Graph.add_edge node1 node2
   |> Graph.add_edge node2 node3
+  |> Graph.add_edge node1 node3
 
 let () = print_endline "Printing graph to string..."
 let () = Printf.printf "Graph: %s\n" (Graph.to_string my_graph)
+
+let () = print_endline "Printing neighbors of node1..."
+let () = Printf.printf "Neighbors: %s\n" (
+  my_graph |> Graph.neighbours node1 |> List.map Node.to_string |> String.concat ", "
+  )
 
 let () = print_endline "Removing node1 from graph..."
 let my_graph = Graph.remove_node node1 my_graph

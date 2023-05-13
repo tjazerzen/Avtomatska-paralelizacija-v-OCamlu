@@ -40,6 +40,7 @@ module Graph : sig
   val nodes : t -> Node.t list
   val edges : t -> (Node.t * Node.t) list
   val to_string : t -> string
+  val neighbours : Node.t -> t -> Node.t list
 end = struct
   type elt = int  (*Each node's values will be integers*)
   type t = {
@@ -107,5 +108,7 @@ end = struct
     |> NodeMap.bindings
     |> List.map (fun (node1, nodes) -> NodeSet.fold (fun node2 acc -> (node1, node2) :: acc) nodes [])
     |> List.flatten
+  
+  let neighbours node graph = NodeMap.find node graph.edges |> NodeSet.elements
 
 end
