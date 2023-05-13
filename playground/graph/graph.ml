@@ -57,12 +57,12 @@ end = struct
     { graph with edges }
 
   let add_edge node1 node2 graph =
-    let edges = graph.edges |> NodeMap.add node1 (NodeSet.add node2 (NodeMap.find node1 graph.edges)) in
-    let edges = 
-      if graph.directed then edges 
-      else edges |> NodeMap.add node2 (NodeSet.add node1 (NodeMap.find node2 graph.edges)) 
+    let add_directed_edge node1 node2 graph =
+      let edges = graph.edges |> NodeMap.add node1 (NodeSet.add node2 (NodeMap.find node1 graph.edges)) in
+      { graph with edges }
     in
-    { graph with edges }
+    if graph.directed then add_directed_edge node1 node2 graph
+    else add_directed_edge node1 node2 graph |> add_directed_edge node2 node1
 
   let remove_edge node1 node2 graph =
     let edges = graph.edges |> NodeMap.add node1 (NodeSet.remove node2 (NodeMap.find node1 graph.edges)) in
