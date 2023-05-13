@@ -8,7 +8,7 @@ let node3 = Node.create 6
 
 let () = print_endline "Creating graph with nodes: {node1, node2, node3} and creating edges node1-node2 and node2-node3..."
 let my_graph = 
-  Graph.empty true
+  Graph.empty ~directed:true
   |> Graph.add_node node1 
   |> Graph.add_node node2 
   |> Graph.add_node node3

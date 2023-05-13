@@ -32,7 +32,7 @@ module NodeMap = Map.Make(Node)
 module Graph : sig
   type elt = int  (* node values *)
   type t    (* graphs *)
-  val empty : bool -> t
+  val empty : directed:bool -> t
   val add_node : Node.t -> t -> t
   val remove_node : Node.t -> t -> t
   val add_edge : Node.t -> Node.t -> t  -> t
@@ -73,7 +73,7 @@ end = struct
 
   let nodes graph = NodeMap.bindings graph.edges |> List.map fst
 
-  let empty directed = { edges = NodeMap.empty; directed }
+  let empty ~directed = { edges = NodeMap.empty; directed }
 
   let add_node node graph =
     let edges = NodeMap.add node NodeSet.empty graph.edges in
