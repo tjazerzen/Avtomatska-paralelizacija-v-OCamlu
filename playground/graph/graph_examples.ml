@@ -1,5 +1,4 @@
 open Graph
-open Node
 
 (* #use "graph_new_examples.ml";; *)
 let () = Printf.printf "Creating nodes with values 4, 5, 6...\n"
