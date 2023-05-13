@@ -66,6 +66,26 @@
 \usepackage{algpseudocode}  % za psevdokodo
 \usepackage{algorithm}      % za algoritme
 \usepackage{algorithmicx}
+\usepackage{hyperref}
+\usepackage{listings}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    citecolor=red
+}
+
+% Set the font size for all listings
+\lstset{basicstyle=\footnotesize\ttfamily}
+
+\algnewcommand\algorithmicto{\textbf{to}}
+\algnewcommand\algorithmicin{\textbf{in}}
+\algnewcommand\algorithmicforeach{\textbf{for each}}
+\algrenewtext{For}[3]{\algorithmicfor\ #1 $\gets$ #2\ \algorithmicto\ #3\ \algorithmicdo}
+\algdef{S}[FOR]{ForEach}[2]{\algorithmicforeach\ #1\ \algorithmicin\ #2\ \algorithmicdo}
+
 
 \floatname{algorithm}{Algoritem}
 \renewcommand{\listalgorithmname}{Kazalo algoritmov}
@@ -187,61 +207,7 @@ Posledično so v splošnem podatkovne strukture v funkcijskih jezikih asimptotsk
 % TODO (kasneje): Podaj primer podatkovne strukture, ki se je na funkcijski način ne da učinkovito implementirati.
 Še ena slabost podatkovnih struktur v funkcijskih jezikih je, da se nekaterih podatkovnih struktur preprosto ne da učinkovito implementirati na funkcijski način.
 
-
-\subsection{Pisanje algoritmov}
-Za pisanje algoritmov sta na voljo okolji \texttt{algorithm} in
-\texttt{algorithmic} iz paketov \texttt{algorithm} in \texttt{algorithmix}, ki
-sodelujeta podobno kot \texttt{table} in \texttt{tabular}. Algoritmi plavajo
-med tekstom, enako kot slike in tabele, nanje se lahko tudi sklicujemo, kot
-prikazano v izvorni kodi in v algoritmu~\\ref alg:metoda. Sklicujemo se lahko
-tudi na pomembne vrstice, npr.\ na vrstico \\ref alg:pomembna-vrstica, ki
-predstavlja glavni del algoritma. Za primer pisanja algoritma se posvetujte s
-primerom v tem dokumentu, za bolj napredne primere uporabe, kot na primer
-razbijanje algoritma na več kosov, pa z (precej razumljivo) uradno
-dokumentacijo\footnote{\url{http://tug.ctan.org/macros/latex/contrib/algorithmicx/algorithmicx.pdf}}.
-Če želite vključiti izvorno kodo nekega programa, priporočamo paket
-\texttt{minted}\footnote{\url{https://github.com/gpoore/minted}}.
-
-\algnewcommand\algorithmicto{\textbf{to}}
-\algnewcommand\algorithmicin{\textbf{in}}
-\algnewcommand\algorithmicforeach{\textbf{for each}}
-\algrenewtext{For}[3]{\algorithmicfor\ #1 $\gets$ #2\ \algorithmicto\ #3\ \algorithmicdo}
-\algdef{S}[FOR]{ForEach}[2]{\algorithmicforeach\ #1\ \algorithmicin\ #2\ \algorithmicdo}
-
-\begin{algorithm}[ht]
-  \caption{Opis, ki ima enako funkcionalnost kot opis pod sliko.}
-  \label{alg:metoda}
-  \raggedright
-  \textbf{Vhod:} Števili $n, m \in \N, n > m$. \\
-  \textbf{Izhod:} Decimalno število $x$, ki aproksimira rešitev enačbe $n x = m$.
-  \begin{algorithmic}[1]
-    \Function{reši}{$n$, $m$} \Comment{Vsi vhodni parametri morajo biti opisani.}
-    \State $a \gets [\,]$ \Comment{Spremenljivka $a$ naj postane prazna kopica.}
-    \For{$i$}{$1$}{$n$}
-      \If{$i \operatorname{mod} 7 = 5$}
-        \State \Call{heapop}{$a$}
-      \ElsIf{$i < 5$}
-      \State \Call{heappush}{$a, \frac{i+12}{7} + \pi$} \Comment{Lahko uporabljamo matematiko.}
-      \Else
-        \State \Call{heappush}{$a, i$}
-      \EndIf
-    \EndFor
-    \Statex  \Comment{Prazna vrstica}
-    \State $x \gets 0$  \Comment{To je primer komentarja.}
-    \ForEach{e}{a}
-      \State $x \gets 1 + \sqrt[e]{x}$
-    \EndFor
-    \While{$|x| > \varepsilon$}
-      \State $x \gets x / 2$
-    \EndWhile
-    \State $x \gets m / n$ \label{alg:pomembna-vrstica}
-    \State \Return $x$  \Comment{Vsi izhodni parametri morajo biti opisani nad algoritmom.}
-    \EndFunction
-  \end{algorithmic}
-\end{algorithm}
-
-\section{Konec dela}
-
+V nadaljevanju dokumenta se bom najprej posvetil vprašanju, kako graf v funkcijskih jezikih sploh predstavimo, nato pa se bom lotil algoritmov ter podatkovnih struktur na grafih.
 
 
 \end{document}

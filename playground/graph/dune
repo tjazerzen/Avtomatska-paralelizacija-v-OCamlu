@@ -1,0 +1,5 @@
+(executable
+ (name graph_examples)
+ (promote
+  (until-clean))
+  )

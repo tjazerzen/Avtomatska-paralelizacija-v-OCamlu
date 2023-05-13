@@ -43,6 +43,12 @@ _opam/
 *.xmpdata
 *.xmpi
 
+# Additionally, I've added .pdf file to the list of ignored files
+*.pdf
+
+# Exectuable files
+*.exe
+
 ## Intermediate documents:
 *.dvi
 *-converted-to.*
@@ -258,3 +264,5 @@ build/
 
 # generated PDFs
 Priimek-Vpisna-Leto.pdf
+playground/graph/temp.ml
+playground/graph/graph_examples.exe
