@@ -11,10 +11,10 @@ end = struct
   
   let counter = ref 0
 
-  let create v = 
+  let create value = 
     let id = !counter in
     incr counter;
-    { id = id; value = v }
+    { id; value }
 
   let value node = node.value
   
