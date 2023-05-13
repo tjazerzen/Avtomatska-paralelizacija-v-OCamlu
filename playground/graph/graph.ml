@@ -4,7 +4,6 @@ module Node : sig
   val create : elt -> t
   val value : t -> elt
   val compare : t -> t -> int
-  val id : t -> int
   val to_string : t -> string
 end = struct
   type elt = int
@@ -18,8 +17,6 @@ end = struct
     { id = id; value = v }
 
   let value node = node.value
-
-  let id node = node.id
   
   let compare node1 node2 = Stdlib.compare node1.id node2.id
 
