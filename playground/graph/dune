@@ -1,5 +1,5 @@
 (executable
- (name graph_examples)
- (promote
-  (until-clean))
-  )
+ (name fib)
+ (promote (until-clean))
+ (libraries domainslib unix)
+ )
