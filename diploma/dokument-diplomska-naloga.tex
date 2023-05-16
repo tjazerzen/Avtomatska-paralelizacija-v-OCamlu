@@ -49,9 +49,17 @@
 \geslo{funkcijsko programiranje}{računalniški koncept, znotraj katerega programe pišemo s komponiranjem in apliciranjem matematičnih funkcij}
 \geslo{stranski učinki programov}{odklon med čistimi matematičnimi funkcijami ter našim programom.}
 % TODO: Je vztrajno dober prevod ``persistent''?
-\geslo{Vztrajna podatkovna struktura}{}
+\geslo{Vztrajna podatkovna struktura}{TODO}
 % TODO: Je minljivo dober prevod ``ephemeral''?
-\geslo{Minljiva podatkovna struktura}{}
+\geslo{Minljiva podatkovna struktura}{TODO}
+\geslo{high performance computing}{Visokozmožnostno računanje}
+\geslo{domains}{domene}
+\geslo{parallel tasks}{vzporedne naloge}
+\geslo{task collections}{zbirke opravil}
+\geslo{parallel computation patterns}{vzorci vzporednega računanja}
+\geslo{synchronization primitives}{sinhronizacijski mehanizmi}
+\geslo{load balancing}{Izravnavanje obremenitve}
+\geslo{high-level}{visokonivojski}
 }
 
 % - ime datoteke z viri (vključno s končnico .bib), če uporabljate BibTeX
@@ -208,6 +216,62 @@ Posledično so v splošnem podatkovne strukture v funkcijskih jezikih asimptotsk
 Še ena slabost podatkovnih struktur v funkcijskih jezikih je, da se nekaterih podatkovnih struktur preprosto ne da učinkovito implementirati na funkcijski način.
 
 V nadaljevanju dokumenta se bom najprej posvetil vprašanju, kako graf v funkcijskih jezikih sploh predstavimo, nato pa se bom lotil algoritmov ter podatkovnih struktur na grafih.
+
+
+\section{Prestavitev grafa v funkcijskih jezikih}
+
+\textbf{TODO}
+
+\pagebreak
+
+\section{Paralelizacija}
+
+\subsection{Pregled OCamlove knjižnice \textit{Domainslib}}
+
+\href{https://github.com/ocaml-multicore/domainslib}{Domainslib} je sočasna programska knjižnica za OCaml, 
+ki nam omogoča paralelizacijo na nivoju procesorja.
+Ponuja nam niz abstrakcij in orodij za pisanje vzporednih in sočasnih programov. 
+Zgrajena je na t.i. domenah (ang. domains). To so lahke niti, vgrajene v OCaml.
+
+S prihodom nove različice OCaml 4.12, je Domainslib postal del standardne knjižnice OCaml, z verzije 5.0.0 pa se je ta knjižnica
+še precej okrepila na svojih sposobnostih ter računskih zmožnostih.
+
+Tukaj povzamem glavne koncepte Domainsliba, ki jih bom uporabil v svoji diplomski nalogi:
+
+\begin{enumerate}
+  \item Domene (ang. domains) so niti, ki nam zagotavljajo sočasnost v OCaml-u. 
+        Po svoji zasnovi so visokonivojske ter imajo nizke stroške dodatne računske obremenitve, 
+        kar omogoča ustvarjanje velikega števila sočasnih nalog. Novo domeno ustvarimo z ukazom ~\texttt{Domainslib.make}.
+  \item Paralelne naloge (ang. parallel tasks): Knjižnica nam ponuja preproste funkcije za ustvarjanje in upravljanje z vzporednimi nalogami.
+        Naloge so delovne enote, ki se lahko izvajajo hkrati na različnih domenah.
+        Ustvarijo se s funkcijo ~\texttt{Domainslib.Task.async}, na njihovo dokončanje pa se počaka z uporabo ~\texttt{Domainslib.Task.await}
+  \item Zbirke opravil (ang. task collections): Knjižnica nam ponuja zbirke opravil, ki so podobne paralelnim nalogam, 
+        le da lahko v njih shranimo več nalog hkrati. Zbirke opravil so lahko uporabne, kadar želimo ustvariti več nalog hkrati, 
+        vendar pa ne želimo ustvariti toliko domen, kot je nalog.
+  \item Vzorci vzporednega računanja (ang. parallel computation patterns), ki so pogosto uporabni pri vzporednem programiranju.
+        Na primer, vzorec ~\texttt{Domainslib.Parallel.map} nam omogoča vzporedno preslikavo funkcije na seznam elementov. 
+        Podobno nam vzorec ~\texttt{Domainslib.Parallel.reduce} omogoča vzporedno zmanjševanje seznama elementov, 
+        z vzorcem ~\texttt{Domainslib.Parallel.stable\_sort} vzporedno uredimo seznam elementov, 
+        z ukazom ~\texttt{Domainslib.Parallel.For} pa vporedno poženemo for zanko. Vse to nam precej olajša delo, če lahko večji kos računalniške naloge
+        razdelimo na manjše kose, ki jih lahko izvajamo vzporedno že preko vgrajenih funkcij.
+  \item Sinhronizacijski mehanizmi (ang. synchronization primitives): Knjižnica nam ponuja sinhronizacijske pritive, ki nam omogočajo sinhronizacijo med domenami.
+        Na primer, sinhronizacijski mehanizem ~\texttt{Domainslib.Sync} nam omogoča sinhronizacijo med domenami, 
+        sinhronizacijski primitiv ~\texttt{Domainslib.Sync\_event} pa nam omogoča sinhronizacijo med domenami preko dogodkov.
+  \item Izravnavanje obremenitve (ang. load balancing): Domainslib nam ponuja orodja za izravnavanje obremenitve, 
+        ki nam omogočajo, da se obremenitev med domenami porazdeli čim bolj enakomerno.
+\end{enumerate}
+
+Na splošno knjižnica Domainslib poenostavlja postopek pisanja vzporednih in sočasnih programov v OCamlu. 
+Zagotavlja nam visokonivojski (ang. high-level) vmesnik za upravljanje nalog, usklajevanje sinhronizacije in izkoriščanje vzporednosti, 
+kar olajša izkoriščanje celotnega potenciala večjedrnih procesorjev ter doseganje boljše zmogljivosti.
+
+
+
+
+
+\subsection{Paralelizacija 101: Računanje Fibonaccijevih števil}
+
+
 
 
 \end{document}
