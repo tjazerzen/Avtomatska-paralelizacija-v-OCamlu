@@ -1,6 +1,6 @@
 (*Povzeto po https://github.com/ocaml-multicore/domainslib/blob/master/test/fib_par.ml*)
 
-let max_num_of_domains = try int_of_string Sys.argv.(1) with _ -> 10
+let max_num_of_domains = try int_of_string Sys.argv.(1) with _ -> 25
 let n = try int_of_string Sys.argv.(2) with _ -> 43
 
 let out_channel = open_out "computation_time_analysis/fib_par.csv"
@@ -33,4 +33,3 @@ let () =
   output_string out_channel "num_domains,time\n";
   main 1;
   close_out out_channel
-    
