@@ -46,12 +46,10 @@
 % TODO
 % - angleško-slovenski slovar strokovnih izrazov
 \slovar{
-\geslo{funkcijsko programiranje}{računalniški koncept, znotraj katerega programe pišemo s komponiranjem in apliciranjem matematičnih funkcij}
-\geslo{stranski učinki programov}{odklon med čistimi matematičnimi funkcijami ter našim programom.}
 % TODO: Je vztrajno dober prevod ``persistent''?
-\geslo{Vztrajna podatkovna struktura}{TODO}
+\geslo{persistent data structure}{vztrajna podatkovna struktura}
 % TODO: Je minljivo dober prevod ``ephemeral''?
-\geslo{Minljiva podatkovna struktura}{TODO}
+\geslo{ephemeral data structure}{Minljiva podatkovna struktura}
 \geslo{high performance computing}{Visokozmožnostno računanje}
 \geslo{domains}{domene}
 \geslo{parallel tasks}{vzporedne naloge}
@@ -396,7 +394,7 @@ Ta postopek sem pognal na računalniku z 8 jedri, ter dobil naslednje rezultate 
   \centering
   \caption{Čas izračuna 43. Fibonaccijevega števila v odvisnosti od števila domen}
   \includegraphics[width=13cm]{slike/fib_par_v_odvisnosti_od_domen.jpg}
-  \label{fig:paralelizacija-fizikalno}
+  \label{fig:fib_par_v_odvisnosti_od_domen}
 \end{figure}
 
 Vidimo, da število domen vpliva na hitrost izračuna: Z večanjem števila domen se čas izračuna Fibonaccijevega števila zmanjšuje,
@@ -404,6 +402,26 @@ kar bi za paralelizacijo tudi pričakovali. Vendar pa se čas izračuna Fibonacc
 temveč sprva relativno hitro, nato pa se čas izračuna pri 14. domeni ustali tam nekje pri treh četrtinkah sekunde.
 Seveda se to razlikuje od enega računalnika do drugega, razmerje med časom izračuna nekega Fibonaccijevega števila pri eni domeni ter pri
 npr. desetih pa bi moralo biti podobno na vseh računalnikih (opomba: Te izračune poganjam na osemjedrnem Applovem MacBooku Air M1).
+
+Vseeno, opomniti gre, da je točno tak eksperiment točno s takimi rezultati praktično nemogoče replicirati. Že samo s tem, da sem enkrat program poganjal
+medtem ko sem imel odprte še tri druge aplikacije, drugič pa samo medtem ko sem imel odprt zgolj naš program, sem v drugem primeru dobil skoraj dvakrat hitrejši čas izračuna.
+
+Nato pa me je še zanimalo, kako se čas izračuna Fibonaccijevih števil spreminja v odvisnosti od zahtevanega Fibonaccijevega števila ter kako se pri tem razlikuje čas izračuna
+med paralelnim in neparalelnim programom. Kot že rečeno, sem empirično ugotovil, da se neparalelni program začne zatikati pri računanju Fibonaccijevih števil večjih od 38, zato
+sem tako za paralelni kot neparalelni program izračunal čase izračuna Fibonaccijevih števil od 38. do vključno 45. števila. Rezultati so prikazani na 
+sliki \ref{fig:fib_par_v_odvisnosti_od_n}.
+
+\begin{figure}[h!]
+  \centering
+  \caption{Čas izračuna Fibonaccijevih števil v odvisnosti od zahtevanega Fibonaccijevega števila: Paralelno in neparalelno}
+  \includegraphics[width=15cm]{slike/fib_par_v_odvisnosti_od_n.jpg}
+  \label{fig:fib_par_v_odvisnosti_od_n}
+\end{figure}
+
+Vidimo, da se čas izračuna Fibonaccijevih števil pri paralelnem programu z večanjem zahtevanega Fibonaccijevega števila povečuje 
+počasneje kot pri neparalelnem programu. Pri neparalelnem programu se čas izvajanja, kot bi si mislili, povečuje eksponentno 
+(saj je časovna zahtevnost računanja eksponentna), pri paralelnem programu pa se čas izvajanja povečuje počasneje, kar je tudi 
+razvidno iz kvocienta časov izvajanja paralelnega in neparalelnega programa (označeni z svetlo modrimi kvadratki).
 
 
 \pagebreak
