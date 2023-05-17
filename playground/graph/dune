@@ -1,5 +1,12 @@
 (executable
- (name fib_par)
+ (name fib_examples)
  (promote (until-clean))
- (libraries domainslib unix)
+ (libraries domainslib unix fib)
+ (modules fib_examples)
  )
+
+(library
+ (name fib)
+ (modules fib)
+ (libraries domainslib unix)
+)
