@@ -423,7 +423,65 @@ počasneje kot pri neparalelnem programu. Pri neparalelnem programu se čas izva
 (saj je časovna zahtevnost računanja eksponentna), pri paralelnem programu pa se čas izvajanja povečuje počasneje, kar je tudi 
 razvidno iz kvocienta časov izvajanja paralelnega in neparalelnega programa (označeni z svetlo modrimi kvadratki).
 
+\section{Paralelno iskanje v širino (PBFS)}
 
-\pagebreak
+\section{Neparalelni BFS}
+
+BFS rešuje sledeč problem. Naj bo $G=(V,E)$ naš graf ter $s \in V$ naše začetno vozlišče. 
+Iz danega vozlišča $s$ želimo poiskati vsa vozlišča, ki so od njega dosegljiva 
+ter najti najkrajšo razdaljo od vozlišča $s$ do vseh drugih.
+Drugače povedano, naš graf $G$ želimo \textit{raziskati}.
+
+Pri predmetih iz drugega in tretjega letnika (OR, PSA1) smo se naučili, da BFS deluje tako, da
+vozlišča razvršča v vrsto, nato pa iz vrste izbira vozlišča, ki jih bo raziskal. Tako lahko vozlišča obiskujemo
+po nivojih, kjer nivo $0$ predstavlja zgolj množico vozlišča $s$, nivo $1$ predstavlja vozlišča, ki 
+so od $s$ oddaljena za $1$ povezavo, in tako naprej.
+
+BFS se uporablja za reševanje velikega števila problemov, kot so na primer: Raziskovanje grafa, iskanje najkrajše poti neusmerjenem v grafu,
+ugotavljanje, če med dvema vozliščema obstaja pot, ugotavljanje, če je graf dvodelen, prav tako pa predstavlja osnovno za kompleksejše grafovkse
+algoritme, npr. za Dijkstro.
+
+\begin{algorithm}[H]
+  \caption{Imperativno napisana psevdokoda za neparalelno iskanje v širino (BFS)}
+  \label{alg:non_parallel_bfs}
+  \begin{algorithmic}[1]
+    \Function{BFS}{$G,s$}
+      \State $Q \gets \emptyset$
+      \State $Q.\text{enqueue}(s)$
+      \State $visited \gets \emptyset$
+      \State $visited.\text{add}(s)$
+      \While{$Q \neq \emptyset$}
+        \State $u \gets Q.\text{dequeue}()$
+        \For{$v \in G.\text{adj}(u)$}
+          \If{$v \notin visited$}
+            \State $visited.\text{add}(v)$
+            \State $Q.\text{enqueue}(v)$
+          \EndIf
+        \EndFor
+      \EndWhile
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+Čeprav gre za neparalelen algoritem, se mi zdi še vseeno koristno predstaviti ideje algoritma, saj bomo tako lažje 
+razumeli ideje kompleksnejše, paralelne verzije:
+\begin{enumerate}
+  \item Začni z vrsto $Q$, ki vsebuje zgolj vozlišče $s$. Odstrani vozlišče $s$ iz vrste $Q$ ter ga dodaj v množico $visited$.
+        Opomniti gre, da je vrsta FIFO (first in, first out), kar pomeni, da bomo iz vrste $Q$ vedno odstranjevali vozlišča, 
+        ki so bila v vrsto dodana najprej.
+  \item Odstrani vozlišče $u$ iz vrste $Q$. Nato za vsako vozlišče $v$, ki je sosed vozlišča $u$ in še ni bilo obiskano,
+        ga dodaj v vrsto $Q$ ter v množico $visited$. Ta postopek ponavljaj, dokler vrsta $Q$ ni prazna.
+\end{enumerate}
+
+
+
+
+
+
+
+
+
+
+
 
 \end{document}
