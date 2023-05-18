@@ -6,6 +6,7 @@ module Node : sig
   val value : t -> elt
   val compare : t -> t -> int
   val to_string : t -> string
+  val id : t -> elt
 end = struct
   type elt = int
   type t = { id : int; value : elt }
@@ -22,10 +23,13 @@ end = struct
 
   let to_string node =
     Printf.sprintf "Node(id: %d, value: %d)" node.id node.value
+
+  let id node = node.id
 end
 
 module NodeSet = Set.Make (Node)
 module NodeMap = Map.Make (Node)
+module IntMap = Map.Make (Int)
 
 module Graph : sig
   type elt = int (* node values *)
@@ -40,6 +44,8 @@ module Graph : sig
   val edges : t -> (Node.t * Node.t) list
   val to_string : t -> string
   val neighbours : Node.t -> t -> Node.t list
+  val graph_from_txt : string -> t
+  val find_node_by_id : int -> t -> Node.t option
 end = struct
   type elt = int (*Each node's values will be integers*)
 
@@ -118,5 +124,53 @@ end = struct
     |> List.flatten
 
   let neighbours node graph = NodeMap.find node graph.edges |> NodeSet.elements
+
+  let graph_from_txt path =
+    (*
+      Reads a graph from a .txt file. Graph files are going to be stored in folder ./playground/graph/graph_files.
+      The example how the file needs to be formatted my be found there.
+    *)
+    let ic = open_in path in
+    let rec read_lines ic =
+      try let line = input_line ic in line :: read_lines ic
+      with End_of_file -> close_in ic; []
+    in
+    let lines = read_lines ic in
   
+    (* Split the lines into nodes and edges *)
+    let rec split_lines acc = function
+      | "" :: t -> (List.rev acc, t)
+      | h :: t -> split_lines (h :: acc) t
+      | [] -> (acc, [])
+    in
+    let (node_lines, edge_lines) = split_lines [] lines in
+  
+    (* Create nodes *)
+    let create_node line =
+      let id, value = Scanf.sscanf line "%d:%d" (fun id value -> (id, value)) in
+      let node = Node.create value in
+      (id, node)
+    in
+    let nodes = List.map create_node node_lines in
+  
+    (* Create a graph with the nodes *)
+    let graph = List.fold_left (fun g (_, node) -> add_node node g) (empty ~directed:false) nodes in
+  
+    (* Convert the nodes list to a map for easier lookup when creating edges *)
+    let node_map = List.fold_left (fun map (id, node) -> IntMap.add id node map) IntMap.empty nodes in
+  
+    (* Add edges *)
+    let add_edge line graph =
+      let id1, id2 = Scanf.sscanf line "%d-%d" (fun id1 id2 -> (id1, id2)) in
+      let node1 = IntMap.find id1 node_map in
+      let node2 = IntMap.find id2 node_map in
+      add_edge node1 node2 graph
+    in
+    List.fold_right add_edge edge_lines graph
+  
+    let find_node_by_id id graph =
+      let nodes = nodes graph in
+      try Some (List.find (fun node -> Node.id node = id) nodes)
+      with Not_found -> None
+
 end

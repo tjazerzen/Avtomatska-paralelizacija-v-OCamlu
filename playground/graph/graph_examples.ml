@@ -52,3 +52,7 @@ let () =
            Printf.sprintf "(%s, %s)" (Node.to_string node1)
              (Node.to_string node2))
     |> String.concat ",\n")
+
+let () = print_endline "Reading graph from file graph_files/undirected_graph_small.txt..."
+let new_graph = Graph.graph_from_txt "graph_files/undirected_graph_small.txt"
+let () = Printf.printf "Graph: %s\n" (Graph.to_string new_graph)
