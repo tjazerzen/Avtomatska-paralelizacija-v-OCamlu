@@ -118,4 +118,5 @@ end = struct
     |> List.flatten
 
   let neighbours node graph = NodeMap.find node graph.edges |> NodeSet.elements
+  
 end
