@@ -1,19 +1,16 @@
 open Graph
 open Bfs
 
-let node1 = Node.create 4
-let node2 = Node.create 5
-let node3 = Node.create 6
+let () = print_endline "Reading graph from file graph_files/undirected_graph_small.txt..."
+let new_graph = Graph.graph_from_txt "graph_files/undirected_graph_small.txt"
 
-let my_graph =
-  Graph.empty ~directed:false
-  |> Graph.add_node node1
-  |> Graph.add_node node2
-  |> Graph.add_node node3
-  |> Graph.add_edge node1 node3
-  |> Graph.add_edge node3 node2
-  (* |> Graph.add_edge node1 node3 *)
+let node1_option = Graph.find_node_by_id 1 new_graph
+let node1 = Option.get node1_option
+let () = Printf.printf "Printing node1: %s\n" (Node.to_string node1)
 
-let () = Printf.printf "%s\n" (Graph.to_string my_graph)
+let () = List.iter (
+  fun node -> Printf.printf "Neighbour: %s\n" (Node.to_string node)
+  ) (Graph.neighbours node1 new_graph)
 
-let () = Bfs.bfs my_graph node1;
+let () = print_endline "Running BFS on graph..."
+let () = Bfs.bfs new_graph node1

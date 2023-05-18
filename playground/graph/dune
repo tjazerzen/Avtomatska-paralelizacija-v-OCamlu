@@ -1,6 +1,5 @@
 (executable
   (name bfs_examples)
   (libraries base stdio)
-  (modules bfs graph bfs_examples)
-  (promote
-  (until-clean)))
+  (modules bfs graph bfs_examples graph_examples)
+  (promote (until-clean)))
