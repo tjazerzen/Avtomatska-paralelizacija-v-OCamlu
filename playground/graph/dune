@@ -1,12 +1,6 @@
 (executable
- (name fib_examples)
- (promote (until-clean))
- (libraries domainslib unix fib)
- (modules fib_examples)
- )
-
-(library
- (name fib)
- (modules fib)
- (libraries domainslib unix)
-)
+  (name bfs_examples)
+  (libraries base stdio)
+  (modules bfs graph bfs_examples)
+  (promote
+  (until-clean)))
