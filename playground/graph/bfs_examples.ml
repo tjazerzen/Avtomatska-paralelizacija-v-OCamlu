@@ -1,33 +1,31 @@
 open Graph
 open Bfs
 
-let () =
-  print_endline
-    "Reading graph from file graph_files/undirected_graph_small.txt..."
+let print_int_nodemap nodemap = 
+  NodeMap.iter (
+    fun key value -> 
+      Printf.printf "Node: %s - distance from start node: %s\n" (Node.to_string key) (string_of_int value)
+    ) nodemap
 
-let new_graph = Graph.graph_from_txt "graph_files/undirected_graph_small.txt"
-let node1_option = Graph.find_node_by_id 1 new_graph
-let node1 = Option.get node1_option
+let graph_file_name = "graph_files/undirected_graph_large.txt"
 
+let () = Printf.printf "Reading graph from file %s...\n" graph_file_name
 
-let () = Printf.printf "Printing node1: %s\n" (Node.to_string node1)
+let new_graph = Graph.graph_from_txt graph_file_name
+let node1 = Option.get (Graph.find_node_by_id 0 new_graph)
 
-let () =
-  List.iter
-    (fun node -> Printf.printf "Neighbour: %s\n" (Node.to_string node))
-    (Graph.neighbours node1 new_graph)
+let () = Printf.printf "Running SEQUENTIAL BFS on graph, stored in %s, \
+    starting with node with ID 0...\n" graph_file_name
 
-let () =
-  print_endline
-    "Running SEQUENTIAL BFS on graph, stored in undirected_graph_small.txt, starting with \
-     node with ID equal to 1..."
-
-let () = Bfs.bfs new_graph node1
-
-let () =
-  print_endline
-    "Running NON-SEQUENTIAL BFS on graph, stored in undirected_graph_small.txt, starting with \
-     node with ID equal to 1..."
+let levels_nodemap_sequential = Bfs.bfs new_graph node1
+let () = print_int_nodemap levels_nodemap_sequential
 
 
-let _ = Bfs.parallel_bfs3 new_graph node1 4
+let () = Printf.printf "Running PARALLEL BFS on graph, stored in %s, \
+    starting with node with ID 0...\n" graph_file_name
+
+
+let levels_nodemap_parallel = Bfs.parallel_bfs new_graph node1 4
+
+let () = print_int_nodemap levels_nodemap_parallel
+
