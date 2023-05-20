@@ -4,6 +4,8 @@ print_again = True
 
 def generate_graph(num_of_nodes, num_of_edges, file_name):
     existing_edges = set()
+    if num_of_edges > num_of_nodes * (num_of_nodes - 1) / 2:
+        raise Exception('Too many edges for the given number of nodes')
     with open(file_name, 'w') as f:
         # Generate nodes
         for i in range(0, num_of_nodes):
@@ -25,4 +27,4 @@ def generate_graph(num_of_nodes, num_of_edges, file_name):
             f.write(f'{start_node}-{end_node}\n')
 
 if print_again:
-    generate_graph(num_of_nodes=5, num_of_edges=10, file_name='undirected_small_graph.txt')
+    generate_graph(num_of_nodes=7, num_of_edges=10, file_name='undirected_small_graph.txt')
