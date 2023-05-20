@@ -26,10 +26,10 @@ end = struct
 end
 
 module Bfs : sig
-  val bfs : Graph.t -> Node.t -> int NodeMap.t
-  val parallel_bfs : Graph.t -> Node.t -> int -> int NodeMap.t
+  val bfs_sequential : Graph.t -> Node.t -> int NodeMap.t
+  val bfs_parallel : Graph.t -> Node.t -> int -> int NodeMap.t
 end = struct
-  let bfs graph start_node =
+  let bfs_sequential graph start_node =
     let visited = ref NodeSet.empty in
     let level = ref NodeMap.empty in
     let queue = Queue.create_empty_queue () in
@@ -61,13 +61,10 @@ end = struct
     !level
   
 
-    let parallel_bfs graph start_node num_domains =
-      let visited = ref NodeSet.empty in
-      let level = ref (NodeMap.empty) in
-      let queue = Queue.create_empty_queue () in
-      let queue = ref (Queue.enqueue start_node queue) in
-      let visited = ref (NodeSet.add start_node !visited) in
-      let level = ref (NodeMap.add start_node 0 !level) in
+    let bfs_parallel graph start_node num_domains =
+      let queue = ref ((Queue.create_empty_queue ()) |> Queue.enqueue start_node) in
+      let visited = ref (NodeSet.empty |> NodeSet.add start_node) in
+      let level = ref (NodeMap.empty |> NodeMap.add start_node 0) in
     
       let pool = T.setup_pool ~num_domains:(num_domains - 1) () in
     
