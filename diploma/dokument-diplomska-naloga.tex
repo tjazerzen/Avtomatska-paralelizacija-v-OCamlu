@@ -58,6 +58,8 @@
 \geslo{synchronization primitives}{sinhronizacijski mehanizmi}
 \geslo{load balancing}{Izravnavanje obremenitve}
 \geslo{high-level}{visokonivojski}
+\geslo{code wrapper}{programski ovoj}
+\geslo{adjaceny list}{seznam sosednosti}
 }
 
 % - ime datoteke z viri (vključno s končnico .bib), če uporabljate BibTeX
@@ -105,7 +107,7 @@
 \newcommand{\Q}{\mathbb Q}
 
 \lstdefinelanguage{OCaml}{
-  keywords={let,rec,if,then,else},
+  keywords={let,rec,if,then,else, module},
   sensitive=true,
   basicstyle=\ttfamily,
   keywordstyle=\bfseries,
@@ -127,11 +129,11 @@
   showtabs=false,
   showspaces=false,
   showstringspaces=false,
-  basicstyle=\ttfamily,
-  identifierstyle=\ttfamily,
-  commentstyle=\color{gray},
-  keywordstyle=\color{blue},
-  stringstyle=\color{red}
+  basicstyle=\ttfamily\small,
+  identifierstyle=\ttfamily\small,
+  commentstyle=\color{gray}\ttfamily\small,
+  keywordstyle=\color{blue}\ttfamily\small,
+  stringstyle=\color{red}\ttfamily\small
 }
 
 
@@ -191,7 +193,6 @@ pregledal novejše raziskave kar se tiče grafovskih algoritmov v imperativnih j
 
 \begin{definicija}
   \textbf{Funkcijsko programiranje} je računalniški koncept, znotraj katerega programe pišemo komponiranjem in apliciranjem matematičnih funkcij. 
-  .
 \end{definicija}
 
 Že po definiciji je moč čutiti, da bo taka vrsta programov v splošnem bolj podobna pisanju čistih matematičnih funkcij. Posledično programiranje take vrste uporabnika preko zasnove samega jezika
@@ -250,13 +251,157 @@ V nadaljevanju dokumenta se bom najprej posvetil vprašanju, kako graf v funkcij
 
 \section{Prestavitev grafa v funkcijskih jezikih}
 
-\textbf{TODO}
+Če hočemo implementirati kakršen koli grafovski algoritem, je prvi korak, da graf sploh predstavimo v našem programu. V funkcijskih programskih jezikih je naše delo žal
+malce oteženo, saj so, kot že rečeno, podatkovne strukture tipično nespremenljive (ang. mutable).
+
+Zato sem se odločil da bom graf v svoji diplomski nalogi predstavil na dva načina:
+\begin{itemize}
+  \item Prvi je bolj podoben imperativnemu načinu, kjer graf predstavimo s spremenljivimi podatkovnimi strukturami: Vozlišča hranimo v tabeli, povezave pa v matriki sosednosti.
+        Za implementacijo uporabimo OCamlove arraye implementacija je vidna na 
+        \href{https://github.com/tjazerzen/parallelisation-of-graph-algorithms-in-functional-programming-languages/blob/predstavitev_grafa_z_arrayi_ter_mnozicami/playground/graph/graph.ml}{tem naslovu}
+  \item Drugi način je bolj funkcijski, kjer graf predstavimo z nespremenljivimi podatkovnimi strukturami: Namesto klasične matrike sosednosti uporabim OCamlove nespremenljive
+        podatkovne strukture \texttt{map}. Ta implementacija pa je vidna na
+        \href{https://github.com/tjazerzen/parallelisation-of-graph-algorithms-in-functional-programming-languages/blob/master/playground/graph/graph.ml}{tem naslovu}
+\end{itemize}
+
+\subsection{Predstavitev grafa s spremenljivo matriko sosednosti} \label{sec:predstavitev_grafa_s_spremenljivo_matriko_sosednosti}
+
+Tu sem se odločil, da bom graf predstavil s spremenljivo spremenljivimi podatkovnimi strukturami. Definiral sem tipe \texttt{node} ter \texttt{graph} na sledeč način:
+
+\begin{lstlisting}
+type 'a node = {
+  created_time: float;
+  id: int;
+  value: 'a;
+}
+
+module IntSet = Set.Make(struct
+  type t = int
+  let compare = compare
+end)
+
+type 'a graph = {
+  nodes: ('a node Option.t) Array.t;
+  adjacency_list: IntSet.t Array.t;
+  is_directed: bool;
+  node_count: int;
+}
+\end{lstlisting}
+
+\begin{itemize}
+  \item \texttt{node} je tip, ki predstavlja vozlišče grafa. Vsako vozlišče ima svoj \texttt{id}, vrednost \texttt{value} ter čas kreacije \texttt{created\_time}.
+  \item \texttt{graph} je tip, ki predstavlja graf. Graf ima tabelo vozlišč \texttt{nodes}, matriko sosednosti \texttt{adjacency\_list}, 
+        logično vrednost \texttt{is\_directed}, ki pove ali je graf usmerjen ali ne, ter število vozlišč \texttt{node\_count}.
+\end{itemize}
+
+Dodatno sem definiral metode, ki nam ustvarijo prazen graf ter vanj dodajo ter odvzemajo povezave in vozlišča. Vse te operacije so implementirane tako, da spreminjajo obstoječ seznam
+vozlišč ter seznam sosednosti, ne gradijo pa novih podatkovnih struktur. Kot že rečeno, je ta implementacija vidna na 
+\href{https://github.com/tjazerzen/parallelisation-of-graph-algorithms-in-functional-programming-languages/blob/predstavitev_grafa_z_arrayi_ter_mnozicami/playground/graph/graph.ml}{tem naslovu}
+
+\subsection{Predstavitev grafa z nespremenljivimi podatkovnimi strukturami} \label{sec:predstavitev_grafa_z_nespremenljivimi_podatkovnimi_strukturami}
+
+Tu sem se implementacije grafa lotil bolj "OCaml"-ovsko - z uporabo nespremenljivih podatkovnih struktur. Namesto tipov \texttt{node} ter \texttt{graph}
+sem definiral kar modula \texttt{Node} ter \texttt{Graph} ter tako poskrbel, da je uporabniku uporaba teh podatkovnih struktur čim bolj transparentna, prav tako
+pa poskrbim, da metode, ki jih želim skriti, ostanejo privatne glede na modul v katerem so te metode zapisane.
+
+To je sledeča implementacija mojih modulov (opomba: Dejanskih implementacij metod ne prilagam, saj jih lahko najdete na 
+\href{https://github.com/tjazerzen/parallelisation-of-graph-algorithms-in-functional-programming-languages/blob/master/playground/graph/graph.ml}{tem naslovu}):
+
+\begin{lstlisting}
+
+module Node : sig
+  type elt = int
+  type t
+
+  val create : elt -> t
+  val value : t -> elt
+  val compare : t -> t -> int
+  val to_string : t -> string
+end = struct
+  type elt = int
+  type t = { id : int; value : elt }
+  ...
+end
+
+module NodeSet = Set.Make (Node)
+module NodeMap = Map.Make (Node)
+
+module Graph : sig
+  type elt = int (* node values *)
+  type t (* graphs *)
+
+  val empty : directed:bool -> t
+  val add_node : Node.t -> t -> t
+  val remove_node : Node.t -> t -> t
+  val add_edge : Node.t -> Node.t -> t -> t
+  val remove_edge : Node.t -> Node.t -> t -> t
+  val nodes : t -> Node.t list
+  val edges : t -> (Node.t * Node.t) list
+  val to_string : t -> string
+  val neighbours : Node.t -> t -> Node.t list
+end = struct
+  type t = {
+    edges : NodeSet.t NodeMap.t;
+    directed : bool;
+  }
+  ...
+end
+
+\end{lstlisting}
+
+\begin{itemize}
+  \item \texttt{Node} je modul, ki predstavlja vozlišče grafa. Vsako vozlišče ima svoj \texttt{id}, vrednost \texttt{value}.
+        Za razliko od zgornje implementacije je ta priročnejša, saj uporabnik ne operira z ID-ji vozlišč, saj so ti skriti v modulu \texttt{Node}.
+        S tem zmanjšamo možnost, da bi na primer uporabnik ustvaril dve vozlišči z istim ID-jem. Kot vidimo iz funkcijskega zapisa
+        \texttt{val create : elt -> t}, je za ustvarjanje vozlišča potrebna zgolj vrednost, s katero bomo to vozlišče ustvarili.
+  \item \texttt{Graph} je modul, ki predstavlja graf. Namesto klasične (spremenljive) matrike sosednjosti sem tu uporabil OCamlove
+        Map-e (\url{https://ocaml.org/docs/map}), ki kot vrednost hranijo vozlišča sama, kot ključe pa množico sosednjih vozlišč.
+        Poleg tega sem dodal metode, ki bi si jih tipično za graf želeli: Dodajanje ter odvzem vozlišč in povezav, pridobivanje seznama vseh vozlišč ter povezav,
+        prikazovanje grafa v obliki niza ter pridobivanje seznama sosednjih vozlišč.
+\end{itemize}
+
+
+
+\subsection{Primerjava implementacij grafa} \label{sec:primerjava_implementacij_grafa}
+
+Vsaka implementacija grafa ima svoje prednosti in slabosti. V tej sekciji bom primerjal obe implementaciji grafa, ki sem ju predstavil v 
+sekcijah \ref{sec:predstavitev_grafa_s_spremenljivo_matriko_sosednosti} ter \ref{sec:predstavitev_grafa_z_nespremenljivimi_podatkovnimi_strukturami}.
+
+Med pisanjem paralelnih grafovskih algoritmov se bom posluževal predvsem implementacije grafa z nespremenljivimi podatkovnimi strukturami, saj potem ne
+naletetimo na težave s sočasnim dostopom do podatkovnih struktur. V primeru, da bi se odločil za implementacijo grafa s spremenljivimi podatkovnimi strukturami, je v
+primeru sočasnega dostopa do osnovne podatkovne strukture treba poskrbeti za sinhronizacijo dostopa do le-te. Tipično to storimo tako, da med spreminjanjem to podatkovno
+strukturo \textit{zaklenemo} (v OCamlu imamo za to že spisan modul \texttt{Mutex}, ki nam podatkovno strukturo zaklene: \url{https://v2.ocaml.org/api/Mutex.html}),
+kar pa je pogosto precej počasnejši postopek kot pa uporaba nespremenljivih podatkovnih struktur, čeprav se to mogoče ne pozna v časovni zahtevnosti algoritma, ki ga izvajamo.
+
+Vseeno pa je zlasti za pisanje sekvenčnih algoritmov uporaba spremenljivih podatkovnih struktur marsikdaj bolj priročna, saj nam v tem primeru ni treba skrbeti za sinhronizacijo 
+dostopa do podatkovnih struktur.
+
+Vsaka izmed implementacij ima za različne operacije različno časovno zahtevnost. V spodnji tabeli sem zbral časovno zahtevnost nekaterih operacij, ki jih bomo pogosto uporabljali.
+Vedeti je treba, da časovna zahtevnost vpogleda v OCamlov \texttt{Map} (ter posledično \texttt{NodeMap}) enaka $O(\log n)$, kjer je $n$ število elementov v podatkovni strukturi.
+(v ozadju so množice ter Map-i implementirane kot uravnotežena binarna drevesa, zato ima vpogled v te podatkovne strukture časovno zahtevnost $O(\log n)$).
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{|c|c|c|}
+  \hline
+  \textbf{Operacija / implementacija} & \textbf{Spremenljive p.s.} & \textbf{Nespremenljive p.s.} \\ \hline
+  \textbf{Dodajanje vozlišča} & $O(\log |V|)$ & \underline{$O(1_{amort.})$} \\ \hline
+  \textbf{Odvzemanje vozlišča} & $O(|V| \log |V|)$ & \underline{$O(|V|)$} \\ \hline
+  \textbf{Dodajanje povezave} & \underline{$O(\log |V|)$} & $O(|V| + |E|)$ \\ \hline
+  \textbf{Odvzemanje povezave} & \underline{$O(\log |V|)$} & \underline{$O(\log |V|)$} \\ \hline
+  \textbf{Soseščina($u$)} & \underline{$O(deg_Gu + \log |V|)$} & \underline{$O(deg_Gu + \log |V|)$} \\ \hline
+  \end{tabular}
+  \caption{Primerjava časovnih kompleksnosti operacij na grafu med različnima implementacijama. Podčrtana je tista 
+  implementacija, ki je za dano metodo boljša.}
+  \label{tab:primerjava_casovnih_kompleksnosti_operacij_na_grafu_med_razlicnima_implementacijama}
+  \end{table}
+
 
 \pagebreak
 
 \section{Paralelizacija}
 
-\subsection{Pregled OCamlove knjižnice \textit{Domainslib}}
+\subsection{Pregled OCamlove knjižnice \textit{Domainslib}} \label{sec:pregled_domainslib}
 
 \href{https://github.com/ocaml-multicore/domainslib}{Domainslib} je sočasna programska knjižnica za OCaml, 
 ki nam omogoča paralelizacijo na nivoju procesorja.
@@ -425,7 +570,7 @@ razvidno iz kvocienta časov izvajanja paralelnega in neparalelnega programa (oz
 
 \section{Paralelno iskanje v širino (PBFS)}
 
-\section{Neparalelni BFS}
+\subsection{Neparalelni BFS}
 
 BFS rešuje sledeč problem. Naj bo $G=(V,E)$ naš graf ter $s \in V$ naše začetno vozlišče. 
 Iz danega vozlišča $s$ želimo poiskati vsa vozlišča, ki so od njega dosegljiva 
@@ -433,9 +578,7 @@ ter najti najkrajšo razdaljo od vozlišča $s$ do vseh drugih.
 Drugače povedano, naš graf $G$ želimo \textit{raziskati}.
 
 Pri predmetih iz drugega in tretjega letnika (OR, PSA1) smo se naučili, da BFS deluje tako, da
-vozlišča razvršča v vrsto, nato pa iz vrste izbira vozlišča, ki jih bo raziskal. Tako lahko vozlišča obiskujemo
-po nivojih, kjer nivo $0$ predstavlja zgolj množico vozlišča $s$, nivo $1$ predstavlja vozlišča, ki 
-so od $s$ oddaljena za $1$ povezavo, in tako naprej.
+vozlišča razvršča v vrsto, nato pa iz vrste izbira vozlišča, ki jih bo raziskal.
 
 BFS se uporablja za reševanje velikega števila problemov, kot so na primer: Raziskovanje grafa, iskanje najkrajše poti neusmerjenem v grafu,
 ugotavljanje, če med dvema vozliščema obstaja pot, ugotavljanje, če je graf dvodelen, prav tako pa predstavlja osnovno za kompleksejše grafovkse
@@ -473,13 +616,73 @@ razumeli ideje kompleksnejše, paralelne verzije:
         ga dodaj v vrsto $Q$ ter v množico $visited$. Ta postopek ponavljaj, dokler vrsta $Q$ ni prazna.
 \end{enumerate}
 
+Glavna ideja, ki je za razumevanje paralelnega postopka BFS ključna je, da vozlišča razslojimo na ekvivalenčne razrede 
+glede na njihovo oddaljenost od začetnega vozlišča $s$: Razredu razdalje $0$ pripada zgolj vozlišče $s$, razredu razdalje $1$
+pripadajo vozlišča, ki so od $s$ oddaljena za $1$ povezavo, in tako naprej. Dogovorimo se, da tem ekvivalenčnim razredom rečemo \textbf{nivoji}.
 
 
+\subsection{Paralelni BFS}
 
+\textbf{TODO: Priložena implementacija PBFS-ja trenutno ni funkcionalna zaradi thread safe-nessa. Ko implementacijo dokončaš, spremeni tudi spodnjo implementacijo.}
 
+Kot že rečeno: BFS deluje z obiskovanjem vozlišč po nivojih. Glavna ideja paralelnega BFS je, da vsak nivo obiščemo vzporedno, saj so obiski vozlišč na 
+istem nivoju neodvisni eden od drugega.
+Na srečo ima knjižnica domainslib že implementiran programski ovoj (angl. wrapper), ki nam omogoča paralelizacijo BFS tudi na iterativen način,
+kar ni tipično za funkcijski programski jezik. Tako se psevdokoda algoritma ne razlikuje veliko od neparalelne verzije, opisane v \ref{alg:non_parallel_bfs}.
+Tudi če tega \textit{wrapperja} ne bi bilo spisanega, pa bi lahko paralelizacijo izvedli kar direktno preko uporabe \texttt{Domainslib.Task.async}.
 
+\begin{lstlisting}
+let bfs_parallel graph start_node num_domains =
+  let queue = ref (Queue.create_empty_queue () |> Queue.enqueue start_node) in
+  let visited = ref (NodeSet.empty |> NodeSet.add start_node) in
+  let level = ref (NodeMap.empty |> NodeMap.add start_node 0) in
 
+  let pool = T.setup_pool ~num_domains:(num_domains - 1) () in
 
+  let rec bfs_inner () =
+    if Queue.is_empty !queue then ()
+    else
+      match Queue.dequeue !queue with
+      | Some (node, remaining_queue) ->
+        queue := remaining_queue;
+        let neighbours = Graph.neighbours node graph in
+        T.parallel_for pool ~start:0
+          ~finish:(List.length neighbours - 1)
+          ~body:(fun i ->
+            let neighbour = List.nth neighbours i in
+            if not (NodeSet.mem neighbour !visited) then (
+              visited := NodeSet.add neighbour !visited;
+              let parent_level =
+                match NodeMap.find_opt node !level with
+                | Some l -> l
+                | None -> failwith "Unexpected missing parent level in BFS"
+              in
+              level := NodeMap.add neighbour (parent_level + 1) !level;
+              queue := Queue.enqueue neighbour !queue));
+        bfs_inner ()
+      | None -> failwith "Unexpected empty queue"
+  in
+  T.run pool (fun () -> bfs_inner ());
+  T.teardown_pool pool;
+
+  !level
+  \end{lstlisting}
+
+  Ker smo psevdokodo BFS-ja že opisali v \ref{alg:non_parallel_bfs}, se bom tukaj osredotočil na implementacijo samega algoritma v OCamlu:
+  \begin{itemize}
+    \item Najprej inicializiramo vrsto $Q$, množico $visited$ ter slovar $level$. V vrsto $Q$ dodamo začetno vozlišče $s$, v množico $visited$ dodamo $s$,
+          v slovar $level$ pa dodamo par $(s, 0)$, saj je razdalja od $s$ do $s$ enaka $0$. Ti koraki so enako kot pri sekvenčnem BFS-ju.
+          Ta metoda sprejme graf iz modula \texttt{Graph}, začetno vozlišče $s$ iz modula \texttt{Node} ter število domen, na katerih bomo
+          naš algoritem poganjali.
+    \item Nato inicializiramo domene. To naredimo z ukazom \texttt{T.setup\_pool}, ki sprejme število domen, ki jih želimo inicializirati.
+          V našem primeru želimo inicializirati $n-1$ domen, kjer je $n$ število domen, ki jih ima na voljo naš procesor.
+          Pozneje v kodi domene poženemo z ukazom \texttt{T.run}, nato pa jih uničimo z ukazom \texttt{T.teardown\_pool}
+    \item Za pomoč pri implementaciji definiram rekurzivno metodo \texttt{bfs\_inner}. Ta metoda je ekvivalentna z zanko \texttt{while},
+          ki smo jo uporabili pri neparalelni verziji BFS-ja. V tej metodi se nahaja glavna logika algoritma. Sama implementacija je precej podobna
+          sekvenčni verziji - na vsakem koraku odstranimo vozlišče $u$ iz vrste $Q$, nato pa vsako vozlišče $v$, ki je sosed vozlišča $u$ in še ni bilo obiskano
+          damo v vrsto ter postopek ponovimo dokler nismo obiskali vseh vozlišč v dosegu. Edina razlika je uporaba metode \texttt{T.parallel\_for}, ki paralelno 
+          izvaja naše obiskovanje vozlišč.
+  \end{itemize}
 
 
 
