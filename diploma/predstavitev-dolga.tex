@@ -99,10 +99,8 @@
     \begin{itemize}
         \item Težava: Preveliko število vzporednih niti
         \item Ideja: Paralelizacija najbolj časovno zahtevnih delov kode
-        \end{itemize}
-        (\href{https://github.com/tjazerzen/parallelisation-of-graph-algorithms-in-functional-programming-languages/blob/parallel_fibonacci/playground/graph/fib.ml}{povezava do implementacije}):
-
-        \begin{verbatim}
+        \item (\href{https://github.com/tjazerzen/parallelisation-of-graph-algorithms-in-functional-programming-languages/blob/parallel_fibonacci/playground/graph/fib.ml}{povezava do implementacije}):
+    \begin{verbatim}
 module T = Domainslib.Task
 let rec fib n = 
   if n < 2 then 1 
@@ -166,6 +164,9 @@ module Graph = struct
     ...
 end
     \end{verbatim}
+    \begin{itemize}
+      \item Implementacija množic z uteženimi drevesi
+    \end{itemize}
         
     \href{https://github.com/tjazerzen/parallelisation-of-graph-algorithms-in-functional-programming-languages/blob/master/playground/graph/graph.ml}{[implementacija]}.
 \end{frame}
