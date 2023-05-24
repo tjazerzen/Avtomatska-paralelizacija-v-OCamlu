@@ -164,12 +164,41 @@ module Graph = struct
     ...
 end
     \end{verbatim}
-    \begin{itemize}
-      \item Implementacija množic z uteženimi drevesi
-    \end{itemize}
         
-    \href{https://github.com/tjazerzen/parallelisation-of-graph-algorithms-in-functional-programming-languages/blob/master/playground/graph/graph.ml}{[implementacija]}.
+    \href{https://github.com/tjazerzen/parallelisation-of-graph-algorithms-in-functional-programming-languages/blob/master/playground/graph/graph.ml}{[link do implementacije]}.
 \end{frame}
+
+\begin{frame}
+    \frametitle{Prednosti in slabosti}
+    Prednosti in slabosti obeh predstavitev:
+    \begin{itemize}
+    \item Imperativna predstavitev: Bolj znana ter intuitivna, tipično hitrejša za večje grafe, vendar v nasprotju s filozofijo funkcijskega programiranja.
+          Težja za paralelno izvajanje.
+    \item Funkcijska predstavitev: V skladu z vzorci funkcijskega programiranja, lažje za paralelno izvajanje.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Primerjava časovnih zahtevnosti grafovskih operacij med implementacijama}
+    % TODO: To popravi
+    \begin{table}
+      \centering
+      \footnotesize
+      \begin{tabular}{|c|c|c|}
+      \hline
+      \textbf{Operacija / implementacija} & \textbf{Spremenljive p.s.} & \textbf{Nespremenljive p.s.} \\ \hline
+      \textbf{Dodajanje vozlišča} & $O(\log |V|)$ & \underline{$O(1_{amort.})$} \\ \hline
+      \textbf{Odvzemanje vozlišča} & $O(|V| \log |V|)$ & \underline{$O(|V|)$} \\ \hline
+      \textbf{Dodajanje povezave} & \underline{$O(\log |V|)$} & $O(|V| + |E|)$ \\ \hline
+      \textbf{Odvzemanje povezave} & \underline{$O(\log |V|)$} & \underline{$O(\log |V|)$} \\ \hline
+      \textbf{Soseščina($u$)} & \underline{$O(deg_Gu + \log |V|)$} & \underline{$O(deg_Gu + \log |V|)$} \\ \hline
+      \end{tabular}
+      \caption{Primerjava časovnih kompleksnosti operacij na grafu med različnima implementacijama. Podčrtana je tista 
+      implementacija, ki je za dano metodo boljša.}
+      \label{tab:primerjava_casovnih_kompleksnosti_operacij_na_grafu_med_razlicnima_implementacijama}
+    \end{table}
+    
+\end{frame}
+    
 
 \section{Paralelno iskanje v širino (PBFS)}
 
