@@ -48,7 +48,7 @@
 
 \begin{frame}{Uvod v paralelizacijo}
     \begin{itemize}
-        \item: Paralelizacija: Pohitritev zahtevnih izračunov
+        \item Paralelizacija: Pohitritev zahtevnih izračunov
     \end{itemize}
     \begin{figure}
         \caption{Paralelni programi so z večanjem števila jeder hitrejši.}
@@ -99,8 +99,10 @@
     \begin{itemize}
         \item Težava: Preveliko število vzporednih niti
         \item Ideja: Paralelizacija najbolj časovno zahtevnih delov kode
-        \item (\href{https://github.com/tjazerzen/parallelisation-of-graph-algorithms-in-functional-programming-languages/blob/parallel_fibonacci/playground/graph/fib.ml}{povezava do implementacije}):
-    \begin{verbatim}
+        \end{itemize}
+        (\href{https://github.com/tjazerzen/parallelisation-of-graph-algorithms-in-functional-programming-languages/blob/parallel_fibonacci/playground/graph/fib.ml}{povezava do implementacije}):
+
+        \begin{verbatim}
 module T = Domainslib.Task
 let rec fib n = 
   if n < 2 then 1 
@@ -112,7 +114,6 @@ let rec fib_par pool n =
   let b = T.async pool (fun _ -> fib_par pool (n-2)) in
   T.await pool a + T.await pool b
     \end{verbatim}
-    \end{itemize}
 \end{frame}
 
 \begin{frame}
@@ -142,7 +143,6 @@ let rec fib_par pool n =
         \item Definicija paralelnih nalog: ~\texttt{Domainslib.Task.async}, ~\texttt{Domainslib.Task.await}
         \item Vzorci vzporednega računanja: ~\texttt{Domainslib.Parallel.map}, ~\texttt{Domainslib.Parallel.For}
         \item Sinhronizacijski mehanizmi: ~\texttt{Domainslib.Sync}, ~\texttt{Domainslib.Sync.Event}, \dots
-        \item Izravnavanje obremenitve med domenami
       \end{itemize}
 \end{frame}
     
@@ -166,11 +166,8 @@ module Graph = struct
     ...
 end
     \end{verbatim}
-    \begin{itemize}
-      \item Implementacija množic z uteženimi drevesi
-    \end{itemize}
         
-    \href{https://github.com/tjazerzen/parallelisation-of-graph-algorithms-in-functional-programming-languages/blob/master/playground/graph/graph.ml}{[link do implementacije]}.
+    \href{https://github.com/tjazerzen/parallelisation-of-graph-algorithms-in-functional-programming-languages/blob/master/playground/graph/graph.ml}{[implementacija]}.
 \end{frame}
 
 \section{Paralelno iskanje v širino (PBFS)}
@@ -221,7 +218,7 @@ end
         \item Ideja: Vozlišča, ki jih obiskujemo na istih nivojih so neodvisna, zato jih lahko obiskujemo hkrati.
         \item Za vsak nivo $i$ ustvarimo novo domeno, ki obiskuje vozlišča na nivoju $i$.
     \end{itemize}
-    \href{https://github.com/tjazerzen/parallelisation-of-graph-algorithms-in-functional-programming-languages/blob/parallel_BFS/playground/graph/bfs.ml}{[link do implementacije]}.
+    \href{https://github.com/tjazerzen/parallelisation-of-graph-algorithms-in-functional-programming-languages/blob/parallel_BFS/playground/graph/bfs.ml}{[implementacija]}.
 \end{frame}
 
 
