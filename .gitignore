@@ -266,3 +266,4 @@ build/
 Priimek-Vpisna-Leto.pdf
 playground/graph/temp.ml
 playground/graph/graph_examples.exe
+playground/graph/dune_file_contents.txt
