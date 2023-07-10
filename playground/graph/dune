@@ -1,5 +1,12 @@
 (executable
- (name graph_examples)
- (promote
-  (until-clean))
-  )
+ (name fib_examples)
+ (promote (until-clean))
+ (libraries domainslib unix fib)
+ (modules fib_examples)
+ )
+
+(library
+ (name fib)
+ (modules fib)
+ (libraries domainslib unix)
+)

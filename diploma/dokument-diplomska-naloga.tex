@@ -46,12 +46,18 @@
 % TODO
 % - angleško-slovenski slovar strokovnih izrazov
 \slovar{
-\geslo{funkcijsko programiranje}{računalniški koncept, znotraj katerega programe pišemo s komponiranjem in apliciranjem matematičnih funkcij}
-\geslo{stranski učinki programov}{odklon med čistimi matematičnimi funkcijami ter našim programom.}
 % TODO: Je vztrajno dober prevod ``persistent''?
-\geslo{Vztrajna podatkovna struktura}{}
+\geslo{persistent data structure}{vztrajna podatkovna struktura}
 % TODO: Je minljivo dober prevod ``ephemeral''?
-\geslo{Minljiva podatkovna struktura}{}
+\geslo{ephemeral data structure}{Minljiva podatkovna struktura}
+\geslo{high performance computing}{Visokozmožnostno računanje}
+\geslo{domains}{domene}
+\geslo{parallel tasks}{vzporedne naloge}
+\geslo{task collections}{zbirke opravil}
+\geslo{parallel computation patterns}{vzorci vzporednega računanja}
+\geslo{synchronization primitives}{sinhronizacijski mehanizmi}
+\geslo{load balancing}{Izravnavanje obremenitve}
+\geslo{high-level}{visokonivojski}
 }
 
 % - ime datoteke z viri (vključno s končnico .bib), če uporabljate BibTeX
@@ -68,6 +74,8 @@
 \usepackage{algorithmicx}
 \usepackage{hyperref}
 \usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows}
 
 \hypersetup{
     colorlinks=true,
@@ -95,6 +103,36 @@
 \newcommand{\Z}{\mathbb Z}
 \newcommand{\C}{\mathbb C}
 \newcommand{\Q}{\mathbb Q}
+
+\lstdefinelanguage{OCaml}{
+  keywords={let,rec,if,then,else},
+  sensitive=true,
+  basicstyle=\ttfamily,
+  keywordstyle=\bfseries,
+  showstringspaces=false,
+  morecomment=[s]{(*}{*)},
+  morestring=[b]"
+}
+
+\lstset{
+  language=Caml,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny,
+  stepnumber=1,
+  numbersep=5pt,
+  tabsize=2,
+  breaklines=true,
+  prebreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+  showtabs=false,
+  showspaces=false,
+  showstringspaces=false,
+  basicstyle=\ttfamily,
+  identifierstyle=\ttfamily,
+  commentstyle=\color{gray},
+  keywordstyle=\color{blue},
+  stringstyle=\color{red}
+}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -209,5 +247,183 @@ Posledično so v splošnem podatkovne strukture v funkcijskih jezikih asimptotsk
 
 V nadaljevanju dokumenta se bom najprej posvetil vprašanju, kako graf v funkcijskih jezikih sploh predstavimo, nato pa se bom lotil algoritmov ter podatkovnih struktur na grafih.
 
+
+\section{Prestavitev grafa v funkcijskih jezikih}
+
+\textbf{TODO}
+
+\pagebreak
+
+\section{Paralelizacija}
+
+\subsection{Pregled OCamlove knjižnice \textit{Domainslib}}
+
+\href{https://github.com/ocaml-multicore/domainslib}{Domainslib} je sočasna programska knjižnica za OCaml, 
+ki nam omogoča paralelizacijo na nivoju procesorja.
+Ponuja nam niz abstrakcij in orodij za pisanje vzporednih in sočasnih programov. 
+Zgrajena je na t.i. domenah (ang. domains). To so lahke niti, vgrajene v OCaml.
+
+S prihodom nove različice OCaml 4.12, je Domainslib postal del standardne knjižnice OCaml, z verzije 5.0.0 pa se je ta knjižnica
+še precej okrepila na svojih sposobnostih ter računskih zmožnostih.
+
+Tukaj povzamem glavne koncepte Domainsliba, ki jih bom uporabil v svoji diplomski nalogi:
+
+\begin{enumerate}
+  \item Domene (ang. domains) so niti, ki nam zagotavljajo sočasnost v OCaml-u. 
+        Po svoji zasnovi so visokonivojske ter imajo nizke stroške dodatne računske obremenitve, 
+        kar omogoča ustvarjanje velikega števila sočasnih nalog. Novo domeno ustvarimo z ukazom ~\texttt{Domainslib.make}.
+  \item Paralelne naloge (ang. parallel tasks): Knjižnica nam ponuja preproste funkcije za ustvarjanje in upravljanje z vzporednimi nalogami.
+        Naloge so delovne enote, ki se lahko izvajajo hkrati na različnih domenah.
+        Ustvarijo se s funkcijo ~\texttt{Domainslib.Task.async}, na njihovo dokončanje pa se počaka z uporabo ~\texttt{Domainslib.Task.await}
+  \item Zbirke opravil (ang. task collections): Knjižnica nam ponuja zbirke opravil, ki so podobne paralelnim nalogam, 
+        le da lahko v njih shranimo več nalog hkrati. Zbirke opravil so lahko uporabne, kadar želimo ustvariti več nalog hkrati, 
+        vendar pa ne želimo ustvariti toliko domen, kot je nalog.
+  \item Vzorci vzporednega računanja (ang. parallel computation patterns), ki so pogosto uporabni pri vzporednem programiranju.
+        Na primer, vzorec ~\texttt{Domainslib.Parallel.map} nam omogoča vzporedno preslikavo funkcije na seznam elementov. 
+        Podobno nam vzorec ~\texttt{Domainslib.Parallel.reduce} omogoča vzporedno zmanjševanje seznama elementov, 
+        z vzorcem ~\texttt{Domainslib.Parallel.stable\_sort} vzporedno uredimo seznam elementov, 
+        z ukazom ~\texttt{Domainslib.Parallel.For} pa vporedno poženemo for zanko. Vse to nam precej olajša delo, če lahko večji kos računalniške naloge
+        razdelimo na manjše kose, ki jih lahko izvajamo vzporedno že preko vgrajenih funkcij.
+  \item Sinhronizacijski mehanizmi (ang. synchronization primitives): Knjižnica nam ponuja sinhronizacijske pritive, ki nam omogočajo sinhronizacijo med domenami.
+        Na primer, sinhronizacijski mehanizem ~\texttt{Domainslib.Sync} nam omogoča sinhronizacijo med domenami, 
+        sinhronizacijski primitiv ~\texttt{Domainslib.Sync\_event} pa nam omogoča sinhronizacijo med domenami preko dogodkov.
+  \item Izravnavanje obremenitve (ang. load balancing): Domainslib nam ponuja orodja za izravnavanje obremenitve, 
+        ki nam omogočajo, da se obremenitev med domenami porazdeli čim bolj enakomerno.
+\end{enumerate}
+
+Na splošno knjižnica Domainslib poenostavlja postopek pisanja vzporednih in sočasnih programov v OCamlu. 
+Zagotavlja nam visokonivojski (ang. high-level) vmesnik za upravljanje nalog, usklajevanje sinhronizacije in izkoriščanje vzporednosti, 
+kar olajša izkoriščanje celotnega potenciala večjedrnih procesorjev ter doseganje boljše zmogljivosti.
+
+Za več informacij in uradno izvedbo knjižnice Domainslib lahko obiščete uraden repozitorij knjižnice Domainslib na
+GitHub-u na naslovu \url{https://github.com/ocaml-multicore/domainslib}.
+
+
+\subsection{Paralelizacija 101: Računanje Fibonaccijevih števil}
+
+Čeprav ne gre za grafovski algoritem, se mi je zdelo poučno, da najprej predstavim osnovne koncepte paralelizacije na preprostem primeru. 
+Izbral sem si paralelno računanje Fibonaccijevih števil (na naiven način, ki, kot bomo videli, terja časovno zahtevnost $O(2^n)$).
+
+Preprosto funkcijo, ki računa Fibonaccijevo število, lahko zapišemo na zelo preprost način:
+
+\begin{lstlisting}
+  let rec fib n =
+    if n < 2 then 1
+    else fib (n-1) + fib (n-2)
+\end{lstlisting}
+
+\begin{figure}[htb]
+  \centering
+\begin{tikzpicture}[node distance=2cm]
+
+  \node (n0) at (0,0) {$n$};
+  \node (n1) at (-2,-2) {$n-1$};
+  \node (n2) at (2,-2) {$n-2$};
+  \node (n3) at (-4,-4) {$n-2$};
+  \node (n4) at (0,-4) {$n-3$};
+  \node (n5) at (4,-4) {$n-3$};
+  \node (n6) at (-5.5,-6) {$n-4$};
+  \node (n7) at (-3,-6) {$n-5$};
+  \node (n8) at (-1,-6) {$n-4$};
+  \node (n9) at (0,-6) {...};
+
+  \draw [->] (n0) -- (n1);
+  \draw [->] (n0) -- (n2);
+  \draw [->] (n1) -- (n3);
+  \draw [->] (n1) -- (n4);
+  \draw [->] (n2) -- (n4);
+  \draw [->] (n2) -- (n5);
+  \draw [->] (n3) -- (n6);
+  \draw [->] (n3) -- (n7);
+  \draw [->] (n4) -- (n8);
+  \draw [->] (n4) -- (n9);
+
+\label{fig:fib-graph}
+% TODO: caption
+
+\end{tikzpicture}
+\end{figure}
+
+
+Zato se seveda vprašamo, kako bi lahko to funkcijo paralelizirali. Očiten odgovor je, da bi lahko paralelno računali $fib(n-1)$ in $fib(n-2)$ ter to počeli,
+dokler ne pridemo do baze rekurzije. To lahko predstavimo z grafom, kot je prikazano na sliki \ref{fig:fib-graph}.
+Problem, na katerega sem naletel ob empiričnem testiranju svojega programa, je, da je ta način paralelizacije precej neučinkovit, 
+saj računamo na prevečih nitih hkrati. Število niti ki jih ustvarimo namreč narašča eksponentno z $n$.
+Zato sem se v svojem programu poslužil sledeče ideje: Paraleliziraj kose kode, ki vzamejo največ časa, 
+pri čemer naredi čim manj asinhronih klicev na knjižnico Domainslib.
+
+Spet, empirično sem ugotovil, da se neparalelni program začne zatikati tam nekje pri računanju Fibonaccijevih števil večjih od 38, zato sem program spisal tako,
+da števila večja od 38 računam paralelno po zgoraj opisanem postopku (na vsakem koraku ustvarim dve asinhroni nalogi), števila manjša od 38 pa računam neparalelno.
+
+\begin{lstlisting}
+module T = Domainslib.Task
+
+let rec fib n = if n < 2 then 1 else fib (n - 1) + fib (n - 2)
+
+let rec fib_par pool n =
+  if n <= 38 then fib n
+  else
+    let a = T.async pool (fun _ -> fib_par pool (n - 1)) in
+    let b = T.async pool (fun _ -> fib_par pool (n - 2)) in
+    T.await pool a + T.await pool b
+\end{lstlisting}
+
+
+
+Za nadaljevanje bomo potrebovali (opisno) definicijo domen pri paralelnem računanju:
+\begin{definicija}
+  V paralelnem računanju \textbf{domena} pomeni neodvisno računsko enoto, ki lahko sočasno dela z drugimi domenami.
+  Dana domena predstavlja od drugih domen ločen izvedbeni kontekst, ki lahko vzporedno izvaja navodila in izračune.
+  V kontektu paralelnega računalništva se izraz \textbf{število domen} nanaša na število vzporednih izvršilnih enot, ki so 
+  trenutno na voljo za izvajanje izračunov.
+\end{definicija}
+
+Ustavim se pri najpomembnejših ukazih:
+\begin{itemize}
+  \item Z ukazom \texttt{module T = Domainslib.Task} ustvarimo okrajšavo za Domainslib.Task, kar nam olajša pisanje kode.
+  \item Funkcija \texttt{fib\_par} sprejme objekt tipa \texttt{pool} (pool je zadolžen za inicializacijo množice domen, namenjene za 
+        paralelno izvajanje. Tipično je ``pool'' inicializiran s številom domen).
+  \item \texttt{fib\_par} preveri, če je število, ki ga računamo, manjše ali enako 38. 
+        Če je, potem izračuna Fibonaccijevo število na klasičen način (na eni niti oz. na eni domeni).
+        Sicer, pa ustvari dve asinhroni nalogi, ki računata Fibonaccijevo število za $n-1$ in $n-2$. Ti nalogi se bosta izvajali vzporedno.
+\end{itemize}
+
+Ta postopek sem pognal na računalniku z 8 jedri, ter dobil naslednje rezultate v odvisnosti od zahtevanega števila domen:
+
+\begin{figure}[h!]
+  \centering
+  \caption{Čas izračuna 43. Fibonaccijevega števila v odvisnosti od števila domen}
+  \includegraphics[width=13cm]{slike/fib_par_v_odvisnosti_od_domen.jpg}
+  \label{fig:fib_par_v_odvisnosti_od_domen}
+\end{figure}
+
+Vidimo, da število domen vpliva na hitrost izračuna: Z večanjem števila domen se čas izračuna Fibonaccijevega števila zmanjšuje,
+kar bi za paralelizacijo tudi pričakovali. Vendar pa se čas izračuna Fibonaccijevega števila ne zmanjšuje linearno z večanjem števila domen,
+temveč sprva relativno hitro, nato pa se čas izračuna pri 14. domeni ustali tam nekje pri treh četrtinkah sekunde.
+Seveda se to razlikuje od enega računalnika do drugega, razmerje med časom izračuna nekega Fibonaccijevega števila pri eni domeni ter pri
+npr. desetih pa bi moralo biti podobno na vseh računalnikih (opomba: Te izračune poganjam na osemjedrnem Applovem MacBooku Air M1).
+
+Vseeno, opomniti gre, da je točno tak eksperiment točno s takimi rezultati praktično nemogoče replicirati. Že samo s tem, da sem enkrat program poganjal
+medtem ko sem imel odprte še tri druge aplikacije, drugič pa samo medtem ko sem imel odprt zgolj naš program, sem v drugem primeru dobil skoraj dvakrat hitrejši čas izračuna.
+
+Nato pa me je še zanimalo, kako se čas izračuna Fibonaccijevih števil spreminja v odvisnosti od zahtevanega Fibonaccijevega števila ter kako se pri tem razlikuje čas izračuna
+med paralelnim in neparalelnim programom. Kot že rečeno, sem empirično ugotovil, da se neparalelni program začne zatikati pri računanju Fibonaccijevih števil večjih od 38, zato
+sem tako za paralelni kot neparalelni program izračunal čase izračuna Fibonaccijevih števil od 38. do vključno 45. števila. Rezultati so prikazani na 
+sliki \ref{fig:fib_par_v_odvisnosti_od_n}.
+
+\begin{figure}[h!]
+  \centering
+  \caption{Čas izračuna Fibonaccijevih števil v odvisnosti od zahtevanega Fibonaccijevega števila: Paralelno in neparalelno}
+  \includegraphics[width=15cm]{slike/fib_par_v_odvisnosti_od_n.jpg}
+  \label{fig:fib_par_v_odvisnosti_od_n}
+\end{figure}
+
+Vidimo, da se čas izračuna Fibonaccijevih števil pri paralelnem programu z večanjem zahtevanega Fibonaccijevega števila povečuje 
+počasneje kot pri neparalelnem programu. Pri neparalelnem programu se čas izvajanja, kot bi si mislili, povečuje eksponentno 
+(saj je časovna zahtevnost računanja eksponentna), pri paralelnem programu pa se čas izvajanja povečuje počasneje, kar je tudi 
+razvidno iz kvocienta časov izvajanja paralelnega in neparalelnega programa (označeni z svetlo modrimi kvadratki).
+
+
+\pagebreak
 
 \end{document}
