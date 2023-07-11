@@ -7,6 +7,7 @@ module Node : sig
   val compare : t -> t -> int
   val to_string : t -> string
   val id : t -> elt
+  val reset_ids : unit -> unit
 end = struct
   type elt = int
   type t = { id : int; value : elt }
@@ -25,6 +26,8 @@ end = struct
     Printf.sprintf "Node(id: %d, value: %d)" node.id node.value
 
   let id node = node.id
+
+  let reset_ids () = counter := 0
 end
 
 module NodeSet = Set.Make (Node)
@@ -166,6 +169,7 @@ end = struct
       let node2 = IntMap.find id2 node_map in
       add_edge node1 node2 graph
     in
+    let () = Node.reset_ids () in
     List.fold_right add_edge edge_lines graph
   
     let find_node_by_id id graph =
