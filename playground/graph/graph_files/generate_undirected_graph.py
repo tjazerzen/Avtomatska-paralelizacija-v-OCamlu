@@ -27,4 +27,4 @@ def generate_graph(num_of_nodes, num_of_edges, file_name):
             f.write(f'{start_node}-{end_node}\n')
 
 if print_again:
-    generate_graph(num_of_nodes=7, num_of_edges=10, file_name='undirected_small_graph.txt')
+    generate_graph(num_of_nodes=800, num_of_edges=60000, file_name='undirected_large_graph.txt')

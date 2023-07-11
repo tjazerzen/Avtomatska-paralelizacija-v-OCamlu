@@ -1,12 +1,7 @@
 (executable
- (name fib_examples)
- (promote (until-clean))
- (libraries domainslib unix fib)
- (modules fib_examples)
- )
-
-(library
- (name fib)
- (modules fib)
- (libraries domainslib unix)
+  (name bfs_examples)
+  (libraries base stdio domainslib parany)
+  (modules bfs graph bfs_examples graph_examples)
+  (promote (until-clean))
+  (flags :standard -w "-32")
 )

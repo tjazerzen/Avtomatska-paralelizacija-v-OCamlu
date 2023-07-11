@@ -1,4 +1,5 @@
 open Graph
+open Parany
 module T = Domainslib.Task
 
 module Queue : sig
@@ -26,7 +27,7 @@ end
 
 module Bfs : sig
   val bfs_sequential : Graph.t -> Node.t -> int NodeMap.t
-  val bfs_parallel : Graph.t -> Node.t -> int -> int NodeMap.t
+  val bfs_parallel : Graph.t -> Node.t -> NodeSet.t list
 end = struct
   let bfs_sequential graph start_node =
     let visited = ref NodeSet.empty in
@@ -58,39 +59,34 @@ end = struct
     in
     loop queue;
     !level
-
-  let bfs_parallel graph start_node num_domains =
-    let queue = ref (Queue.create_empty_queue () |> Queue.enqueue start_node) in
-    let visited = ref (NodeSet.empty |> NodeSet.add start_node) in
-    let level = ref (NodeMap.empty |> NodeMap.add start_node 0) in
-
-    let pool = T.setup_pool ~num_domains:(num_domains - 1) () in
-
-    let rec bfs_inner () =
-      if Queue.is_empty !queue then ()
-      else
-        match Queue.dequeue !queue with
-        | Some (node, remaining_queue) ->
-            queue := remaining_queue;
-            let neighbours = Graph.neighbours node graph in
-            T.parallel_for pool ~start:0
-              ~finish:(List.length neighbours - 1)
-              ~body:(fun i ->
-                let neighbour = List.nth neighbours i in
-                if not (NodeSet.mem neighbour !visited) then (
-                  visited := NodeSet.add neighbour !visited;
-                  let parent_level =
-                    match NodeMap.find_opt node !level with
-                    | Some l -> l
-                    | None -> failwith "Unexpected missing parent level in BFS"
-                  in
-                  level := NodeMap.add neighbour (parent_level + 1) !level;
-                  queue := Queue.enqueue neighbour !queue));
-            bfs_inner ()
-        | None -> failwith "Unexpected empty queue in BFS"
+  
+  let bfs_parallel (graph : Graph.t) (start_node : Node.t) : NodeSet.t list =
+    let visit_node (node : Node.t) (visited : NodeSet.t) : Node.t list =
+      let neighbours : Node.t list = Graph.neighbours node graph in
+      List.filter (fun node -> not (NodeSet.mem node visited)) neighbours
     in
-    T.run pool (fun () -> bfs_inner ());
-    T.teardown_pool pool;
 
-    !level
+    let next_stage (visited : NodeSet.t) (previous_stage : NodeSet.t) : NodeSet.t =
+      let new_nodes : Node.t list =
+        previous_stage
+        |> NodeSet.elements
+        |> Parmap.parmap 4 (fun node -> visit_node node visited)
+        |> List.flatten
+      in
+      List.fold_left
+        (fun set node -> NodeSet.add node set)
+        NodeSet.empty new_nodes
+    in
+
+    let rec loop (visited : NodeSet.t) (stages : NodeSet.t list) : NodeSet.t list =
+      match stages with
+      | last_stage :: _ ->
+          let next : NodeSet.t = next_stage visited last_stage in
+          if NodeSet.is_empty next then List.rev stages
+          else loop (NodeSet.union visited next) (next :: stages)
+      | [] -> failwith "Should not happen"
+    in
+
+    loop (NodeSet.singleton start_node) [ NodeSet.singleton start_node ]
+
 end

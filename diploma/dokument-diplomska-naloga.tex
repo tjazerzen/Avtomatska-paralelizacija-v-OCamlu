@@ -17,7 +17,7 @@
 \title{Parallelisation of Graph Algorithms in Functional Programming Languages}
 
 % - ime mentorja/mentorice s polnim nazivom:
-\mentorica{izr.~prof.~dr.~Matija Pretnar}
+\mentor{izr.~prof.~dr.~Matija Pretnar}
 
 % - leto diplome
 \letnica{2023} 
@@ -422,10 +422,7 @@ Tukaj povzamem glavne koncepte Domainsliba, ki jih bom uporabil v svoji diplomsk
         le da lahko v njih shranimo več nalog hkrati. Zbirke opravil so lahko uporabne, kadar želimo ustvariti več nalog hkrati, 
         vendar pa ne želimo ustvariti toliko domen, kot je nalog.
   \item Vzorci vzporednega računanja (ang. parallel computation patterns), ki so pogosto uporabni pri vzporednem programiranju.
-        Na primer, vzorec ~\texttt{Domainslib.Parallel.map} nam omogoča vzporedno preslikavo funkcije na seznam elementov. 
-        Podobno nam vzorec ~\texttt{Domainslib.Parallel.reduce} omogoča vzporedno zmanjševanje seznama elementov, 
-        z vzorcem ~\texttt{Domainslib.Parallel.stable\_sort} vzporedno uredimo seznam elementov, 
-        z ukazom ~\texttt{Domainslib.Parallel.For} pa vporedno poženemo for zanko. Vse to nam precej olajša delo, če lahko večji kos računalniške naloge
+        Na primer, z ukazom ~\texttt{Domainslib.Parallel.For} pa vporedno poženemo for zanko. Vse to nam precej olajša delo, če lahko večji kos računalniške naloge
         razdelimo na manjše kose, ki jih lahko izvajamo vzporedno že preko vgrajenih funkcij.
   \item Sinhronizacijski mehanizmi (ang. synchronization primitives): Knjižnica nam ponuja sinhronizacijske pritive, ki nam omogočajo sinhronizacijo med domenami.
         Na primer, sinhronizacijski mehanizem ~\texttt{Domainslib.Sync} nam omogoča sinhronizacijo med domenami, 
