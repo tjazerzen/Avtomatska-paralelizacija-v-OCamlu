@@ -1,58 +1,79 @@
 open Graph
+
+(* open BfsAlgorithms *)
 open Bfs
 
 (*Helper methods*)
-let print_sequential_result nodemap =
-  NodeMap.iter
-    (fun key value ->
-      Printf.printf "Node: %s - distance from start node: %s\n"
-        (Node.to_string key) (string_of_int value))
-    nodemap
 
-let print_parallel_result result =
+let print_bfs_result result =
   result
   |> List.iteri (fun level nodes ->
-          Printf.printf "Level %d:\n" level;
-          NodeSet.iter (fun node -> Printf.printf "  Node: %s\n" (Node.to_string node)) nodes;
-          print_newline ())
+         Printf.printf "Level %d:\n" level;
+         NodeSet.iter
+           (fun node -> Printf.printf "  Node: %s\n" (Node.to_string node))
+           nodes;
+         print_newline ())
 
-let info_graph_reading_print (graph_file_name : string) =
-  Printf.printf "Reading graph from file %s...\n\n" graph_file_name
+let info_bfs_calculation_print (start_node_id : int) ~(is_sequential : bool) =
+  Printf.printf "Running %s BFS on graph, starting with node with ID %d...\n"
+    (if is_sequential then "SEQUENTIAL" else "PARALLEL")
+    start_node_id
 
-let info_bfs_calculation_print (is_sequential : bool) (start_node_id : int) (graph_file_name : string) =
-  Printf.printf "Running %s BFS on graph, stored in %s, starting with node with ID %d...\n"
-    (if is_sequential then "SEQUENTIAL" else "PARALLEL") graph_file_name start_node_id
+let num_domains = 8
+
+(*Constants for small graph*)
+let small_graph_start_node_id = 2
+let small_graph_vertex_count = 10
+let small_graph_edge_count = 10
+
+(*Constants for large graph*)
+let large_graph_start_node_id = 2
+let large_graph_vertex_count = 1000
+let large_graph_edge_count = 500000
+
 
 (*---------------SMALL GRAPH-----------------*)
-(*Reading the graph*)
-let small_graph_file_name = "graph_files/undirected_small_graph.txt"
-let small_graph_start_node_id = 2
-let () = info_graph_reading_print small_graph_file_name
-let small_graph = small_graph_file_name |> Graph.graph_from_txt
-let small_graph_start_node = Option.get (Graph.find_node_by_id small_graph_start_node_id small_graph)
+
+let () =
+  Printf.printf "Creating graph with %d vertices and %d edges...\n"
+    small_graph_vertex_count small_graph_edge_count
+
+let small_graph =
+  Graph.create_new_graph ~num_nodes:small_graph_vertex_count
+    ~num_edges:small_graph_edge_count ~directed:false
+
+let small_graph_start_node =
+  Option.get (Graph.find_node_by_id small_graph_start_node_id small_graph)
 
 (*Sequential BFS*)
-let () = info_bfs_calculation_print true small_graph_start_node_id small_graph_file_name
-(* let () = Bfs.sequential small_graph small_graph_start_node |> print_sequential_result *)
-let () = Bfs.sequential small_graph small_graph_start_node |> print_parallel_result
+let () = info_bfs_calculation_print small_graph_start_node_id ~is_sequential:true
+let () =
+  BfsAlgorithms.sequential small_graph small_graph_start_node
+  |> print_bfs_result
 
 (*Parallel BFS*)
-let () = info_bfs_calculation_print false small_graph_start_node_id small_graph_file_name
-let () = Bfs.parallel small_graph small_graph_start_node |> print_parallel_result
+let () = info_bfs_calculation_print small_graph_start_node_id ~is_sequential:false
+let () =
+  BfsAlgorithms.parallel small_graph small_graph_start_node ~num_domains
+  |> print_bfs_result
 
 (*---------------LARGE GRAPH-----------------*)
 (*Reading the graph*)
-let large_graph_file_name = "graph_files/undirected_large_graph.txt"
-let large_graph_start_node_id = 2
-let () = info_graph_reading_print large_graph_file_name
-let large_graph = large_graph_file_name |> Graph.graph_from_txt
-let large_graph_start_node = Option.get (Graph.find_node_by_id 1 large_graph)
+let large_graph = Graph.create_new_graph ~num_nodes:large_graph_vertex_count
+                     ~num_edges:large_graph_edge_count ~directed:false
+let () = Printf.printf "Creating graph with %d vertices and %d edges...\n"
+           large_graph_vertex_count large_graph_edge_count
+let large_graph_start_node = Option.get (Graph.find_node_by_id large_graph_start_node_id large_graph)
 
 (*Parallel BFS*)
-let () = info_bfs_calculation_print false large_graph_start_node_id large_graph_file_name
-let _ = Bfs.parallel large_graph large_graph_start_node
+let () = info_bfs_calculation_print large_graph_start_node_id ~is_sequential:false
+let _ =
+  BfsPerformanceAnalysis.bfs_par_calculation_time large_graph
+    large_graph_start_node num_domains
 
 (*Sequential BFS*)
 
-let () = info_bfs_calculation_print true large_graph_start_node_id large_graph_file_name
-let _ = Bfs.sequential large_graph large_graph_start_node
+let () = info_bfs_calculation_print large_graph_start_node_id ~is_sequential:true 
+let _ =
+  BfsPerformanceAnalysis.bfs_seq_calculation_time large_graph
+    large_graph_start_node
