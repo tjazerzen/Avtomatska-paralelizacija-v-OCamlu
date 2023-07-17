@@ -2,14 +2,14 @@ open Graph
 open Bfs
 
 (*Helper methods*)
-let print_bfs_sequential_result nodemap =
+let print_sequential_result nodemap =
   NodeMap.iter
     (fun key value ->
       Printf.printf "Node: %s - distance from start node: %s\n"
         (Node.to_string key) (string_of_int value))
     nodemap
 
-let print_bfs_parallel_result result =
+let print_parallel_result result =
   result
   |> List.iteri (fun level nodes ->
           Printf.printf "Level %d:\n" level;
@@ -33,11 +33,12 @@ let small_graph_start_node = Option.get (Graph.find_node_by_id small_graph_start
 
 (*Sequential BFS*)
 let () = info_bfs_calculation_print true small_graph_start_node_id small_graph_file_name
-let () = Bfs.bfs_sequential small_graph small_graph_start_node |> print_bfs_sequential_result
+(* let () = Bfs.sequential small_graph small_graph_start_node |> print_sequential_result *)
+let () = Bfs.sequential small_graph small_graph_start_node |> print_parallel_result
 
 (*Parallel BFS*)
 let () = info_bfs_calculation_print false small_graph_start_node_id small_graph_file_name
-let () = Bfs.bfs_parallel small_graph small_graph_start_node |> print_bfs_parallel_result
+let () = Bfs.parallel small_graph small_graph_start_node |> print_parallel_result
 
 (*---------------LARGE GRAPH-----------------*)
 (*Reading the graph*)
@@ -49,9 +50,9 @@ let large_graph_start_node = Option.get (Graph.find_node_by_id 1 large_graph)
 
 (*Parallel BFS*)
 let () = info_bfs_calculation_print false large_graph_start_node_id large_graph_file_name
-let _ = Bfs.bfs_parallel large_graph large_graph_start_node
+let _ = Bfs.parallel large_graph large_graph_start_node
 
 (*Sequential BFS*)
 
 let () = info_bfs_calculation_print true large_graph_start_node_id large_graph_file_name
-let _ = Bfs.bfs_sequential large_graph large_graph_start_node
+let _ = Bfs.sequential large_graph large_graph_start_node
