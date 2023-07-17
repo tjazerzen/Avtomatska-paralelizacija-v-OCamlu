@@ -26,7 +26,6 @@ end = struct
     Printf.sprintf "Node(id: %d, value: %d)" node.id node.value
 
   let id node = node.id
-
   let reset_ids () = counter := 0
 end
 
@@ -49,6 +48,7 @@ module Graph : sig
   val neighbours : Node.t -> t -> Node.t list
   val graph_from_txt : string -> t
   val find_node_by_id : int -> t -> Node.t option
+  val create_new_graph : num_nodes:int -> num_edges:int -> directed:bool -> t
 end = struct
   type elt = int (*Each node's values will be integers*)
 
@@ -135,19 +135,23 @@ end = struct
     *)
     let ic = open_in path in
     let rec read_lines ic =
-      try let line = input_line ic in line :: read_lines ic
-      with End_of_file -> close_in ic; []
+      try
+        let line = input_line ic in
+        line :: read_lines ic
+      with End_of_file ->
+        close_in ic;
+        []
     in
     let lines = read_lines ic in
-  
+
     (* Split the lines into nodes and edges *)
     let rec split_lines acc = function
       | "" :: t -> (List.rev acc, t)
       | h :: t -> split_lines (h :: acc) t
       | [] -> (acc, [])
     in
-    let (node_lines, edge_lines) = split_lines [] lines in
-  
+    let node_lines, edge_lines = split_lines [] lines in
+
     (* Create nodes *)
     let create_node line =
       let id, value = Scanf.sscanf line "%d:%d" (fun id value -> (id, value)) in
@@ -155,13 +159,21 @@ end = struct
       (id, node)
     in
     let nodes = List.map create_node node_lines in
-  
+
     (* Create a graph with the nodes *)
-    let graph = List.fold_left (fun g (_, node) -> add_node node g) (empty ~directed:false) nodes in
-  
+    let graph =
+      List.fold_left
+        (fun g (_, node) -> add_node node g)
+        (empty ~directed:false) nodes
+    in
+
     (* Convert the nodes list to a map for easier lookup when creating edges *)
-    let node_map = List.fold_left (fun map (id, node) -> IntMap.add id node map) IntMap.empty nodes in
-  
+    let node_map =
+      List.fold_left
+        (fun map (id, node) -> IntMap.add id node map)
+        IntMap.empty nodes
+    in
+
     (* Add edges *)
     let add_edge line graph =
       let id1, id2 = Scanf.sscanf line "%d-%d" (fun id1 id2 -> (id1, id2)) in
@@ -171,10 +183,28 @@ end = struct
     in
     let () = Node.reset_ids () in
     List.fold_right add_edge edge_lines graph
-  
-    let find_node_by_id id graph =
-      let nodes = nodes graph in
-      try Some (List.find (fun node -> Node.id node = id) nodes)
-      with Not_found -> None
 
+  let find_node_by_id id graph =
+    let nodes = nodes graph in
+    try Some (List.find (fun node -> Node.id node = id) nodes)
+    with Not_found -> None
+
+  let create_new_graph ~(num_nodes : int) ~(num_edges : int) ~(directed : bool) : t =
+    let graph = empty ~directed in
+    let nodes = List.init num_nodes (fun i -> Node.create i) in
+    let graph =
+      List.fold_left (fun graph node -> add_node node graph) graph nodes
+    in
+    let rec add_edges graph num_edges =
+      if num_edges = 0 then graph
+      else
+        let node1 = List.nth nodes (Random.int num_nodes) in
+        let node2 = List.nth nodes (Random.int num_nodes) in
+        if Node.compare node1 node2 <> 0 then
+          let graph = add_edge node1 node2 graph in
+          add_edges graph (num_edges - 1)
+        else add_edges graph num_edges
+    in
+    let () = Node.reset_ids () in
+    add_edges graph num_edges
 end
