@@ -2,20 +2,34 @@ open Graph
 open Parany
 module T = Domainslib.Task
 
+(** [Queue] is a module that implements a queue data structure using two stacks.
+    The first stack is used for enqueueing elements, while the second stack 
+    is used for dequeueing elements. *)
 module Queue : sig
   type 'a t
 
+  (** [create_empty_queue ()] creates an empty queue. *)
   val create_empty_queue : unit -> 'a t
+
+  (** [is_empty q] returns [true] if the queue [q] is empty, [false] otherwise. *)
   val is_empty : 'a t -> bool
+
+  (** [enqueue x q] adds element [x] to the queue [q]. *)
   val enqueue : 'a -> 'a t -> 'a t
+
+  (** [dequeue q] removes and returns the first element of the queue [q].
+    If the queue is empty, returns [None]. *)
   val dequeue : 'a t -> ('a * 'a t) option
 end = struct
   type 'a t = { enqueue_stack : 'a list; dequeue_stack : 'a list }
 
+      
   let create_empty_queue () = { enqueue_stack = []; dequeue_stack = [] }
+  
   let is_empty q = q.enqueue_stack = [] && q.dequeue_stack = []
-  let enqueue x q = { q with enqueue_stack = x :: q.enqueue_stack }
 
+  let enqueue x q = { q with enqueue_stack = x :: q.enqueue_stack }
+  
   let dequeue q =
     match q.dequeue_stack with
     | hd :: tl -> Some (hd, { q with dequeue_stack = tl })
@@ -26,67 +40,49 @@ end = struct
 end
 
 module Bfs : sig
-  val bfs_sequential : Graph.t -> Node.t -> int NodeMap.t
-  val bfs_parallel : Graph.t -> Node.t -> NodeSet.t list
+  val parallel : Graph.t -> Node.t -> NodeSet.t list
+  val sequential : Graph.t -> Node.t -> NodeSet.t list
 end = struct
-  let bfs_sequential graph start_node =
-    let visited = ref NodeSet.empty in
-    let level = ref NodeMap.empty in
-    let queue = Queue.create_empty_queue () in
 
-    visited := NodeSet.add start_node !visited;
-    level := NodeMap.add start_node 0 !level;
-    let queue = Queue.enqueue start_node queue in
-
-    let rec loop q =
-      if not (Queue.is_empty q) then
-        match Queue.dequeue q with
-        | Some (node, next_q) ->
-            let neighbours = Graph.neighbours node graph in
-            let parent_level = NodeMap.find node !level in
-            let new_q =
-              List.fold_left
-                (fun acc_q neighbour ->
-                  if not (NodeSet.mem neighbour !visited) then (
-                    visited := NodeSet.add neighbour !visited;
-                    level := NodeMap.add neighbour (parent_level + 1) !level;
-                    Queue.enqueue neighbour acc_q)
-                  else acc_q)
-                next_q neighbours
-            in
-            loop new_q
-        | None -> ()
-    in
-    loop queue;
-    !level
-  
-  let bfs_parallel (graph : Graph.t) (start_node : Node.t) : NodeSet.t list =
-    let visit_node (node : Node.t) (visited : NodeSet.t) : Node.t list =
+  let visit_node (node : Node.t) (visited : NodeSet.t) (graph : Graph.t) : Node.t list =
       let neighbours : Node.t list = Graph.neighbours node graph in
       List.filter (fun node -> not (NodeSet.mem node visited)) neighbours
-    in
+    
+  let rec loop (visited : NodeSet.t) (stages : NodeSet.t list) (next_stage_implementation : NodeSet.t -> NodeSet.t -> Graph.t -> NodeSet.t) (graph : Graph.t) :
+          NodeSet.t list =
+        match stages with
+        | last_stage :: _ ->
+            let next : NodeSet.t = next_stage_implementation visited last_stage graph in
+            if NodeSet.is_empty next then List.rev stages
+            else loop (NodeSet.union visited next) (next :: stages) next_stage_implementation graph
+        | [] -> failwith "Should not happen"
 
-    let next_stage (visited : NodeSet.t) (previous_stage : NodeSet.t) : NodeSet.t =
+  let parallel (graph : Graph.t) (start_node : Node.t) : NodeSet.t list =
+    let next_stage_parallel (visited : NodeSet.t) (previous_stage : NodeSet.t) (graph : Graph.t) :
+        NodeSet.t =
       let new_nodes : Node.t list =
-        previous_stage
-        |> NodeSet.elements
-        |> Parmap.parmap 4 (fun node -> visit_node node visited)
+        previous_stage |> NodeSet.elements
+        |> Parmap.parmap 4 (fun node -> visit_node node visited graph)
         |> List.flatten
       in
       List.fold_left
         (fun set node -> NodeSet.add node set)
         NodeSet.empty new_nodes
     in
-
-    let rec loop (visited : NodeSet.t) (stages : NodeSet.t list) : NodeSet.t list =
-      match stages with
-      | last_stage :: _ ->
-          let next : NodeSet.t = next_stage visited last_stage in
-          if NodeSet.is_empty next then List.rev stages
-          else loop (NodeSet.union visited next) (next :: stages)
-      | [] -> failwith "Should not happen"
+    loop (NodeSet.singleton start_node) [ NodeSet.singleton start_node ] next_stage_parallel graph
+  
+  let sequential (graph : Graph.t) (start_node : Node.t) : NodeSet.t list =
+    let next_stage_sequential (visited : NodeSet.t) (previous_stage : NodeSet.t) (graph : Graph.t) :
+        NodeSet.t =
+      let new_nodes : Node.t list =
+        previous_stage |> NodeSet.elements
+        |> List.map (fun node -> visit_node node visited graph)
+        |> List.flatten
+      in
+      List.fold_left
+        (fun set node -> NodeSet.add node set)
+        NodeSet.empty new_nodes
     in
-
-    loop (NodeSet.singleton start_node) [ NodeSet.singleton start_node ]
-
+    loop (NodeSet.singleton start_node) [ NodeSet.singleton start_node ] next_stage_sequential graph
+  
 end
