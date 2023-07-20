@@ -123,30 +123,65 @@ module BfsAlgorithms : Bfs = struct
 end
 
 module MakeBfsPerformanceAnalysis (Bfs : Bfs) : sig
-  val bfs_par_calculation_time : Graph.t -> Node.t -> int -> NodeSet.t list
-  val bfs_seq_calculation_time : Graph.t -> Node.t -> NodeSet.t list
+  val bfs_par_calculation_time : Graph.t -> Node.t -> int -> float
+  val bfs_seq_calculation_time : Graph.t -> Node.t -> float
+  val bfs_par_calculation_time_num_domains_to_csv : Graph.t -> Node.t -> max_domains:int -> unit
+  val bfs_calculation_time_combinations_to_csv : (int * int) list -> num_domains:int -> unit
 end = struct
   (** [bfs_par_calculation_time graph start_node num_domains] runs the breadth-first search algorithm on a graph [graph] starting from a given node [start_node]. 
     It returns a list of sets of nodes, where each set contains all nodes at a certain distance from the starting node. 
     This function uses parallelism to speed up the computation. *)
   let bfs_par_calculation_time (graph : Graph.t) (start_node : Node.t)
-      (num_domains : int) : NodeSet.t list =
+      (num_domains : int) : float =
     let start_time = Unix.gettimeofday () in
-    let result = Bfs.parallel graph start_node ~num_domains in
-    Printf.printf "Parallel BFS took %f seconds\n"
-      (Unix.gettimeofday () -. start_time);
-    result
+    let _ = Bfs.parallel graph start_node ~num_domains in
+    (* Printf.printf "Parallel BFS took %f seconds\n" *)
+    Unix.gettimeofday () -. start_time
+    (* result *)
 
   (** [bfs_seq_calculation_time graph start_node] runs the breadth-first search algorithm on a graph [graph] starting from a given node [start_node]. 
     It returns a list of sets of nodes, where each set contains all nodes at a certain distance from the starting node. 
     This function runs on a single thread. *)
-  let bfs_seq_calculation_time (graph : Graph.t) (start_node : Node.t) :
-      NodeSet.t list =
+  let bfs_seq_calculation_time (graph : Graph.t) (start_node : Node.t) : float =
     let start_time = Unix.gettimeofday () in
-    let result = Bfs.sequential graph start_node in
-    Printf.printf "Sequential BFS took %f seconds\n"
-      (Unix.gettimeofday () -. start_time);
-    result
+    let _ = Bfs.sequential graph start_node in
+    (* Printf.printf "Sequential BFS took %f seconds\n" *)
+    Unix.gettimeofday () -. start_time
+  
+  let bfs_par_calculation_time_num_domains_to_csv
+      (graph : Graph.t) (start_node : Node.t) ~(max_domains:int) : unit =
+    let out_channel = open_out "computation_time_analysis/bfs_par_domains.csv" in
+    let rec bfs_par_calculation_time_num_domains_to_csv_aux num_domains =
+      if num_domains > max_domains then ()
+      else
+        let calculation_time =
+          bfs_par_calculation_time graph start_node num_domains
+        in
+        Printf.fprintf out_channel "%d,%.3f\n" num_domains calculation_time;
+        bfs_par_calculation_time_num_domains_to_csv_aux (num_domains + 1)
+    in
+    output_string out_channel "num_domains,time\n";
+    bfs_par_calculation_time_num_domains_to_csv_aux 1;
+    close_out out_channel
+  
+    let bfs_calculation_time_combinations_to_csv (combinations : (int * int) list) ~(num_domains:int) : unit =
+      let out_channel = open_out "computation_time_analysis/bfs_par_combinations.csv" in
+      let calculate_and_write (num_nodes, num_edges) =
+        let graph = Graph.create_new_graph ~num_nodes ~num_edges ~directed:false in
+        let start_node = Option.get (Graph.find_node_by_id 1 graph) in
+        let parallel_calculation_time =
+          bfs_par_calculation_time graph start_node num_domains
+        in
+        let sequential_calculation_time =
+          bfs_seq_calculation_time graph start_node
+        in
+        Printf.fprintf out_channel "%d,%d,%.3f,%.3f\n" num_nodes num_edges parallel_calculation_time sequential_calculation_time
+      in
+      output_string out_channel "num_nodes,num_edges,parallel_time,sequential_time\n";
+      List.iter calculate_and_write combinations;
+      close_out out_channel    
+  
 end
 
+(** [BfsPerformanceAnalysis] is a module that provides performance analysis functions for the breadth-first search algorithm. *)
 module BfsPerformanceAnalysis = MakeBfsPerformanceAnalysis (BfsAlgorithms)
