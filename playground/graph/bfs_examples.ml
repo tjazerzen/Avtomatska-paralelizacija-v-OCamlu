@@ -39,11 +39,11 @@ let () =
     small_graph_vertex_count small_graph_edge_count
 
 let small_graph =
-  Graph.create_new_graph ~num_nodes:small_graph_vertex_count
+  UnweightedGraph.create_new_graph ~num_nodes:small_graph_vertex_count
     ~num_edges:small_graph_edge_count ~directed:false
 
 let small_graph_start_node =
-  Option.get (Graph.find_node_by_id small_graph_start_node_id small_graph)
+  Option.get (UnweightedGraph.find_node_by_id small_graph_start_node_id small_graph)
 
 (*Sequential BFS*)
 let () = info_bfs_calculation_print small_graph_start_node_id ~is_sequential:true
@@ -59,11 +59,11 @@ let () =
 
 (*---------------LARGE GRAPH-----------------*)
 (*Reading the graph*)
-let large_graph = Graph.create_new_graph ~num_nodes:large_graph_vertex_count
+let large_graph = UnweightedGraph.create_new_graph ~num_nodes:large_graph_vertex_count
                      ~num_edges:large_graph_edge_count ~directed:false
 let () = Printf.printf "Creating graph with %d vertices and %d edges...\n"
            large_graph_vertex_count large_graph_edge_count
-let large_graph_start_node = Option.get (Graph.find_node_by_id large_graph_start_node_id large_graph)
+let large_graph_start_node = Option.get (UnweightedGraph.find_node_by_id large_graph_start_node_id large_graph)
 
 (*Parallel BFS*)
 let () = info_bfs_calculation_print large_graph_start_node_id ~is_sequential:false
