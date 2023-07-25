@@ -1,50 +1,56 @@
 open Graph
 
 (** This module provides an implementation of Dijkstra's shortest path algorithm for weighted graphs. *)
+
+module IntFloatPair =
+  struct
+   type t = int * float
+   let compare (_,x0) (_,x1) = compare x0 x1
+  end
+
+module PairSet = Set.Make(IntFloatPair)
+
 module Dijkstra : sig
-(** The `shortest_path` function computes the shortest path from a given source
-    node to all other nodes in the graph, using Dijkstra's algorithm.
-    @param graph The weighted graph to compute shortest paths in.
-    @param source The source node to compute shortest paths from.
-    @return A pair of maps: the first maps each node to its shortest distance
-            from the source, and the second maps each node to its predecessor
-              in the shortest path from the source. *)
-  val shortest_path : WeightedGraph.t -> Node.t -> float NodeMap.t * Node.t NodeMap.t
+  (** [shortest_path src dst graph] returns the shortest path from [src] to [dst] in [graph] 
+      along with the total weight of that path. If no path exists, returns [None]. *)
+  val dijkstra : WeightedGraph.t -> int -> int -> float
 end = struct
-  let shortest_path (graph: WeightedGraph.t) (source: Node.t) =
-    let inf = infinity in
-    let dist = ref (NodeMap.singleton source 0.) in
-    let prev = ref NodeMap.empty in
-
-    let unvisited = ref (NodeSet.of_list (WeightedGraph.nodes graph)) in
-
-    let weight_of_edge node edges =
-      let edge = List.find (fun (u, v, _) -> u = node || v = node) edges in
-      match edge with
-      | (_, _, weight) -> weight
-      | exception Not_found -> inf
-    in    
-
-    let rec loop () =
-      if not (NodeSet.is_empty !unvisited) then
-        let u =
-          NodeSet.min_elt (NodeSet.filter (fun node -> NodeMap.mem node !dist) !unvisited)
-        in
-        let neighbours = WeightedGraph.neighbours u graph in
-        List.iter
-          (fun v ->
-            let alt = NodeMap.find u !dist +. (weight_of_edge v (WeightedGraph.edges graph))
-            in
-            if alt < (try NodeMap.find v !dist with Not_found -> inf) then (
-              dist := NodeMap.add v alt !dist;
-              prev := NodeMap.add v u !prev))
-          neighbours;
-        unvisited := NodeSet.remove u !unvisited;
-        loop ()
-    in
-    loop ();
-    (!dist, !prev)
-end
-
-
-
+  let dijkstra (graph: WeightedGraph.t) (start_id: int) (end_id: int) : float = 
+    let nodes = WeightedGraph.nodes graph in
+    let n = List.length nodes in
+    let dist = Array.make n max_float in
+    let node_to_idx = Hashtbl.create n in
+    List.iteri (fun i node -> Hashtbl.add node_to_idx (Node.id node) i) nodes;
+    let q = ref PairSet.(empty |> add (start_id, 0.)) in
+    dist.(Hashtbl.find node_to_idx start_id) <- 0.;
+    while not (PairSet.is_empty !q) do
+      let (u_id, _) = PairSet.min_elt !q in
+      let u_idx = Hashtbl.find node_to_idx u_id in
+      q := PairSet.remove (u_id, dist.(u_idx)) !q;
+      let u_node = match WeightedGraph.find_node_by_id u_id graph with
+        | Some node -> node
+        | None -> failwith "Node not found"
+      in
+      List.iter
+        (fun v_node -> 
+          let v_id = Node.id v_node in
+          let v_idx = Hashtbl.find node_to_idx v_id in
+          let weight = 
+            let edges = WeightedGraph.edges graph in
+            let rec find_weight lst = 
+              match lst with
+              | [] -> failwith "Edge not found"
+              | (u, v, w)::rest -> if u = u_node && v = v_node then w else find_weight rest
+            in find_weight edges
+          in
+          let newdist = dist.(u_idx) +. weight in
+          if newdist < dist.(v_idx) then
+          begin
+            q := PairSet.add (v_id, newdist) !q;
+            dist.(v_idx) <- newdist
+          end
+        )
+        (WeightedGraph.neighbours u_node graph)
+    done;
+    dist.(Hashtbl.find node_to_idx end_id)  
+  end

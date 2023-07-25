@@ -14,6 +14,7 @@ let print_shortest_path_result (dist, prev) =
 
 (*Constants for the small graph*)
 let small_graph_start_node_id = 2
+let small_graph_end_node_id = 9
 let small_graph_vertex_count = 10
 let small_graph_edge_count = 10
 
@@ -34,9 +35,14 @@ let small_graph_start_node = Option.get (WeightedGraph.find_node_by_id small_gra
 
 (* let () = print_endline "\n\nResult of Dijkstra's algorithm:\n" *)
 
-let res = Dijkstra.shortest_path small_graph small_graph_start_node
+(* let res = Dijkstra.shortest_path small_graph small_graph_start_node *)
 
 
-let () = print_shortest_path_result res
+(* let () = print_shortest_path_result res *)
+
+let res = Dijkstra.dijkstra small_graph small_graph_start_node_id small_graph_end_node_id
+
+let () = Printf.printf "%f" res
+
 
 (*----------------------LARGE GRAPH----------------------*)
