@@ -72,24 +72,24 @@ let () =
      node1-node2 (weight 0.3), node2-node3 (weight 0.4), and node1-node3 (weight 0.5)..."
 
 let my_weighted_graph =
-  WeightedUnweightedGraph.empty ~directed:false
-  |> WeightedUnweightedGraph.add_node node1 |> WeightedUnweightedGraph.add_node node2 |> WeightedUnweightedGraph.add_node node3
-  |> WeightedUnweightedGraph.add_edge node1 node2 0.3 |> WeightedUnweightedGraph.add_edge node2 node3 0.4
-  |> WeightedUnweightedGraph.add_edge node1 node3 0.5
+  WeightedGraph.empty ~directed:false
+  |> WeightedGraph.add_node node1 |> WeightedGraph.add_node node2 |> WeightedGraph.add_node node3
+  |> WeightedGraph.add_edge node1 node2 0.3 |> WeightedGraph.add_edge node2 node3 0.4
+  |> WeightedGraph.add_edge node1 node3 0.5
 
 let () = print_endline "Printing weighted graph to string..."
-let () = Printf.printf "WeightedUnweightedGraph: %s\n" (WeightedUnweightedGraph.to_string my_weighted_graph)
+let () = Printf.printf "WeightedGraph: %s\n" (WeightedGraph.to_string my_weighted_graph)
 let () = print_endline "Printing neighbors of node1..."
 
 let () =
   Printf.printf "Neighbors: %s\n"
-    (my_weighted_graph |> WeightedUnweightedGraph.neighbours node1 |> List.map Node.to_string
+    (my_weighted_graph |> WeightedGraph.neighbours node1 |> List.map Node.to_string
    |> String.concat ", ")
 
 let () = print_endline "Removing node1 from weighted graph..."
-let my_weighted_graph = WeightedUnweightedGraph.remove_node node1 my_weighted_graph
+let my_weighted_graph = WeightedGraph.remove_node node1 my_weighted_graph
 let () = print_endline "Printing weighted graph to string once again..."
-let () = Printf.printf "WeightedUnweightedGraph: %s\n" (WeightedUnweightedGraph.to_string my_weighted_graph)
+let () = Printf.printf "WeightedGraph: %s\n" (WeightedGraph.to_string my_weighted_graph)
 let () = print_endline "Removing edge node2-node3 from weighted graph..."
-let my_weighted_graph = WeightedUnweightedGraph.remove_edge node2 node3 my_weighted_graph
-let () = Printf.printf "WeightedUnweightedGraph: %s\n" (WeightedUnweightedGraph.to_string my_weighted_graph)
+let my_weighted_graph = WeightedGraph.remove_edge node2 node3 my_weighted_graph
+let () = Printf.printf "WeightedGraph: %s\n" (WeightedGraph.to_string my_weighted_graph)

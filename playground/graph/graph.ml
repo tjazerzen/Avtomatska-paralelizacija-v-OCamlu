@@ -153,7 +153,7 @@ end = struct
 end
 
 
-module WeightedUnweightedGraph : sig
+module WeightedGraph : sig
   type elt = int
   type t
 
