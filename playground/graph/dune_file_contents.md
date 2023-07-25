@@ -41,3 +41,24 @@
   (modules bfs graph bfs_examples graph_examples)
   (promote (until-clean)))
 ```
+
+- `dijkstra.ml`:
+```
+(executable
+  (name dijkstra)
+  (libraries base stdio domainslib)
+  (modules dijkstra graph)
+  (flags :standard -w "-32-70") ; If needed - suppress warnings 32 and 70
+)
+```
+
+- `dijkstra_examples.ml`:
+```
+(executable
+  (name dijkstra_examples)
+  (libraries base stdio domainslib)
+  (modules dijkstra graph dijkstra_examples graph_examples)
+  (promote (until-clean))
+  (flags :standard -w "-32-33-70")
+  )
+```
