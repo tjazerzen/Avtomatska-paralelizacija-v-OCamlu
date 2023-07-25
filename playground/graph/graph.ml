@@ -4,6 +4,8 @@ module Node : sig
 
   val create : elt -> t
   val value : t -> elt
+  (* compare x y returns 0 if x is equal to y, a negative integer if x is less than y, and a positive integer if x is greater than y *)
+  val compare_ids : t -> t -> int
   val compare : t -> t -> int
   val to_string : t -> string
   val id : t -> elt
@@ -20,7 +22,9 @@ end = struct
     { id; value }
 
   let value node = node.value
-  let compare node1 node2 = Stdlib.compare node1.id node2.id
+  let compare_ids node1 node2 = Stdlib.compare node1.id node2.id
+
+  let compare node1 node2 = Stdlib.compare node1.value node2.value
 
   let to_string node =
     Printf.sprintf "Node(id: %d, value: %d)" node.id node.value
@@ -143,7 +147,7 @@ end = struct
       else
         let node1 = List.nth nodes (Random.int num_nodes) in
         let node2 = List.nth nodes (Random.int num_nodes) in
-        if Node.compare node1 node2 <> 0 then
+        if Node.compare_ids node1 node2 <> 0 then
           let graph = add_edge node1 node2 graph in
           add_edges graph (num_edges - 1)
         else add_edges graph num_edges
@@ -275,7 +279,7 @@ end = struct
       else
         let node1 = List.nth nodes (Random.int num_nodes) in
         let node2 = List.nth nodes (Random.int num_nodes) in
-        if Node.compare node1 node2 <> 0 then
+        if Node.compare_ids node1 node2 <> 0 then
           let graph = add_edge node1 node2 (Random.float 1.0) graph in
           add_edges graph (num_edges - 1)
         else add_edges graph num_edges
