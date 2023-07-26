@@ -179,9 +179,6 @@ module WeightedGraph : sig
 (** [nodes graph] returns a list of nodes in the graph. *)
   val nodes : t -> Node.t list
   
-(** [edges graph] returns a list of edges in the graph, represented as a tuple of the form (node1, node2, weight). *)
-  val edges : t -> (Node.t * Node.t * float) list
-  
 (** [to_string graph] returns a string representation of the graph [graph], including a list of its nodes and edges. *)
   val to_string : t -> string
   
@@ -194,6 +191,9 @@ module WeightedGraph : sig
 (** [create_new_graph ~num_nodes ~num_edges ~directed] returns a new graph with [num_nodes] nodes and [num_edges] edges, with the specified directionality. *)
   val create_new_graph : num_nodes:int -> num_edges:int -> directed:bool -> t
 
+(** [edges graph] returns a map of maps representing the edges in the graph [graph]. The outer map maps each node in the graph to a map of its neighbours, where the inner map maps each neighbour to the weight of the edge connecting it to the node. *)
+  val edges : t -> float NodeMap.t NodeMap.t
+
 end = struct
   
   type elt = int
@@ -203,6 +203,8 @@ end = struct
   }
 
   let empty ~directed = { edges = NodeMap.empty; directed }
+
+  let edges graph = graph.edges
 
   let add_node (node: Node.t) (graph: t) : t =
     let edges = NodeMap.add node NodeMap.empty graph.edges in
@@ -243,18 +245,21 @@ end = struct
 
   let nodes (graph: t) : Node.t list = NodeMap.bindings graph.edges |> List.map fst
 
-  let edges (graph: t) : (Node.t * Node.t * float) list =
-    NodeMap.bindings graph.edges |> List.map (fun (src, dst_map) ->
-      NodeMap.bindings dst_map |> List.map (fun (dst, weight) -> (src, dst, weight))
-    ) |> List.flatten
-
   let to_string (graph : t) : string =
     let nodes_str =
       nodes graph |> List.map (fun node -> Node.to_string node)
       |> String.concat ", "
     in
+    let edges_aux (graph : t) : (Node.t * Node.t * float) list = 
+      graph.edges |> NodeMap.bindings
+      |> List.map (fun (node1, nodes) ->
+             NodeMap.bindings nodes
+             |> List.map (fun (node2, weight) -> (node1, node2, weight))
+      )
+      |> List.flatten
+      in
     let edges_str =
-      edges graph |> List.map (fun (src, dst, weight) ->
+      edges_aux graph |> List.map (fun (src, dst, weight) ->
         Printf.sprintf "(%s -> %s : %f)" (Node.to_string src) (Node.to_string dst) weight
       ) |> String.concat ", "
     in

@@ -3,4 +3,5 @@
   (libraries base stdio domainslib)
   (modules dijkstra graph dijkstra_examples graph_examples)
   (promote (until-clean))
+  (flags :standard -w "-32")
   )
