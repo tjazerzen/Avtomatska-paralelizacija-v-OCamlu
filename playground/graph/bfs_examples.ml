@@ -31,7 +31,6 @@ let large_graph_start_node_id = 2
 let large_graph_vertex_count = 1000
 let large_graph_edge_count = 500000
 
-
 (*---------------SMALL GRAPH-----------------*)
 
 let () =
@@ -43,59 +42,91 @@ let small_graph =
     ~num_edges:small_graph_edge_count ~directed:false
 
 let small_graph_start_node =
-  Option.get (UnweightedGraph.find_node_by_id small_graph_start_node_id small_graph)
+  Option.get
+    (UnweightedGraph.find_node_by_id small_graph_start_node_id small_graph)
 
 (*Sequential BFS*)
-let () = info_bfs_calculation_print small_graph_start_node_id ~is_sequential:true
+let () =
+  info_bfs_calculation_print small_graph_start_node_id ~is_sequential:true
+
 let () =
   BfsAlgorithms.sequential small_graph small_graph_start_node
   |> print_bfs_result
 
 (*Parallel BFS*)
-let () = info_bfs_calculation_print small_graph_start_node_id ~is_sequential:false
+let () =
+  info_bfs_calculation_print small_graph_start_node_id ~is_sequential:false
+
 let () =
   BfsAlgorithms.parallel small_graph small_graph_start_node ~num_domains
   |> print_bfs_result
 
 (*---------------LARGE GRAPH-----------------*)
 (*Reading the graph*)
-let large_graph = UnweightedGraph.create_new_graph ~num_nodes:large_graph_vertex_count
-                     ~num_edges:large_graph_edge_count ~directed:false
-let () = Printf.printf "Creating graph with %d vertices and %d edges...\n"
-           large_graph_vertex_count large_graph_edge_count
-let large_graph_start_node = Option.get (UnweightedGraph.find_node_by_id large_graph_start_node_id large_graph)
+let large_graph =
+  UnweightedGraph.create_new_graph ~num_nodes:large_graph_vertex_count
+    ~num_edges:large_graph_edge_count ~directed:false
+
+let () =
+  Printf.printf "Creating graph with %d vertices and %d edges...\n"
+    large_graph_vertex_count large_graph_edge_count
+
+let large_graph_start_node =
+  Option.get
+    (UnweightedGraph.find_node_by_id large_graph_start_node_id large_graph)
 
 (*Parallel BFS*)
-let () = info_bfs_calculation_print large_graph_start_node_id ~is_sequential:false
-let _ = Printf.printf "Parallel BFS calculation time: %f\n" (BfsPerformanceAnalysis.bfs_par_calculation_time large_graph large_graph_start_node num_domains)
+let () =
+  info_bfs_calculation_print large_graph_start_node_id ~is_sequential:false
+
+let _ =
+  Printf.printf "Parallel BFS calculation time: %f\n"
+    (BfsPerformanceAnalysis.bfs_par_calculation_time large_graph
+       large_graph_start_node num_domains)
 
 (*Sequential BFS*)
-let () = info_bfs_calculation_print large_graph_start_node_id ~is_sequential:true 
-let () = Printf.printf "Sequential BFS calculation time: %f\n" (BfsPerformanceAnalysis.bfs_seq_calculation_time large_graph large_graph_start_node)
+let () =
+  info_bfs_calculation_print large_graph_start_node_id ~is_sequential:true
 
-let () = Printf.printf "Printing parallel BFS performance based on num_domains to csv...\n"
-let () = BfsPerformanceAnalysis.bfs_par_calculation_time_num_domains_to_csv large_graph large_graph_start_node ~max_domains:8
+let () =
+  Printf.printf "Sequential BFS calculation time: %f\n"
+    (BfsPerformanceAnalysis.bfs_seq_calculation_time large_graph
+       large_graph_start_node)
+
+let () =
+  Printf.printf
+    "Printing parallel BFS performance based on num_domains to csv...\n"
+
+let () =
+  BfsPerformanceAnalysis.bfs_par_calculation_time_num_domains_to_csv large_graph
+    large_graph_start_node ~max_domains:8
 
 (*Printing sequential BFS performance to csv...*)
 (* This code block defines a list of tuples representing combinations of node and edge counts for a graph. The tuples are used to calculate the performance of sequential BFS on graphs with varying sizes. *)
-let combinations = [
-  (134, 67000);
-  (267, 133500);
-  (401, 200500);
-  (534, 267000);
-  (668, 334000);
-  (801, 400500);
-  (935, 467500);
-  (1068, 534000);
-  (1202, 601000);
-  (1335, 667500);
-  (1469, 734500);
-  (1602, 801000);
-  (1736, 868000);
-  (1869, 934500);
-  (2003, 1001000);
-]
+let combinations =
+  [
+    (134, 67000);
+    (267, 133500);
+    (401, 200500);
+    (534, 267000);
+    (668, 334000);
+    (801, 400500);
+    (935, 467500);
+    (1068, 534000);
+    (1202, 601000);
+    (1335, 667500);
+    (1469, 734500);
+    (1602, 801000);
+    (1736, 868000);
+    (1869, 934500);
+    (2003, 1001000);
+  ]
 
-let () = Printf.printf "Printing sequential BFS performance based on number of nodes and edges to csv...\n"
+let () =
+  Printf.printf
+    "Printing sequential BFS performance based on number of nodes and edges to \
+     csv...\n"
 
-let () = BfsPerformanceAnalysis.bfs_calculation_time_combinations_to_csv combinations ~num_domains:8
+let () =
+  BfsPerformanceAnalysis.bfs_calculation_time_combinations_to_csv combinations
+    ~num_domains:8

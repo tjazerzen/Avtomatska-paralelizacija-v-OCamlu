@@ -44,7 +44,8 @@ end
     while the [sequential] function runs on a single thread. 
     *)
 module type Bfs = sig
-  val parallel : UnweightedGraph.t -> Node.t -> num_domains:int -> NodeSet.t list
+  val parallel :
+    UnweightedGraph.t -> Node.t -> num_domains:int -> NodeSet.t list
   (** [parallel graph start_node] is a function that implements the breadth-first search algorithm on a graph [graph] starting from a given node [start_node]. 
   It returns a list of sets of nodes, where each set contains all nodes at a certain distance from the starting node. 
   This function uses parallelism to speed up the computation. *)
@@ -59,15 +60,15 @@ end
 
 module BfsAlgorithms : Bfs = struct
   (** [visit_node node visited graph] returns a list of nodes that are neighbours of [node] in [graph] and have not been visited yet. *)
-  let visit_node (node : Node.t) (visited : NodeSet.t) (graph : UnweightedGraph.t) :
-      Node.t list =
+  let visit_node (node : Node.t) (visited : NodeSet.t)
+      (graph : UnweightedGraph.t) : Node.t list =
     let neighbours : Node.t list = UnweightedGraph.neighbours node graph in
     List.filter (fun node -> not (NodeSet.mem node visited)) neighbours
 
   let rec loop (visited : NodeSet.t) (stages : NodeSet.t list)
       (next_stage_implementation :
-        NodeSet.t -> NodeSet.t -> UnweightedGraph.t -> NodeSet.t) (graph : UnweightedGraph.t) :
-      NodeSet.t list =
+        NodeSet.t -> NodeSet.t -> UnweightedGraph.t -> NodeSet.t)
+      (graph : UnweightedGraph.t) : NodeSet.t list =
     match stages with
     | last_stage :: _ ->
         let next : NodeSet.t =
@@ -83,8 +84,8 @@ module BfsAlgorithms : Bfs = struct
   (** [parallel graph start_node] is a function that implements the breadth-first search algorithm on a graph [graph] starting from a given node [start_node]. 
     It returns a list of sets of nodes, where each set contains all nodes at a certain distance from the starting node. 
     This function uses parallelism to speed up the computation. *)
-  let parallel (graph : UnweightedGraph.t) (start_node : Node.t) ~(num_domains : int) :
-      NodeSet.t list =
+  let parallel (graph : UnweightedGraph.t) (start_node : Node.t)
+      ~(num_domains : int) : NodeSet.t list =
     let next_stage_par (visited : NodeSet.t) (previous_stage : NodeSet.t)
         (graph : UnweightedGraph.t) : NodeSet.t =
       let new_nodes : Node.t list =
@@ -104,7 +105,8 @@ module BfsAlgorithms : Bfs = struct
   (** [sequential graph start_node] is a function that implements the breadth-first search algorithm on a graph [graph] starting from a given node [start_node]. 
     It returns a list of sets of nodes, where each set contains all nodes at a certain distance from the starting node. 
     This function runs on a single thread. *)
-  let sequential (graph : UnweightedGraph.t) (start_node : Node.t) : NodeSet.t list =
+  let sequential (graph : UnweightedGraph.t) (start_node : Node.t) :
+      NodeSet.t list =
     let next_stage_seq (visited : NodeSet.t) (previous_stage : NodeSet.t)
         (graph : UnweightedGraph.t) : NodeSet.t =
       let new_nodes : Node.t list =
@@ -125,8 +127,12 @@ end
 module MakeBfsPerformanceAnalysis (Bfs : Bfs) : sig
   val bfs_par_calculation_time : UnweightedGraph.t -> Node.t -> int -> float
   val bfs_seq_calculation_time : UnweightedGraph.t -> Node.t -> float
-  val bfs_par_calculation_time_num_domains_to_csv : UnweightedGraph.t -> Node.t -> max_domains:int -> unit
-  val bfs_calculation_time_combinations_to_csv : (int * int) list -> num_domains:int -> unit
+
+  val bfs_par_calculation_time_num_domains_to_csv :
+    UnweightedGraph.t -> Node.t -> max_domains:int -> unit
+
+  val bfs_calculation_time_combinations_to_csv :
+    (int * int) list -> num_domains:int -> unit
 end = struct
   (** [bfs_par_calculation_time graph start_node num_domains] runs the breadth-first search algorithm on a graph [graph] starting from a given node [start_node]. 
     It returns a list of sets of nodes, where each set contains all nodes at a certain distance from the starting node. 
@@ -137,20 +143,23 @@ end = struct
     let _ = Bfs.parallel graph start_node ~num_domains in
     (* Printf.printf "Parallel BFS took %f seconds\n" *)
     Unix.gettimeofday () -. start_time
-    (* result *)
+  (* result *)
 
   (** [bfs_seq_calculation_time graph start_node] runs the breadth-first search algorithm on a graph [graph] starting from a given node [start_node]. 
     It returns a list of sets of nodes, where each set contains all nodes at a certain distance from the starting node. 
     This function runs on a single thread. *)
-  let bfs_seq_calculation_time (graph : UnweightedGraph.t) (start_node : Node.t) : float =
+  let bfs_seq_calculation_time (graph : UnweightedGraph.t) (start_node : Node.t)
+      : float =
     let start_time = Unix.gettimeofday () in
     let _ = Bfs.sequential graph start_node in
     (* Printf.printf "Sequential BFS took %f seconds\n" *)
     Unix.gettimeofday () -. start_time
-  
-  let bfs_par_calculation_time_num_domains_to_csv
-      (graph : UnweightedGraph.t) (start_node : Node.t) ~(max_domains:int) : unit =
-    let out_channel = open_out "computation_time_analysis/bfs_par_domains.csv" in
+
+  let bfs_par_calculation_time_num_domains_to_csv (graph : UnweightedGraph.t)
+      (start_node : Node.t) ~(max_domains : int) : unit =
+    let out_channel =
+      open_out "computation_time_analysis/bfs_par_domains.csv"
+    in
     let rec bfs_par_calculation_time_num_domains_to_csv_aux num_domains =
       if num_domains > max_domains then ()
       else
@@ -163,25 +172,31 @@ end = struct
     output_string out_channel "num_domains,time\n";
     bfs_par_calculation_time_num_domains_to_csv_aux 1;
     close_out out_channel
-  
-    let bfs_calculation_time_combinations_to_csv (combinations : (int * int) list) ~(num_domains:int) : unit =
-      let out_channel = open_out "computation_time_analysis/bfs_par_combinations.csv" in
-      let calculate_and_write (num_nodes, num_edges) =
-        let graph = UnweightedGraph.create_new_graph ~num_nodes ~num_edges ~directed:false in
-        let start_node = Option.get (UnweightedGraph.find_node_by_id 1 graph) in
-        let parallel_calculation_time =
-          bfs_par_calculation_time graph start_node num_domains
-        in
-        let sequential_calculation_time =
-          bfs_seq_calculation_time graph start_node
-        in
-        Printf.fprintf out_channel "%d,%d,%.3f,%.3f\n" num_nodes num_edges parallel_calculation_time sequential_calculation_time
+
+  let bfs_calculation_time_combinations_to_csv (combinations : (int * int) list)
+      ~(num_domains : int) : unit =
+    let out_channel =
+      open_out "computation_time_analysis/bfs_par_combinations.csv"
+    in
+    let calculate_and_write (num_nodes, num_edges) =
+      let graph =
+        UnweightedGraph.create_new_graph ~num_nodes ~num_edges ~directed:false
       in
-      output_string out_channel "num_nodes,num_edges,parallel_time,sequential_time\n";
-      List.iter calculate_and_write combinations;
-      close_out out_channel    
-  
+      let start_node = Option.get (UnweightedGraph.find_node_by_id 1 graph) in
+      let parallel_calculation_time =
+        bfs_par_calculation_time graph start_node num_domains
+      in
+      let sequential_calculation_time =
+        bfs_seq_calculation_time graph start_node
+      in
+      Printf.fprintf out_channel "%d,%d,%.3f,%.3f\n" num_nodes num_edges
+        parallel_calculation_time sequential_calculation_time
+    in
+    output_string out_channel
+      "num_nodes,num_edges,parallel_time,sequential_time\n";
+    List.iter calculate_and_write combinations;
+    close_out out_channel
 end
 
-(** [BfsPerformanceAnalysis] is a module that provides performance analysis functions for the breadth-first search algorithm. *)
 module BfsPerformanceAnalysis = MakeBfsPerformanceAnalysis (BfsAlgorithms)
+(** [BfsPerformanceAnalysis] is a module that provides performance analysis functions for the breadth-first search algorithm. *)
