@@ -1,4 +1,4 @@
-open Priority_queue
+open Dijkstra
 open Graph
 
 (* Create an empty priority queue *)
@@ -9,10 +9,9 @@ let node1 = Node.create 3;;
 let node2 = Node.create 1;;
 let node3 = Node.create 2;;
 
-(* Insert the nodes into the priority queue *)
-let pq = PQ.insert pq node1;;
-let pq = PQ.insert pq node2;;
-let pq = PQ.insert pq node3;;
+let pq = pq |> PQ.insert node1 3.0 |> PQ.insert node2 1.0 |> PQ.insert node3 2.0;;
+
+(* Print the priority queue *)
 
 (* Extract the nodes from the priority queue *)
 let (node, pq) = PQ.extract pq;;

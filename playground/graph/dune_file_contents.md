@@ -42,22 +42,22 @@
   (promote (until-clean)))
 ```
 
-- `priority_queue.ml`:
+- `dijkstra.ml`:
 ```
 (executable
-  (name priority_queue)
+  (name dijkstra)
   (libraries base stdio domainslib)
   (modules dijkstra graph)
   (flags :standard -w "-32-70") ; If needed - suppress warnings 32 and 70
 )
 ```
 
-- `priority_queue_examples.ml`:
+- `dijkstra_examples.ml`:
 ```
 (executable
-  (name priority_queue_examples)
+  (name dijkstra_examples)
   (libraries base stdio domainslib)
-  (modules priority_queue graph priority_queue_examples graph_examples)
+  (modules dijkstra graph dijkstra_examples graph_examples)
   (promote (until-clean))
   (flags :standard -w "-32-33-70")
   )
