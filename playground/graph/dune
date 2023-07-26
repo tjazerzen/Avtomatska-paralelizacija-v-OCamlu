@@ -1,5 +1,6 @@
 (executable
-  (name bfs_examples)
-  (libraries base stdio domainslib parany)
-  (modules bfs graph bfs_examples graph_examples)
-  (promote (until-clean)))
+  (name dijkstra_examples)
+  (libraries base stdio domainslib)
+  (modules dijkstra graph dijkstra_examples graph_examples)
+  (promote (until-clean))
+  )
