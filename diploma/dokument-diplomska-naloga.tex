@@ -60,6 +60,8 @@
 \geslo{high-level}{visokonivojski}
 \geslo{code wrapper}{programski ovoj}
 \geslo{adjaceny list}{seznam sosednosti}
+\geslo{shared memory}{skupni pomnilnik}
+\geslo{distributed memory}{porazdeljeni pomnilnik}
 }
 
 % - ime datoteke z viri (vključno s končnico .bib), če uporabljate BibTeX
@@ -146,42 +148,53 @@
 \section{Uvod}
 
 Grafovski algoritmi so dan danes ključni pri modeliranju širokega nabora vsakdanjih problemov: 
-Igrajo pomembno vlogo pri modeliranju družbenih ter računalniških omrežjih, z njimi pa se prav tako razrešujejo problemi na področjih računalniške komunikacije ter podatkovne analitike. 
-Splošno, z grafi lahko abstrahiramo kakršno koli množico odnosov med danimi entitetami, vse od računanja razdalj med mesti, pa do računanje vodnega pretoka od enega kraja do drugega.
+Igrajo pomembno vlogo pri modeliranju družbenih ter računalniških omrežjih, z njimi pa se prav tako razrešujejo 
+problemi na področjih računalniške komunikacije ter podatkovne analitike. Splošno, z grafi lahko abstrahiramo kakršno 
+koli množico odnosov med danimi entitetami, vse od računanja razdalj med mesti, pa do računanje vodnega pretoka 
+od enega kraja do drugega.
 
-Ker kompleksnost grafov raste nelinearno z večanjem podatkov, z njihovim računanjem ter procesiranjem pogosto trčimo ob računsko prezahtevno oviro.
-Načinov za reševanje tega je več, pogosto pa je ena izmed najpogostejših ozkih grl to, da našega programa nismo napisali paralelno ter s tem izkoristili celotne kapacitete računalnika, 
-temveč smo naš program poganjali zgolj na enem jedru. 
-Posledično je paralelizacija tovrstnih algoritmov v zadnjih letih postala zanimiva in aplikativna raziskovalna tema. 
-V svoji diplomski nalogi se bom tako ukvarjal z paralelizacijo grafovksih algoritmov.
+Ker kompleksnost grafov raste nelinearno z večanjem podatkov, z njihovim računanjem ter procesiranjem pogosto trčimo
+ob računsko prezahtevno oviro. Načinov za reševanje tega je več, pogosto pa je eden izmed možnih načinov pospešitve
+programa paralelizacija, s čimer, kot bomo videli, bolje izkoristimo celotno računalniško kapaciteto.
+Posledično je paralelizacija tovrstnih algoritmov v zadnjih letih postala tako zanimiva raziskovalna kot
+tudi aplikativna tema v računalništvu.  Tema se zdi vsekakor zanimiva, zato sem v svoji diplomski nalogi želel 
+vključiti elemente računalniške paralelizacije.
 
-Funkcijski programski jeziki zagotavljajo matematične abstrakcije na višjem nivoju, kot so jih to sposobni navadni imperativni programski jeziki, kot so na primer Python, C++ in Java. 
-Ena izmed prednosti funkcijskih programskih jezikov je, da omogočajo deklarativno programiranje, kar jih naredi bolj paralelizabilne (več o tem v nadaljevanju). 
-Tako me je zanimanje za matematične grafe, algoritme in funkcijske jezike pripeljalo v združevanje vseh teh tem hkrati: 
-V svoji diplomski nalogi se bom zato osredotočil na \textit{paralelizacijo grafovskih algoritmov v funkcijskih programskih jezikih}.
+Funkcijski programski jeziki zagotavljajo matematične abstrakcije na višjem nivoju, kot so jih to sposobni navadni
+imperativni programski jeziki, kot so na primer \textit{Python}, \textit{C++} in \textit{Java}. 
+Ena izmed prednosti funkcijskih programskih jezikov je, da omogočajo deklarativno programiranje, 
+kar jih naredi bolj paralelizabilne (\ref{def:deklarativni_programski_jeziki}). Tako me je zanimanje za matematične grafe, algoritme
+in funkcijske jezike pripeljalo v združevanje vseh teh tem hkrati: Osrednja tema moje diplomske naloge bo
+\textit{paralelizacija grafovskih algoritmov v funkcijskih programskih jezikih}.
 
-\begin{definicija}
-  \textbf{Deklarativni programski jezik} je vrsta programskega jezika, kjer razvijalec opišie kaj naj program stori, namesto kako naj to stori. Programi so tipično strukturirani kot nizi deklaracij, 
-  ki določajo razmerja in omejitve med med različnimi entitetami znotraj problema. Nasprotno, \textbf{imperativni programski jezik} je vrsta programskega jezika, kjer programer navede zaporedje ukazov,
+\begin{definicija} \label{def:deklarativni_programski_jeziki}
+  \textbf{Deklarativni programski jezik} je vrsta programskega jezika, kjer razvijalec opišie kaj naj program stori, 
+  namesto kako naj to stori. Programi so tipično strukturirani kot nizi deklaracij, ki določajo razmerja in omejitve
+  med različnimi entitetami znotraj problema. 
+  Nasprotno, \textbf{imperativni programski jezik} je vrsta programskega jezika, kjer programer navede zaporedje ukazov,
   ki naj jih računalnik izvrši za rešitev problema.
 \end{definicija}
 
-Vzporednost na nivoju pomnilnika je moč doseči na dva načina: 
+Vzporednost na nivoju procesorja je moč doseči na dva načina: 
 Tako, da je pomnilnik vsem računalniškim jedrom skupen, ali pa da je pomnilnik \textit{porazdeljen}. 
-V tej diplomski nalogi se bom osredotočal na sisteme s skupnim pomnilnikom. 
-V tej diplomski nalogi se bom osredotočal zgolj na sisteme s skupnim pomnilnikom ter porazdeljeno procesorsko močjo.
+V tej diplomski nalogi se bom osredotočal zgolj na sisteme s skupnim pomnilnikom ter porazdeljeno procesorsko močjo, 
+saj je tovrstne programe tipično manj zahtevno implementirati, kot pa programe, ki delujejo na porazdeljenem pomnilniku.
 
-Vse več funkcijskih programskih jezikov, kot so na primer Scala, F\# ter Haskell ima implementirane knjižnice in ogrodja za paralelizacijo grafovskih algoritmov:
+Vse več funkcijskih programskih jezikov, kot so na primer Scala, F\# ter Haskell ima implementirane knjižnice
+in ogrodja za paralelizacijo grafovskih algoritmov:
 \begin{itemize}
-    \item knjižnica \textit{Graphalyze} v Haskellu zagotavlja vzporedne algoritme za najkrajšo pot ter iskanje krepko povezanih komponent.
+    \item knjižnica \textit{Graphalyze} v Haskellu zagotavlja vzporedne algoritme za najkrajšo pot 
+    ter iskanje krepko povezanih komponent.
     \item \textit{GraphX} v Scali ponuja implementacijo paralelnega Googlovega PageRank algoritma.
-    \item \textit{Alea.cuBase} nam ponuja osnovne paralelne algoritme v jeziku F\#.
+    \item \textit{Alea.cuBase} nam ponuja elementarne paralelne algoritme v jeziku F\#.
 \end{itemize}
 
-Od konca lanskega leta pa imamo nov funkcijski programski jezik, ki je postal ``multicore'' - to je OCaml, ki se med drugim poučuje na naši fakulteti v sklopu računalniško-orientiranih predmetov. 
+Od konca lanskega leta pa imamo nov funkcijski programski jezik, ki je postal ``multicore'' - to je \textit{OCaml},
+ki se med drugim poučuje na naši fakulteti v sklopu računalniško-orientiranih predmetov. 
 Zato sem to priložnost izoristil, da svoje računalniške programe pišem v tem funkcijskem jeziku. 
 V tej diplomski naloge se bom tako spustil v tovrstne knjižnice v funkcijskih jezikih, ki že obstajajo, 
-pregledal novejše raziskave kar se tiče grafovskih algoritmov v imperativnih jezikih, to prevedel v deklarativni jezik ter vse to skupaj povezav v zaključeno celovito knjižnico v OCamlu.
+pregledal novejše raziskave kar se tiče grafovskih algoritmov v imperativnih jezikih, 
+to prevedel v deklarativni jezik ter vse to skupaj povezav v zaključeno celovito knjižnico v OCamlu.
 
 \section{Kratek uvod v funkcijsko programiranje}
 
