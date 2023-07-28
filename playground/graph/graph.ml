@@ -35,7 +35,6 @@ end
 
 module NodeSet = Set.Make (Node)
 module NodeMap = Map.Make (Node)
-module IntMap = Map.Make (Int)
 
 module UnweightedGraph : sig
   type elt = int (* node values *)
