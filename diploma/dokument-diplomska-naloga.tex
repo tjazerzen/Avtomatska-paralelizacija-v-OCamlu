@@ -638,57 +638,6 @@ za kompleksejše grafovske algoritme, npr. za Dijkstro.
 Pri predmetih iz drugega in tretjega letnika (OR, PSA1) smo se naučili, da BFS deluje tako, da vozlišča razvršča
 v vrsto, nato pa iz vrste izbira vozlišča, ki jih bo raziskal, nato pa to induktivno ponavlja za vse sosede.
 
-Vrsta je FIFO (first in, first out) podatkovna struktura, kar pomeni, da bomo iz vrste vedno odstranjevali vozlišča, 
-ki so bila v vrsto dodana najprej. Ta funkcionalnost je že implementirana v OCamlovi standarni knjižnici
-(\url{https://v2.ocaml.org/api/Queue.html}), vendar pa je le-ta implementirana preko spremenljivih podatkovnih struktur,
-kar pa bi predstavljajo probleme pri paralelizaciji ter spreminjanjem deljenega pomnilnika. Zato sem si v tem poglavju
-najprej zadal implementirati svojo nespremenljivo vrsto.
-
-\subsection{Implementacija vrste z dvema skladoma}
-
-Implementacija vrste preko dveh skladov je znan problem, ki se je v moji situaciji izkazal za uporabnega.
-Tu rešitev do omenjenega problema predstavim ter predstavim rešitev v OCamlu.
-Za razliko od vrste je sklad je FILO (first in, last out) podatkovna struktura, kar pomeni, da bomo iz sklada vedno
-odstranjevali vozlišča, ki so bila v sklad dodana zadnja.
-
-Ker je zaradi implementacije pomnilnika v OCamlu sklad praktično že implementiran sam od sebe (seznam), je implementacija
-vrste preko dveh skladov smiselna.
-
-Glavna ideja je sledeča: Vozlišča, ki jih dodajamo v vrsto, dodajamo v sklad $A$. Ko pa želimo vozlišče odstraniti iz
-vrste, ga odstranimo iz sklada $B$. Če je sklad $B$ prazen, potem pa vsebino sklada $A$ prekopiramo v sklad $B$ v obratnem.
-
-Rezultat implementirane ideje je sledeči modul:
-
-\begin{lstlisting}[label=lst:queue]
-module Queue : sig
-  type 'a t
-  val create_empty_queue : unit -> 'a t
-  val is_empty : 'a t -> bool
-  val enqueue : 'a -> 'a t -> 'a t
-  val dequeue : 'a t -> ('a * 'a t) option
-end = struct
-  type 'a t = { 
-    enqueue_stack : 'a list; 
-    dequeue_stack : 'a list }
-  let create_empty_queue () = 
-    { enqueue_stack = []; dequeue_stack = [] }
-  let is_empty q = 
-    q.enqueue_stack = [] && q.dequeue_stack = []
-  let enqueue x q = 
-    { q with enqueue_stack = x :: q.enqueue_stack }
-
-  let dequeue q =
-    match q.dequeue_stack with
-    | hd :: tl -> Some (hd, { q with dequeue_stack = tl })
-    | [] -> (
-        match List.rev q.enqueue_stack with
-        | [] -> None
-        | hd :: tl -> Some (
-            hd, 
-            { enqueue_stack = []; dequeue_stack = tl })
-          )
-end
-\end{lstlisting}
 
 Glavni metodi znotraj tega modula sta \texttt{enqueue} in \texttt{dequeue}. Vlogo skladov $A$ in $B$ imata
 seznama \texttt{enqueue\_stack} in \texttt{dequeue\_stack}. Vozlišča, ki jih dodajamo v vrsto, dodajamo v sklad
