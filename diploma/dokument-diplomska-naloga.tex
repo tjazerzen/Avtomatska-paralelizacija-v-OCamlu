@@ -109,7 +109,7 @@
 \newcommand{\Q}{\mathbb Q}
 
 \lstdefinelanguage{OCaml}{
-  keywords={let,rec,if,then,else, module},
+  keywords={let,rec,if,then,else,module},
   sensitive=true,
   basicstyle=\ttfamily,
   keywordstyle=\bfseries,
@@ -643,109 +643,171 @@ Glavni metodi znotraj tega modula sta \texttt{enqueue} in \texttt{dequeue}. Vlog
 seznama \texttt{enqueue\_stack} in \texttt{dequeue\_stack}. Vozlišča, ki jih dodajamo v vrsto, dodajamo v sklad
 \texttt{enqueue\_stack}. Ko pa želimo vozlišče odstraniti iz vrste, ga odstranimo iz sklada \texttt{dequeue\_stack}.
 
-\subsection{Neparalelni BFS}
+\subsection{Sekvenčni BFS}
+
+Ker je rekurzija elementarno orodje v funkcijskih jezikih, sem se sekvenčne implementacije BFS lotil rekurzivno, kar
+je za iskanje v širino mogoče bolj redko kot iterativna verzija tega algoritma. 
+
+Ideja je, da na vsakem koraku dodamo množico vseh dosegljivih vozlišč iz trenutnega nivoja. To lahko naredimo tako, da
+za vsako vozlišče $u$ na trenutnem nivoju $L$ dodamo v množico $L$ vse njegove sosede, ki še niso bili obiskani.
+
+Tu je moja implementirana sekvenčna implementacija tega algoritma:
+
+\begin{lstlisting}[label=lst:bfs_sequential]
+module BfsAlgorithms : Bfs = struct
+  let visit_node (node : Node.t) (visited : NodeSet.t)
+      (graph : UnweightedGraph.t) : Node.t list =
+    let neighbours : Node.t list = 
+      UnweightedGraph.neighbours node graph in
+    List.filter (
+      fun node -> not (NodeSet.mem node visited)) neighbours
+
+  let rec loop (visited : NodeSet.t) 
+      (stages : NodeSet.t list)
+      next_stage_implementation
+      (graph : UnweightedGraph.t) : NodeSet.t list =
+    match stages with
+    | last_stage :: _ ->
+        let next : NodeSet.t =
+          next_stage_implementation visited last_stage graph
+        in
+        if NodeSet.is_empty next then List.rev stages
+        else
+          loop
+            (NodeSet.union visited next)
+            (next :: stages) next_stage_implementation graph
+    | [] -> failwith "Should not happen"
+
+  let sequential graph start_node : NodeSet.t list =
+    let next_stage_seq visited previous_stage
+        (graph : UnweightedGraph.t) : NodeSet.t =
+      let new_nodes : Node.t list =
+        previous_stage |> NodeSet.elements
+        |> List.map (
+          fun node -> visit_node node visited graph)
+        |> List.flatten
+      in
+      List.fold_left
+        (fun set node -> NodeSet.add node set)
+        NodeSet.empty new_nodes
+    in
+    loop
+      (NodeSet.singleton start_node)
+      [ NodeSet.singleton start_node ]
+      next_stage_seq graph
+end
+
+\end{lstlisting}
 
 
-\begin{algorithm}[H]
-  \caption{Imperativno napisana psevdokoda za neparalelno iskanje v širino (BFS)}
-  \label{alg:non_parallel_bfs}
-  \begin{algorithmic}[1]
-    \Function{BFS}{$G,s$}
-      \State $Q \gets \emptyset$
-      \State $Q.\text{enqueue}(s)$
-      \State $visited \gets \emptyset$
-      \State $visited.\text{add}(s)$
-      \While{$Q \neq \emptyset$}
-        \State $u \gets Q.\text{dequeue}()$
-        \For{$v \in G.\text{adj}(u)$}
-          \If{$v \notin visited$}
-            \State $visited.\text{add}(v)$
-            \State $Q.\text{enqueue}(v)$
-          \EndIf
-        \EndFor
-      \EndWhile
-    \EndFunction
-  \end{algorithmic}
-\end{algorithm}
+Implementacijsko to počnem preko funkcije \texttt{loop}, ki na vsakem koraku dodaja nove nivoje v seznam nivojev.
+Funkcija \texttt{loop} sprejme množico obiskanih vozlišč, seznam nivojev, funkcijo, ki določa, kako se izračuna
+naslednji nivo, ter graf, v katerem iščemo. Funkcija \texttt{loop} na vsakem koraku izračuna naslednji nivo, nato pa
+rekurzivno kliče samo sebe, dokler ne pride do nivoja, ki ne vsebuje nobenega vozlišča. Takrat vrne seznam nivojev.
 
-Čeprav gre za neparalelen algoritem, se mi zdi še vseeno koristno predstaviti ideje algoritma, saj bomo tako lažje 
-razumeli ideje kompleksnejše, paralelne verzije:
-\begin{enumerate}
-  \item Začni z vrsto $Q$, ki vsebuje zgolj vozlišče $s$. Odstrani vozlišče $s$ iz vrste $Q$ ter ga dodaj v množico $visited$.
-        Opomniti gre, da je vrsta FIFO (first in, first out), kar pomeni, da bomo iz vrste $Q$ vedno odstranjevali vozlišča, 
-        ki so bila v vrsto dodana najprej.
-  \item Odstrani vozlišče $u$ iz vrste $Q$. Nato za vsako vozlišče $v$, ki je sosed vozlišča $u$ in še ni bilo obiskano,
-        ga dodaj v vrsto $Q$ ter v množico $visited$. Ta postopek ponavljaj, dokler vrsta $Q$ ni prazna.
-\end{enumerate}
-
-Glavna ideja, ki je za razumevanje paralelnega postopka BFS ključna je, da vozlišča razslojimo na ekvivalenčne razrede 
-glede na njihovo oddaljenost od začetnega vozlišča $s$: Razredu razdalje $0$ pripada zgolj vozlišče $s$, razredu razdalje $1$
-pripadajo vozlišča, ki so od $s$ oddaljena za $1$ povezavo, in tako naprej. Dogovorimo se, da tem ekvivalenčnim razredom rečemo \textbf{nivoji}.
-
+Funkcija \texttt{sequential} je zgolj vmesna funkcija, ki kliče funkcijo \texttt{loop} z ustrezno funkcijo, ki
+izračuna naslednji nivo. V tem primeru je to funkcija \texttt{next\_stage\_seq}, ki za vsako vozlišče na trenutnem
+nivoju izračuna njegove sosede, ki še niso bili obiskani. To pa stori preko matematične funkcije \texttt{map}, ki
+na seznamu vozlišč iz trenutnega nivoja kliče metodo \texttt{visit\_node}, ki za dano vozlišče izračuna njegove
+sosede, ki še niso bili obiskani. Nato pa vse te sosede združi v eno samo množico, ki jo vrne.
 
 \subsection{Paralelni BFS}
 
-\textbf{TODO: Priložena implementacija PBFS-ja trenutno ni funkcionalna zaradi thread safe-nessa. Ko implementacijo dokončaš, spremeni tudi spodnjo implementacijo.}
+Namerno sem v \ref{lst:bfs_sequential} metodo \texttt{sequential} napisal modularno, tako da lahko paralelizacijo
+dodamo zgolj z zamenjavo funkcije \texttt{next\_stage\_seq} z ustrezno funkcijo, ki bo izračunala naslednji nivo
+paralelno. To sem naredil v \ref{lst:bfs_parallel}.
 
-Kot že rečeno: BFS deluje z obiskovanjem vozlišč po nivojih. Glavna ideja paralelnega BFS je, da vsak nivo obiščemo vzporedno, saj so obiski vozlišč na 
-istem nivoju neodvisni eden od drugega.
-Na srečo ima knjižnica domainslib že implementiran programski ovoj (angl. wrapper), ki nam omogoča paralelizacijo BFS tudi na iterativen način,
-kar ni tipično za funkcijski programski jezik. Tako se psevdokoda algoritma ne razlikuje veliko od neparalelne verzije, opisane v \ref{alg:non_parallel_bfs}.
-Tudi če tega \textit{wrapperja} ne bi bilo spisanega, pa bi lahko paralelizacijo izvedli kar direktno preko uporabe \texttt{Domainslib.Task.async}.
+\begin{lstlisting}[label=lst:bfs_parallel]
 
-\begin{lstlisting}
-let bfs_parallel graph start_node num_domains =
-  let queue = ref (Queue.create_empty_queue () |> Queue.enqueue start_node) in
-  let visited = ref (NodeSet.empty |> NodeSet.add start_node) in
-  let level = ref (NodeMap.empty |> NodeMap.add start_node 0) in
+module BfsAlgorithms : Bfs = struct
+  ...
 
-  let pool = T.setup_pool ~num_domains:(num_domains - 1) () in
+  let parallel graph start_node
+      ~(num_domains : int) : NodeSet.t list =
+    let next_stage_par visited previous_stage graph =
+      let new_nodes : Node.t list =
+        previous_stage |> NodeSet.elements
+        |> Parmap.parmap num_domains (
+          fun node -> visit_node node visited graph)
+        |> List.flatten
+      in
+      List.fold_left
+        (fun set node -> NodeSet.add node set)
+        NodeSet.empty new_nodes
+    in
+    loop
+      (NodeSet.singleton start_node)
+      [ NodeSet.singleton start_node ]
+      next_stage_par graph
 
-  let rec bfs_inner () =
-    if Queue.is_empty !queue then ()
-    else
-      match Queue.dequeue !queue with
-      | Some (node, remaining_queue) ->
-        queue := remaining_queue;
-        let neighbours = Graph.neighbours node graph in
-        T.parallel_for pool ~start:0
-          ~finish:(List.length neighbours - 1)
-          ~body:(fun i ->
-            let neighbour = List.nth neighbours i in
-            if not (NodeSet.mem neighbour !visited) then (
-              visited := NodeSet.add neighbour !visited;
-              let parent_level =
-                match NodeMap.find_opt node !level with
-                | Some l -> l
-                | None -> failwith "Unexpected missing parent level in BFS"
-              in
-              level := NodeMap.add neighbour (parent_level + 1) !level;
-              queue := Queue.enqueue neighbour !queue));
-        bfs_inner ()
-      | None -> failwith "Unexpected empty queue"
-  in
-  T.run pool (fun () -> bfs_inner ());
-  T.teardown_pool pool;
+  ...
+end
 
-  !level
-  \end{lstlisting}
+\end{lstlisting}
 
-  Ker smo psevdokodo BFS-ja že opisali v \ref{alg:non_parallel_bfs}, se bom tukaj osredotočil na implementacijo samega algoritma v OCamlu:
-  \begin{itemize}
-    \item Najprej inicializiramo vrsto $Q$, množico $visited$ ter slovar $level$. V vrsto $Q$ dodamo začetno vozlišče $s$, v množico $visited$ dodamo $s$,
-          v slovar $level$ pa dodamo par $(s, 0)$, saj je razdalja od $s$ do $s$ enaka $0$. Ti koraki so enako kot pri sekvenčnem BFS-ju.
-          Ta metoda sprejme graf iz modula \texttt{Graph}, začetno vozlišče $s$ iz modula \texttt{Node} ter število domen, na katerih bomo
-          naš algoritem poganjali.
-    \item Nato inicializiramo domene. To naredimo z ukazom \texttt{T.setup\_pool}, ki sprejme število domen, ki jih želimo inicializirati.
-          V našem primeru želimo inicializirati $n-1$ domen, kjer je $n$ število domen, ki jih ima na voljo naš procesor.
-          Pozneje v kodi domene poženemo z ukazom \texttt{T.run}, nato pa jih uničimo z ukazom \texttt{T.teardown\_pool}
-    \item Za pomoč pri implementaciji definiram rekurzivno metodo \texttt{bfs\_inner}. Ta metoda je ekvivalentna z zanko \texttt{while},
-          ki smo jo uporabili pri neparalelni verziji BFS-ja. V tej metodi se nahaja glavna logika algoritma. Sama implementacija je precej podobna
-          sekvenčni verziji - na vsakem koraku odstranimo vozlišče $u$ iz vrste $Q$, nato pa vsako vozlišče $v$, ki je sosed vozlišča $u$ in še ni bilo obiskano
-          damo v vrsto ter postopek ponovimo dokler nismo obiskali vseh vozlišč v dosegu. Edina razlika je uporaba metode \texttt{T.parallel\_for}, ki paralelno 
-          izvaja naše obiskovanje vozlišč.
-  \end{itemize}
+Če smo prej preko metode \texttt{map} za vsako vozlišče na trenutnem nivoju izračunali njegove sosede sekvenčno,
+je tu ideja paralelizacije v tem, da to naredimo vzporedno. Našel sem knjižnico \texttt{Parmap}, ki nam omogoča
+paralelizacijo metode map na seznamu. Ta knjižnica je zelo preprosta za uporabo, saj je potrebno zgolj zamenjati
+funkcijo \texttt{map} z \texttt{parmap} in dodati še število domen, ki jih želimo uporabiti. Knjižnica sama poskrbi
+za vse ostalo.
 
+\subsection{Analiza časovne zahtevnosti}
+
+V tem razdelku bom analiziral časovno zahtevnost paralelnega BFS algoritma v primerjavi s sekvenčnim.
+Za razliko od pohitritve algoritma računanja Fibonaccijevih števil, kjer je paralelno računanje pospešilo naš proces,
+se je pri paralelnem BFS algoritmu izkazalo, da je paralelno računanje celo upočasnilo naš proces. Vseeno
+pa tu predstavim rezultate ter povzamem, kako sem se merjenja časa računanja grafov lotil empirično.
+
+Vemo, da je časovna kompleksnost sekvenčnega BFS algoritma $O(|V| + |E|)$, kjer je $|V|$ število vozlišč v grafu,
+$|E|$ pa število povezav v grafu, zato je pričakovati, da bo čas izračuna sekvenčnega BFS algoritma naraščala linearno
+z velikostjo grafa. Da sem lahko primerjal časa izračuna sekvenčnega in paralelnega algoritma, sem izračunal ustvaril
+$16$ grafov, ki so po številu svojih vozlišč in povezav linearno naraščali, pri čemer je imel največji graf
+$2000$ vozlišč ter $1000000$ povezav. Na sliki \ref{fig:bfs_calculation_time_by_graph_size} so predstavljeni izmerjeni
+rezultati.
+
+\begin{figure}[h!]
+  \centering
+  \caption{Čas izračuna BFS algoritma v odvisnosti od števila vozlišč ter povezav}
+  \includegraphics[width=15cm]{slike/bfs_v_odvisnosti_od_velikosti_grafa.jpg}
+  \label{fig:bfs_calculation_time_by_graph_size}
+\end{figure}
+
+Čeprav tudi čas izračuna paralelnega algoritma narašča linearno z velikostjo grafa, je vseeno precej počasnejši od
+sekvenčnega algoritma. Po večih poskusih optimizacije paralelnega algoritma nisem našel algoritma, ki bi bil pri
+večino grafih hitrejši kot sekvenčni, razlogov pa je lahko več:
+\begin{itemize}
+  \item \textbf{Overhead zaradi paralelizacije: } Paralelizacija algoritma zahteva dodatne operacije, kot so 
+        razdeljevanje dela med niti, sinhronizacija med nitmi in pošiljanje rezultatov nazaj v glavni program. 
+        Vse te operacije lahko povzročijo dodaten overhead, ki upočasni izvajanje algoritma.
+  \item \textbf{Počasnost knjižnice Parany: } Knjižnica Parany prav tako podpira samo paralelizacijo na nivoju
+        procesorja, kar je lahko precej počasneje kot paralelizacija na nivoju pomnilnika za dano metodo. Prav tako
+        pa je bila ta knjižnica napisana več let nazaj ter posledično ni ustvarjena za OCaml 5 ter najnovejše
+        procesorske arhitekture.
+  \item \textbf{Naivna paralelizacija: } V zgornji kodi sem paraleliziral vsak funkcijski klic. Ideja, ki mi je zaradi
+        premajhnega obsega diplomske naloge ni uspelo implementirati je, da bi na neki točki avtomatsko ugotovil,
+        kateri deli kode so najbolj računsko zahtevni, ter te dele kode paraleliziral, druge pa bi pustil, da se
+        računajo na enem samem jedru.
+\end{itemize}
+
+Dodatno me je zanimalo še, kako se čas izračuna paralelnega BFS algoritma spreminja z večanjem števila domen.
+Zato sem si izbral graf z $500000$ povezavami, ter ga računal paralelno z različnim številom domen. Rezultati so
+prikazani na sliki \ref{fig:bfs_calculation_time_by_num_domains}.
+
+\begin{figure}[h!]
+  \centering
+  \caption{Čas izračuna paralelnega BFS algoritma v odvisnosti od števila domen}
+  \includegraphics[width=15cm]{slike/bfs_v_odvisnosti_od_stevila_domen.jpg}
+  \label{fig:bfs_calculation_time_by_graph_size}
+\end{figure}
+
+Vidimo lahko, da je paralelni algoritem spet počasnejši od sekvenčnega - pri eni domeni je seveda z sekvenčnim primerljiv,
+pri več kot eni domeni pa je počasnejši, kar prav tako potrjuje hipotezo, da je je paralelizacija algoritma za iskanje
+v širino na nivoju procesorja počasnejša od svojega sekvenčnega ekvivalenta.
+
+
+\section{Paralelna implementacija Dijkstrovega algoritma}
+
+TODO.
 
 
 
