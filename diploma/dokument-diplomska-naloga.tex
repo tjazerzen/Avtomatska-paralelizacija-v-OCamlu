@@ -44,8 +44,6 @@
 
 % - angleško-slovenski slovar strokovnih izrazov
 \slovar{
-\geslo{persistent data structure}{vztrajna podatkovna struktura} % TODO: Je to dober prevod?
-\geslo{ephemeral data structure}{Minljiva podatkovna struktura} % TODO: Je to dober prevod?
 \geslo{high performance computing}{Visokozmožnostno računanje}
 \geslo{domains}{domene}
 \geslo{parallel tasks}{vzporedne naloge}
@@ -64,7 +62,8 @@
 }
 
 % - ime datoteke z viri (vključno s končnico .bib), če uporabljate BibTeX
-% \literatura{literatura.bib}
+
+\literatura{literatura.bib}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -183,12 +182,12 @@ in funkcijske jezike pripeljalo v združevanje vseh teh tem hkrati: Osrednja tem
 Vzporednost na nivoju procesorja je moč doseči na dva načina: 
 Tako, da je pomnilnik vsem računalniškim jedrom skupen, ali pa da je pomnilnik \textit{porazdeljen}. 
 V tej diplomski nalogi se bom osredotočal zgolj na sisteme s skupnim pomnilnikom ter porazdeljeno procesorsko močjo, 
-saj je tovrstne programe tipično manj zahtevno implementirati, kot pa programe, ki delujejo na porazdeljenem pomnilniku.
+saj je tovrstne programe tipično manj zahtevno implementirati, kot pa tiste, ki delujejo na porazdeljenem pomnilniku.
 
 Vse več funkcijskih programskih jezikov, kot so na primer Scala, F\# ter Haskell ima implementirane knjižnice
 in ogrodja za paralelizacijo grafovskih algoritmov:
 \begin{itemize}
-    \item knjižnica \textit{Graphalyze} v Haskellu zagotavlja vzporedne algoritme za najkrajšo pot 
+    \item knjižnica \textit{fgl} v Haskellu zagotavlja vzporedne algoritme za najkrajšo pot 
     ter iskanje krepko povezanih komponent.
     \item \textit{GraphX} v Scali ponuja implementacijo paralelnega Googlovega PageRank algoritma.
     \item \textit{Alea.cuBase} nam ponuja elementarne paralelne algoritme v jeziku F\#.
@@ -197,76 +196,28 @@ in ogrodja za paralelizacijo grafovskih algoritmov:
 Od konca lanskega leta pa imamo nov funkcijski programski jezik, ki je začel podpirati paralelno računanje - to je \textit{OCaml},
 ki se med drugim poučuje na naši fakulteti v sklopu računalniško-orientiranih predmetov. 
 Zato sem to priložnost izoristil, da svoje računalniške programe pišem v tem funkcijskem jeziku. 
-V tej diplomski naloge se bom tako spustil v tovrstne knjižnice v funkcijskih jezikih, ki že obstajajo, 
+V svoji diplomski naloge se bom tako spustil v tovrstne knjižnice v funkcijskih jezikih, ki že obstajajo, 
 pregledal novejše raziskave kar se tiče grafovskih algoritmov v imperativnih jezikih, 
-to prevedel v deklarativni jezik ter vse to skupaj povezav v zaključeno celovito knjižnico v OCamlu.
+tovrstne ideje poskušal razumeti v kontekstu funkcijskih jezikov ter vse skupaj povezal v preprosto knjižnico v OCamlu.
 
-\subsection{Fizikalno: Zakaj je paralelizacija učinkovita?}
-
-TODO
-
-Zakaj bi sploh paralelizirali svoj program? Na prvi pogled mogoče ni zagotovila, da bi paralelizacija programa 
-naše izračune pospešila. Vendar pa je v praksi to pogosto res. Zakaj?
-
-Oglejmo ni sledečo situacijo, kjer imamo dve vezji: Prvo vezje ima en sam procesor, ki deluje s frekvenco $f$, 
-drugo vezje pa ima dva procesorja, kjer vsak deluje s frekvenco $f/2$.
-To je ponazorjeno na sliki \ref{fig:paralelizacija-fizikalno}.
-
-\begin{figure}[h!]
-  \centering
-  \caption{Fizikalno - zakaj je paralelno izvajanje programa bolj učinkovito od sekvenčnega?}
-  \includegraphics[width=13cm]{slike/paralelizacija-fizikalno.png}
-  \label{fig:paralelizacija-fizikalno}
-\end{figure}
-
-Skozi obe vezji spustimo kapacitivnost $C$ ter napetost $U'=0,6U$. Zanima nas, kakšno moč bomo
-pri tem porabili za izračun $N$ računskih operacij.
-
-\begin{align*}
-  P &= U'I \\
-  &= U' \frac{de}{dt} \\
-  &= U'C \frac{dU}{dt} \\
-  &= 2\pi U'^2Cf \\
-  &= 2\pi (0.6)^2U^2Cf
-\end{align*}
-  
-kjer upoštevamo sledeče enakosti: $I = \frac{de}{dt}$, $U' = 0.6U$, $e = CU$ (ter da je $C$ od časa neodvisna),
-$U = U_0\sin(2\pi ft)$, kar potem povprečimo po času.
-
-V drugem primeru pa lahko v istem času opravimo isto število operacij kot močnejši procesor. Tovrstno vezje pa ima
-eno prednost: Če procesor dela počasneje, potrebujemo manjšo napetost, kar pomeni, da je poraba energije manjša.
-Posledično je uporabljena moč enaka:
-
-\begin{align*}
-  P' &= U_1I_1 + U_2I_2 \\
-  &= 2\pi (U_1^2C_1f_1 + U_2^2C_2f_2) \\
-  &= 4\pi U'^2C_1f_1 \\
-  &= 4\pi (0.6)^2U^2(1.2)C\left(\frac{1}{2}\right)f \\
-  &= 2\pi U^2Cf(1.2)(0.6)^2
-\end{align*}
-
-Kjer smo v drugi vrstici že upoštevali ugotovitve iz prvega primera, nato pa še upoštevamo enakosti
-$f_2 = f_1 = \frac{f}{2}$, $U_1 = U_2 = U' = 0.6U$ ter $C_1 = C_2 = C$.
-
-Tako končno dobimo razmerje 
-
-\begin{equation}
-  \frac{P'}{P} = \frac{2\pi U^2Cf(1.2)(0.6)^2}{2\pi U^2Cf} = 1.2(0.6)^2 = 0.432
-\end{equation}
-
-kar nakazuje na to, da bo drugo vezje porabilo samo $43.2\%$ energije, ki jo porabi prvo vezje.
-Posledično lahko pri isti količini energije s porazdeljeno arhitekturo procesorja izračunamo več.
+Ker OCaml šele na sveže podpira paralelizacijo, je posledično literature točno za ta jezik na to temo malo. 
+Edina OCamlova knjižnica, ki sem jo našel, da se ukvarja s paralelizacijo grafovskih algoritmov, je \cite{ocaml_multicore_500},
+ki pa se od moje razlikuje v tem, da je namenjena zgolj za paralelizacijo redkih grafov, prav tako pa je omenjena knjižnica napisana
+v prejšnji verziji OCamla, ki je paralelizacijo podpirala zgolj v omejenem obsegu. V glavnem mi ni preostalo drugega,
+kot da se sem se zanašal zgolj na OCamlovo dokumentacijo paralelizacije (\cite{ocaml_paralelisation_documentation}) ter
+na obstoječe knjižnice, razvite v drugih funkcijskih jezikih. Ob ustvarjanju grafa mi je kot osnovna ideja
+služila že napisana knjižnica v Swiftu (\cite{functional_swift_graph}), ob pisanju grafovskih algoritmov ter
+strukturiranju knjižnice pa grafovska knjižnica v Haskellu (\cite{haskell_fgl}).
 
 \subsection{Kaj lahko od paralelnega programa pričakujemo?}
 
-Super - paralelizacija v teoriji deluje. Kaj si potem lahko obetamo v praksi? Za začetek bi si želeli vsaj, da
-je paralelni program hitrejši od sekvenčnega. 
-Intuitivno smiselno obstaja spodnja meja, ki nam pove, da če imamo na voljo $n$ procesorjev, bo naš program največ 
-$n$-krat hitrejši od sekvenčnega programa.
+Kaj si od paralelnega programa lahko obetamo v praksi? Za začetek bi si želeli vsaj, da je paralelni program hitrejši
+od sekvenčnega.  Intuitivno smiselno obstaja spodnja meja, ki nam pove, da če imamo na voljo $n$ procesorjev,
+bo naš program največ $n$-krat hitrejši od sekvenčnega programa.
 Dodatno pa je tu še dodatna računska obremenitev (ang. overhead), ki je potrebna za vzpostavitev vzporednega izvajanja
 programa (na primer inicializacija domene, definicija asinhronih nalog, \dots). 
 Posledično, če bomo naš paralelni program poganjali na enem samem jedru, bo 
-zagotovo počasnejši od sekvenčnega programa. Vse te ugotovitve so ponazorjene na sliki
+zagotovo počasnejši od sekvenčnega programa. Ugotovitve so ponazorjene na sliki
 \ref{fig:cilj-casovne-zahtevnosti-paralelizacije}.
 
 \begin{figure}[h!]
@@ -278,9 +229,6 @@ zagotovo počasnejši od sekvenčnega programa. Vse te ugotovitve so ponazorjene
   \footnotesize{V našem programu si želimo, da bo čas izvedbe našega programa ujet med spodnjo in zgornjo mejo.}
 \end{figure}
 
-
-% \section{Kratek uvod v funkcijsko programiranje}
-
 \subsection{Prednosti paralelizacije v funkcijskih programskih jezikov pred paralelizacijo v imperativnih programskih jezikih}
 
 \begin{definicija}
@@ -289,7 +237,8 @@ zagotovo počasnejši od sekvenčnega programa. Vse te ugotovitve so ponazorjene
 
 Zakaj koncepta funkcijskih programskih jezikov ter paralelizacije tako dobro sovpadata skupaj?
 V primerjavi z drugimi vrstami programskih jezikov, kot so na primer imperativni programski jeziki,
-so funkcijski programski jeziki bolj primerni za paralelizacijo iz več razlogov:
+so funkcijski programski jeziki bolj primerni za paralelizacijo iz več razlogov 
+(\cite{parallelisation_advantages_stack_discussion_2023}, \cite{functional_parallel_graph_rewriting}):
 
 \begin{itemize} \label{itemize:prednosti_funkcijskega_programiranja}
   \item \textbf{Nespremenljivost in odsotnost stranskih učinkov:} 
@@ -318,12 +267,17 @@ so funkcijski programski jeziki bolj primerni za paralelizacijo iz več razlogov
     saj se lahko osredotočite na problem, ne da bi se zapletli v podrobnosti paralelnega izvajanja.
 \end{itemize}
 
-Ko potrebujem npr. implementacijo vrste s prednostjo v Pythonu, je pogosto dovolj, da v splošnem učbeniku najdem njeno
-implementacijo ter to prepišem. Razvijalci, ki pa svojo kodo pišejo v funkcijskih programskih jezikih, pa zaradi manjše
-razširjenosti funkcijskih programskih jezikov pogosto te sreče nimajo. 
+Ko potrebujem implementacijo določene podatkovne strukture v imperativnem programskem jeziku, kot je na primer
+\textit{Python}, je pogosto dovolj, da v splošnem učbeniku najdem njeno implementacijo ter to prepišem.
+Razvijalci, ki pa svojo kodo pišejo v funkcijskih programskih jezikih, pa zaradi manjše
+razširjenosti funkcijskih programskih jezikov pogosto te sreče nimajo.
 Dodatno smo zaradi stroge omejitve odsotnosti stranskih učinkov v funkcijskih jezikih primorani, da se izogibamo
 programskim konstruktom, ki pomnilnik spreminjajo, na primer zanka. To pa je v primeru implementacije grafovskih
 algoritmov, kjer se moramo npr. sprehoditi po sosedih trenutnega vozlišča, pogosto precej težavno.
+
+Pogosto se zgodi, da podatkovna struktura v imperativnih jezikih nima svojega ekvivalenta v funkcijskih jezikih.
+Pri implementaciji različnih podatkovnih struktur, kot je na primer vrsta s prednostjo v poglavju
+\ref{section:dijkstra}, mi je bila v veliko pomoč knjiga \cite{okasaki1996}.
 
 V nadaljevanju dokumenta se bom najprej posvetil vprašanju, kako graf v funkcijskih jezikih sploh predstavimo, 
 nato pa se bom lotil algoritmov ter podatkovnih struktur na grafih.
@@ -344,7 +298,6 @@ ne bom prilagal tudi njihove implementacije, je pa le-ta na voljo na
 Vseeno pa tu predstavim glavno idejo zasnove modulov, ključno programsko kodo za razumevanje pa prilagam spodaj:
 
 \begin{lstlisting}
-
 module Node : sig
   type elt = int
   type t
@@ -496,17 +449,21 @@ Zagotavlja nam visokonivojski (ang. high-level) vmesnik za upravljanje nalog, us
 izkoriščanje vzporednosti, kar olajša izkoriščanje celotnega potenciala večjedrnih procesorjev ter doseganje boljše
 zmogljivosti.
 
-Za več informacij in uradno izvedbo knjižnice Domainslib lahko obiščete uraden repozitorij knjižnice Domainslib na
-GitHub-u na naslovu \url{https://github.com/ocaml-multicore/domainslib}.
+Za več informacij in uradno implementacijo knjižnice Domainslib lahko obiščete uraden repozitorij
+knjižnice Domainslib na GitHub-u na spletnem naslovu \url{https://github.com/ocaml-multicore/domainslib}.
 
 
 \subsection{Uvodni primer: Računanje Fibonaccijevih števil}
 
 Čeprav ne gre za grafovski algoritem, se mi je vseeno zdelo zelo poučno, da najprej predstavim osnovne koncepte
 paralelizacije na kar se da preprostem primeru. Izbral sem si paralelno računanje Fibonaccijevih števil
-(na naiven način, ki, kot bomo videli, terja časovno zahtevnost $O(2^n)$).
+(na način, ki terja časovno zahtevnost $O(2^n)$, kot je razvidno iz slike \ref{fig:fib-graph}).
+Osnovno idejo problema sem povzel po \cite{parallel_fib_computation} in \cite{multicore_ocaml_article} ter jo prilagodil
+za lastne potrebe.
 
 Preprosto funkcijo, ki računa Fibonaccijevo število, lahko zapišemo na zelo preprost način:
+
+\subsubsection{Sekvenčno računanje Fibonaccijevih števil}
 
 \begin{lstlisting}
   let rec fib n =
@@ -547,12 +504,13 @@ Preprosto funkcijo, ki računa Fibonaccijevo število, lahko zapišemo na zelo p
 \end{figure}
 
 
+\subsubsection{Paralelno računanje Fibonaccijevih števil}
 
 Zato se seveda vprašamo, kako bi lahko to funkcijo paralelizirali. Očiten odgovor je, da bi lahko paralelno računali
 $fib(n-1)$ in $fib(n-2)$ ter to počeli, dokler ne pridemo do baze rekurzije. To lahko predstavimo z grafom, kot je
 prikazano na sliki \ref{fig:fib-graph}. Problem, na katerega sem naletel ob empiričnem testiranju svojega programa
 je, da je ta način paralelizacije precej neučinkovit, saj tako definirano število paralelnih nalog narašča zelo hitro
-(natančna zgornja meja je $O(2^n)$).
+(zgornja meja za število tako definiranih paralelnih procesov je $O(2^n)$).
 Zato sem v svojem programu uporabil naslednjo idejo: Paraleliziraj kose kode, ki vzamejo največ časa, 
 manj računsko zahtevne dele kode pa računaj sekvenčno.
 
@@ -563,7 +521,8 @@ večjih od $38$, zato sem program spisal tako, da števila večja od $38$ račun
 \begin{lstlisting}
 module T = Domainslib.Task
 
-let rec fib n = if n < 2 then 1 else fib (n - 1) + fib (n - 2)
+let rec fib n = 
+  if n < 2 then 1 else fib (n - 1) + fib (n - 2)
 
 let rec fib_par pool n =
   if n <= 38 then fib n
@@ -585,7 +544,8 @@ v kontekstu izpostavimo nekaj pomembnih točk:
         Ti nalogi se bosta izvajali vzporedno.
 \end{itemize}
 
-Opomnil bi še, da sem vse izračune poganjal na osemjedrnem Applovem MacBooku Air M1.
+\subsubsection{Analiza časa računanja Fibonaccijevih števil}
+
 Najprej me je zanimalo, kako se čas izračuna Fibonaccijevih števil spreminja v odvisnosti od števila domen, zato sem
 v odvisnosti različnega števila domen dobil naslednje rezultate:
 
@@ -599,9 +559,10 @@ v odvisnosti različnega števila domen dobil naslednje rezultate:
 Vidimo, da število domen vpliva na hitrost izračuna: Z večanjem števila domen se čas izračuna Fibonaccijevega števila
 zmanjšuje, kar bi za paraleliziran računalniški program tudi pričakovali. Vendar pa se čas izračuna Fibonaccijevega
 števila ne zmanjšuje linearno z večanjem števila domen, temveč sprva relativno hitro, nato pa se čas izračuna pri $14.$
-domeni ustali tam nekje pri treh četrtinkah sekunde. Seveda se to razlikuje od enega računalnika do drugega, razmerje
-med časom izračuna nekega Fibonaccijevega števila pri eni domeni ter pri npr. desetih pa bi moralo biti podobno na vseh
-računalnikih.
+domeni ustali tam nekje pri treh četrtinkah sekunde. Seveda se to razlikuje od tega, na kako močnem računalniku
+program poganjamo, vendar pa bi pričakovali, da je razmerje časov izračuna Fibonaccijevih števil pri pri sekvenčnem
+ter paralelnem programu podobno na vseh računalnikih. Omenil bi, da sem dane izračune poganjal na osemjedrnem Applovem
+MacBooku Air M1. 
 
 Vseeno - opomniti gre, da je točno tak eksperiment točno s takimi rezultati praktično nemogoče replicirati.
 Že samo s tem, da sem prvič program poganjal medtem ko sem imel odprte še tri druge aplikacije, 
@@ -629,7 +590,7 @@ povečuje počasneje kot pri sekvenčnem programu. Pri neparalelnem programu se 
 si mislili, povečuje eksponentno (saj je časovna zahtevnost računanja eksponentna), pri paralelnem programu pa se čas
 izvajanja povečuje počasneje.
 
-\section{Paralelno iskanje v širino (PBFS)}
+\subsection{Paralelno iskanje v širino (PBFS)}
 
 BFS rešuje širok nabor problemov, kot so na primer: Raziskovanje grafa, iskanje najkrajše poti v neuteženem grafu, 
 ugotavljanja, če med dvema vozliščema obstaja pot, ugotavljanje, če je graf dvodelen, prav tako pa predstavlja osnovo
@@ -638,12 +599,13 @@ za kompleksejše grafovske algoritme, npr. za Dijkstro.
 Pri predmetih iz drugega in tretjega letnika (OR, PSA1) smo se naučili, da BFS deluje tako, da vozlišča razvršča
 v vrsto, nato pa iz vrste izbira vozlišča, ki jih bo raziskal, nato pa to induktivno ponavlja za vse sosede.
 
+Ideja sekvenčnega algoritma je preprosta: Vozlišča, ki jih je potrebno raziskati, hranimo v vrsti. Na vsakem koraku
+iz vrste vzamemo vozlišče, ki ga bomo raziskali, nato pa v vrsto dodamo vse njegove sosede, ki še niso bili obiskani.
+Ta postopek ponavljamo, dokler ne pridemo do vozlišča, ki ga ne moremo raziskati, saj nima neobiskanih sosedov.
+Paralelna verzija tega algoritma je nekoliko bolj zapletena. Pri ideji implementacije algoritma mi je najbolj pomagala
+literatura \cite{spaa2010}.
 
-Glavni metodi znotraj tega modula sta \texttt{enqueue} in \texttt{dequeue}. Vlogo skladov $A$ in $B$ imata
-seznama \texttt{enqueue\_stack} in \texttt{dequeue\_stack}. Vozlišča, ki jih dodajamo v vrsto, dodajamo v sklad
-\texttt{enqueue\_stack}. Ko pa želimo vozlišče odstraniti iz vrste, ga odstranimo iz sklada \texttt{dequeue\_stack}.
-
-\subsection{Sekvenčni BFS}
+\subsubsection{Sekvenčni BFS}
 
 Ker je rekurzija elementarno orodje v funkcijskih jezikih, sem se sekvenčne implementacije BFS lotil rekurzivno, kar
 je za iskanje v širino mogoče bolj redko kot iterativna verzija tega algoritma. 
@@ -711,14 +673,13 @@ nivoju izračuna njegove sosede, ki še niso bili obiskani. To pa stori preko ma
 na seznamu vozlišč iz trenutnega nivoja kliče metodo \texttt{visit\_node}, ki za dano vozlišče izračuna njegove
 sosede, ki še niso bili obiskani. Nato pa vse te sosede združi v eno samo množico, ki jo vrne.
 
-\subsection{Paralelni BFS}
+\subsubsection{Paralelni BFS}
 
 Namerno sem v \ref{lst:bfs_sequential} metodo \texttt{sequential} napisal modularno, tako da lahko paralelizacijo
 dodamo zgolj z zamenjavo funkcije \texttt{next\_stage\_seq} z ustrezno funkcijo, ki bo izračunala naslednji nivo
-paralelno. To sem naredil v \ref{lst:bfs_parallel}.
+paralelno. To sem naredil v metodi \texttt{parallel}.
 
 \begin{lstlisting}[label=lst:bfs_parallel]
-
 module BfsAlgorithms : Bfs = struct
   ...
 
@@ -751,7 +712,7 @@ paralelizacijo metode map na seznamu. Ta knjižnica je zelo preprosta za uporabo
 funkcijo \texttt{map} z \texttt{parmap} in dodati še število domen, ki jih želimo uporabiti. Knjižnica sama poskrbi
 za vse ostalo.
 
-\subsection{Analiza časovne zahtevnosti}
+\subsubsection{Analiza časa računanja BFS algoritmov}
 
 V tem razdelku bom analiziral časovno zahtevnost paralelnega BFS algoritma v primerjavi s sekvenčnim.
 Za razliko od pohitritve algoritma računanja Fibonaccijevih števil, kjer je paralelno računanje pospešilo naš proces,
@@ -776,9 +737,9 @@ rezultati.
 sekvenčnega algoritma. Po večih poskusih optimizacije paralelnega algoritma nisem našel algoritma, ki bi bil pri
 večino grafih hitrejši kot sekvenčni, razlogov pa je lahko več:
 \begin{itemize}
-  \item \textbf{Overhead zaradi paralelizacije: } Paralelizacija algoritma zahteva dodatne operacije, kot so 
+  \item \textbf{Dodatna računaska obremenitev zaradi paralelizacije: } Paralelizacija algoritma zahteva dodatne operacije, kot so 
         razdeljevanje dela med niti, sinhronizacija med nitmi in pošiljanje rezultatov nazaj v glavni program. 
-        Vse te operacije lahko povzročijo dodaten overhead, ki upočasni izvajanje algoritma.
+        Vse te operacije lahko povzročijo dodatno računsko obremenitev (overhead), ki upočasni izvajanje algoritma.
   \item \textbf{Počasnost knjižnice Parany: } Knjižnica Parany prav tako podpira samo paralelizacijo na nivoju
         procesorja, kar je lahko precej počasneje kot paralelizacija na nivoju pomnilnika za dano metodo. Prav tako
         pa je bila ta knjižnica napisana več let nazaj ter posledično ni ustvarjena za OCaml 5 ter najnovejše
@@ -805,7 +766,7 @@ pri več kot eni domeni pa je počasnejši, kar prav tako potrjuje hipotezo, da 
 v širino na nivoju procesorja počasnejša od svojega sekvenčnega ekvivalenta.
 
 
-\section{Paralelna implementacija Dijkstrovega algoritma}
+\subsection{Paralelna implementacija Dijkstrovega algoritma} \label{section:dijkstra}
 
 TODO.
 
