@@ -18,6 +18,9 @@ module PQ : sig
   val empty : unit -> t
   (** [empty ()] returns an empty priority queue. *)
 
+  val is_empty : t -> bool
+  (** [val_is_empty pq] returns [true] if [pq] is empty, and [false] otherwise. *)
+
   val insert : Node.t -> priority -> t -> t
   (** [insert new_node new_priority pq] returns a new priority queue [pq'] with [new_node] inserted with priority [new_priority]. *)
 
@@ -35,8 +38,10 @@ end = struct
 
   let empty () = { priority_queue = Empty; mutex = Mutex.create () }
 
+  let is_empty (pq : t) = pq.priority_queue = Empty
+
   let insert (new_node : Node.t) (new_priority : priority) (pq : t) : t =
-    Mutex.lock pq.mutex;
+    (* Mutex.lock pq.mutex; *)
     let rec insert_aux new_node new_priority queue =
       match queue with
       | Empty -> PQNode (new_priority, new_node, Empty, Empty)
@@ -57,7 +62,7 @@ end = struct
     let updated_priority_queue =
       insert_aux new_node new_priority pq.priority_queue
     in
-    Mutex.unlock pq.mutex;
+    (* Mutex.unlock pq.mutex; *)
     { pq with priority_queue = updated_priority_queue }
 
   let remove_top (pq : t) =
@@ -78,7 +83,7 @@ end = struct
     { pq with priority_queue = remove_top_aux pq.priority_queue }
 
   let extract (pq : t) =
-    Mutex.lock pq.mutex;
+    (* Mutex.lock pq.mutex; *)
     let extract_aux priority_queue =
       match priority_queue with
       | Empty -> raise Queue_is_empty
@@ -86,7 +91,7 @@ end = struct
           (priority, elt, remove_top { pq with priority_queue = queue })
     in
     let priority, extracted_node, updated_pq = extract_aux pq.priority_queue in
-    Mutex.unlock pq.mutex;
+    (* Mutex.unlock pq.mutex; *)
     (priority, extracted_node, updated_pq)
 end
 
@@ -122,7 +127,7 @@ end = struct
 
   let parallel (graph : WeightedGraph.t) start_node end_node pool =
     let rec loop pq visited =
-      if pq = PQ.empty () then raise Not_found
+      if PQ.is_empty pq then raise Not_found
       else
         let current_cost, current_node, pq = PQ.extract pq in
         let new_visited = current_node :: visited in
@@ -141,9 +146,10 @@ end = struct
             ~body:(fun i ->
               (* Mutex.lock mutex; *)
               let neighbor, weight = List.nth neighbours i in
-              if List.mem neighbor new_visited then ()
-              else new_pq := PQ.insert neighbor (current_cost +. weight) pq
-              (* Mutex.unlock mutex; *));
+              (if List.mem neighbor new_visited then ()
+              else new_pq := PQ.insert neighbor (current_cost +. weight) pq);
+              (* Mutex.unlock mutex; *)
+              );
           (* T.teardown_pool pool; *)
           loop !new_pq new_visited
     in
