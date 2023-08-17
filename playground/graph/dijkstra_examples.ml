@@ -1,5 +1,6 @@
 open Dijkstra
 open Graph
+open Domainslib
 
 (*--------------------------PRIORITY QUEUE--------------------------*)
 let () = Printf.printf "-----------------PRIORITY QUEUE-----------------\n"
@@ -62,7 +63,20 @@ let () =
 let () = Printf.printf "Cost: %f\n" cost
 let () = Printf.printf "Parallel Dijkstra...\n"
 let () = print_endline ""
-let cost, visited = Dijkstra.parallel small_graph node0 node3
+
+let pool = T.setup_pool ~num_domains:5 ()
+
+(* let cost, visited = Task.run (fun pool -> Dijkstra.parallel small_graph node0 node3 pool) pool *)
+
+let dijkstra_parallel_wrapper pool = Dijkstra.parallel small_graph node0 node3 pool
+
+(* let cost, visited = Task.run (fun () -> Dijkstra.parallel small_graph node0 node3 pool) *)
+let cost, visited = Task.run pool dijkstra_parallel_wrapper
+
+Task.teardown_pool pool
+
+(*let cost, visited = Task.run pool *)
+(* Dijkstra.parallel small_graph node0 node3 *)
 
 let () =
   List.iter (fun node -> Printf.printf "%s\n" (Node.to_string node)) visited

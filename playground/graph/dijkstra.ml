@@ -94,7 +94,7 @@ module Dijkstra : sig
   val sequential : WeightedGraph.t -> Node.t -> Node.t -> priority * Node.t list
   (** [sequential graph start_node end_node] is a sequential implementation of Dijkstra's algorithm for finding the shortest path between [start_node] and [end_node] in the weighted graph [graph]. It returns a tuple of the shortest distance and the list of nodes in the shortest path. *)
 
-  val parallel : WeightedGraph.t -> Node.t -> Node.t -> priority * Node.t list
+  val parallel : WeightedGraph.t -> Node.t -> Node.t -> T.pool -> priority * Node.t list
   (** [parallel graph start_node end_node] is a parallel implementation of Dijkstra's algorithm for finding the shortest path between [start_node] and [end_node] in the weighted graph [graph]. It returns a tuple of the shortest distance and the list of nodes in the shortest path. *)
 end = struct
   let sequential (graph : WeightedGraph.t) start_node end_node =
@@ -120,7 +120,7 @@ end = struct
     let cost, path = loop pq_start [] in
     (cost, List.rev path)
 
-  let parallel (graph : WeightedGraph.t) start_node end_node =
+  let parallel (graph : WeightedGraph.t) start_node end_node pool =
     let rec loop pq visited =
       if pq = PQ.empty () then raise Not_found
       else
@@ -132,9 +132,8 @@ end = struct
             WeightedGraph.edges graph |> NodeMap.find current_node
             |> NodeMap.bindings
           in
-          let pool =
-            T.setup_pool ~num_domains:(List.length neighbours - 1) ()
-          in
+          (* let pool = T.setup_pool ~num_domains:(List.length neighbours - 1) () *)
+          (* in *)
           let new_pq = ref pq in
           (* let mutex = Mutex.create () in *)
           T.parallel_for pool ~start:0
@@ -145,7 +144,7 @@ end = struct
               if List.mem neighbor new_visited then ()
               else new_pq := PQ.insert neighbor (current_cost +. weight) pq
               (* Mutex.unlock mutex; *));
-          T.teardown_pool pool;
+          (* T.teardown_pool pool; *)
           loop !new_pq new_visited
     in
     let pq_start = PQ.empty () |> PQ.insert start_node 0.0 in
