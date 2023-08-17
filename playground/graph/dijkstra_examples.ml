@@ -71,9 +71,13 @@ let pool = T.setup_pool ~num_domains:5 ()
 let dijkstra_parallel_wrapper pool = Dijkstra.parallel small_graph node0 node3 pool
 
 (* let cost, visited = Task.run (fun () -> Dijkstra.parallel small_graph node0 node3 pool) *)
-let cost, visited = Task.run pool dijkstra_parallel_wrapper
+let cost, visited = Task.run pool (fun () -> dijkstra_parallel_wrapper pool)
+
+;;
 
 Task.teardown_pool pool
+
+
 
 (*let cost, visited = Task.run pool *)
 (* Dijkstra.parallel small_graph node0 node3 *)
