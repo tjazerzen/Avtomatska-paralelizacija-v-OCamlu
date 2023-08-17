@@ -48,6 +48,7 @@ let small_graph =
   |> WeightedGraph.add_node node0
   |> WeightedGraph.add_node node1
   |> WeightedGraph.add_node node2
+  |> WeightedGraph.add_node node3
   |> WeightedGraph.add_edge node0 node1 1.0
   |> WeightedGraph.add_edge node1 node2 2.0
   |> WeightedGraph.add_edge node0 node2 1.9
