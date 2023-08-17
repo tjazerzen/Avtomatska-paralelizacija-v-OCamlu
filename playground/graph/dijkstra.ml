@@ -140,15 +140,16 @@ end = struct
           (* let pool = T.setup_pool ~num_domains:(List.length neighbours - 1) () *)
           (* in *)
           let new_pq = ref pq in
-          (* let mutex = Mutex.create () in *)
+          let mutex = Mutex.create () in
           T.parallel_for pool ~start:0
             ~finish:(List.length neighbours - 1)
             ~body:(fun i ->
-              (* Mutex.lock mutex; *)
               let neighbor, weight = List.nth neighbours i in
-              (if List.mem neighbor new_visited then ()
-              else new_pq := PQ.insert neighbor (current_cost +. weight) pq);
-              (* Mutex.unlock mutex; *)
+              if List.mem neighbor new_visited then ()
+              else
+                (Mutex.lock mutex;
+                new_pq := PQ.insert neighbor (current_cost +. weight) !new_pq;
+                Mutex.unlock mutex;)
               );
           (* T.teardown_pool pool; *)
           loop !new_pq new_visited
