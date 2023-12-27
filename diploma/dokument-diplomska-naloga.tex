@@ -553,31 +553,38 @@ Zanimivo je tudi opaziti, kako se čas izračuna spreminja pri različnih pragih
 V obravnavanem primeru sta bila uporabljena dva različna praga sekvenčnosti (35 in 38), kar je omogočilo dodatne
 vpoglede v učinkovitost in skalabilnost paraleliziranega pristopa.
 
-
 \subsection{Paralelno iskanje v širino (PBFS)}
 
-BFS rešuje širok nabor problemov, kot so na primer: Raziskovanje grafa, iskanje najkrajše poti v neuteženem grafu, 
-ugotavljanja, če med dvema vozliščema obstaja pot, ugotavljanje, če je graf dvodelen, prav tako pa predstavlja osnovo
-za kompleksejše grafovske algoritme, npr. za Dijkstro.
+Breadth-first search (BFS) je algoritem, ki rešuje širok nabor problemov, vključno z raziskovanjem struktur
+grafov, iskanjem najkrajših poti v neuteženih grafih, preverjanjem povezanosti med vozlišči ter analizo dvodelnosti grafov.
+Dodatno BFS služi kot osnova za naprednejše grafovske algoritme, kot je na primer Dijkstrin algoritem.
 
-Pri predmetih iz drugega in tretjega letnika (OR, PSA1) smo se naučili, da BFS deluje tako, da vozlišča razvršča
-v vrsto, nato pa iz vrste izbira vozlišča, ki jih bo raziskal, nato pa to induktivno ponavlja za vse sosede.
-
-Ideja sekvenčnega algoritma je preprosta: Vozlišča, ki jih je potrebno raziskati, hranimo v vrsti. Na vsakem koraku
-iz vrste vzamemo vozlišče, ki ga bomo raziskali, nato pa v vrsto dodamo vse njegove sosede, ki še niso bili obiskani.
-Ta postopek ponavljamo, dokler ne pridemo do vozlišča, ki ga ne moremo raziskati, saj nima neobiskanih sosedov.
-Paralelna verzija tega algoritma je nekoliko bolj zapletena. Pri ideji implementacije algoritma mi je najbolj pomagala
-literatura \cite{spaa2010}.
+Sekvenčna izvedba BFS algoritma temelji na metodologiji upravljanja vrste vozlišč, ki čakajo na raziskavo.
+Algoritem izbere in raziskuje vozlišče na čelu vrste, nato pa v vrsto postopoma dodaja njegove neobiskane sosede.
+Ta proces se nadaljuje, dokler ni več vozlišč za raziskovanje, kar signalizira zaključek algoritma.
+Paralelna različica BFS algoritma predstavlja večji izziv, saj zahteva naprednejšo koordinacijo in upravljanje več
+niti izvedbe. Navdih za implementacijo paralelnega BFS sem črpal iz \cite{spaa2010}.
 
 \subsubsection{Sekvenčni BFS}
 
-Ker je rekurzija elementarno orodje v funkcijskih jezikih, sem se sekvenčne implementacije BFS lotil rekurzivno, kar
-je za iskanje v širino mogoče bolj redko kot iterativna verzija tega algoritma. 
+V kontekstu funkcijskih programskih jezikov, kjer je rekurzija temeljni gradnik, sem k implementaciji BFS algoritma
+pristopil rekurzivno. 
 
-Ideja je, da na vsakem koraku dodamo množico vseh dosegljivih vozlišč iz trenutnega nivoja. To lahko naredimo tako, da
-za vsako vozlišče $u$ na trenutnem nivoju $L$ dodamo v množico $L$ vse njegove sosede, ki še niso bili obiskani.
+Algoritem izvaja iskanje po nivojih, pri čemer sistematično dodaja vse dosegljive vozle iz trenutnega nivoja v naslednji nivo.
+Specifično, za vsako vozlišče $u$ trenutnega nivoja $L$ se v naslednji nivo $L'$ vključijo vsi njegovi sosedi, ki še niso
+bili obiskani. To dosežemo z uporabo funkcije \textit{visit\_node}, ki identificira neobiskane sosede danega vozlišča v grafu.
 
-Tu je moja implementirana sekvenčna implementacija tega algoritma:
+Implementacija se začne z metodo sequential, ki je vstopna točka algoritma. Ta funkcija začne rekurzivni proces z
+uporabo metode \textit{loop}. Metoda \textit{loop} prejme množico obiskanih vozlišč, trenutno zgrajeni seznam nivojev,
+funkcijo za izračun naslednjega nivoja in graf. Na vsakem koraku izračuna naslednji nivo s funkcijo \textit{next\_stage\_seq},
+ki za vsako vozlišče trenutnega nivoja izračuna neobiskane sosede. Ti sosedi se nato zložijo v enotno množico,
+ki predstavlja naslednji nivo. Proces se nadaljuje, dokler ne obstaja naslednji nivo za raziskovanje,
+nakar se vrne celoten seznam nivojev kot rezultat BFS.
+
+Metoda \textit{next\_stage\_seq} deluje tako, da sprejme trenutni nivo in uporabi funkcijo \textit{map} za
+preoblikovanje vsakega vozlišča v njegove sosede z uporabo funkcije \textit{visit\_node}. 
+Rezultati se združijo v enoten seznam, ki predstavlja naslednji nivo.
+Ta pristop omogoča učinkovito in jasno razumevanje delovanja BFS v funkcijskem programiranju.
 
 \begin{lstlisting}[label=lst:bfs_sequential]
 module BfsAlgorithms : Bfs = struct
@@ -625,23 +632,18 @@ end
 
 \end{lstlisting}
 
-
-Implementacijsko to počnem preko funkcije \texttt{loop}, ki na vsakem koraku dodaja nove nivoje v seznam nivojev.
-Funkcija \texttt{loop} sprejme množico obiskanih vozlišč, seznam nivojev, funkcijo, ki določa, kako se izračuna
-naslednji nivo, ter graf, v katerem iščemo. Funkcija \texttt{loop} na vsakem koraku izračuna naslednji nivo, nato pa
-rekurzivno kliče samo sebe, dokler ne pride do nivoja, ki ne vsebuje nobenega vozlišča. Takrat vrne seznam nivojev.
-
-Funkcija \texttt{sequential} je zgolj vmesna funkcija, ki kliče funkcijo \texttt{loop} z ustrezno funkcijo, ki
-izračuna naslednji nivo. V tem primeru je to funkcija \texttt{next\_stage\_seq}, ki za vsako vozlišče na trenutnem
-nivoju izračuna njegove sosede, ki še niso bili obiskani. To pa stori preko matematične funkcije \texttt{map}, ki
-na seznamu vozlišč iz trenutnega nivoja kliče metodo \texttt{visit\_node}, ki za dano vozlišče izračuna njegove
-sosede, ki še niso bili obiskani. Nato pa vse te sosede združi v eno samo množico, ki jo vrne.
-
 \subsubsection{Paralelni BFS}
 
-Namerno sem v \ref{lst:bfs_sequential} metodo \texttt{sequential} napisal modularno, tako da lahko paralelizacijo
-dodamo zgolj z zamenjavo funkcije \texttt{next\_stage\_seq} z ustrezno funkcijo, ki bo izračunala naslednji nivo
-paralelno. To sem naredil v metodi \texttt{parallel}.
+V paralelni različici algoritma BFS je osrednji cilj optimizirati izvajanje tako, da se izkoristijo večprocesorske zmogljivosti.
+Ta pristop sem implementiral v metodi \texttt{parallel}, ki sledi modularni zasnovi, ki sem jo uporabil pri sekvenčnem
+ekvivalentu \texttt{sequential}.
+
+Paralelna implementacija temelji na tem, da so izračuni sosede vsakega vozlišča na trenutnem nivoju izvedeni vzporedno.
+Ta proces je dosežen z uporabo knjižnice \texttt{Parmap}, ki omogoča enostavno paralelizacijo metode \texttt{map}.
+Ta knjižnica prihrani dodatno delo pri upravljanju niti, saj zahteva le zamenjavo standardne funkcije \texttt{map} z
+\texttt{parmap} in dodajanje števila domen, ki jih želimo uporabiti.
+
+V naslednjem izseku kode je prikazana ključna implementacija:
 
 \begin{lstlisting}[label=lst:bfs_parallel]
 module BfsAlgorithms : Bfs = struct
@@ -670,25 +672,24 @@ end
 
 \end{lstlisting}
 
-Če smo prej preko metode \texttt{map} za vsako vozlišče na trenutnem nivoju izračunali njegove sosede sekvenčno,
-je tu ideja paralelizacije v tem, da to naredimo vzporedno. Našel sem knjižnico \texttt{Parmap}, ki nam omogoča
-paralelizacijo metode map na seznamu. Ta knjižnica je zelo preprosta za uporabo, saj je potrebno zgolj zamenjati
-funkcijo \texttt{map} z \texttt{parmap} in dodati še število domen, ki jih želimo uporabiti. Knjižnica sama poskrbi
-za vse ostalo.
+Funkcija \texttt{parallel} sledi podobnemu vzorcu kot \texttt{sequential}. Glavna razlika je v uporabi funkcije
+\texttt{parmap} za vzporedno obdelavo vsakega vozlišča na trenutnem nivoju. Ta pristop omogoča, da se vsako vozlišče
+in njegovi sosedi obdelajo vzporedno, kar lahko znatno zmanjša celotni čas izvajanja BFS v primernem večprocesorskem okolju.
+
+Ta paralelna implementacija BFS je ključen korak pri raziskovanju in izkoriščanju možnosti vzporednega programiranja
+v funkcijskih jezikih. Omogoča nam, da razširimo klasične algoritme in izkoristimo sodobno večprocesorsko strojno
+opremo za boljše zmogljivosti.
 
 \subsubsection{Analiza časa računanja BFS algoritmov}
 
-V tem razdelku bom analiziral časovno zahtevnost paralelnega BFS algoritma v primerjavi s sekvenčnim.
-Za razliko od pohitritve algoritma računanja Fibonaccijevih števil, kjer je paralelno računanje pospešilo naš proces,
-se je pri paralelnem BFS algoritmu izkazalo, da je paralelno računanje celo upočasnilo naš proces. Vseeno
-pa tu predstavim rezultate ter povzamem, kako sem se merjenja časa računanja grafov lotil empirično.
+V tem odseku je predstavljena analiza časovne učinkovitosti paralelne različice algoritma za iskanje v širino (BFS)
+v primerjavi s sekvenčnim pristopom. V nasprotju s pričakovanji, ki bi predvidevala pohitritev z uporabo paralelizacije,
+so rezultati pokazali, da paralelni pristop dejansko povzroči upočasnitev procesa.
 
-Vemo, da je časovna kompleksnost sekvenčnega BFS algoritma $O(|V| + |E|)$, kjer je $|V|$ število vozlišč v grafu,
-$|E|$ pa število povezav v grafu, zato je pričakovati, da bo čas izračuna sekvenčnega BFS algoritma naraščala linearno
-z velikostjo grafa. Da sem lahko primerjal časa izračuna sekvenčnega in paralelnega algoritma, sem izračunal ustvaril
-$16$ grafov, ki so po številu svojih vozlišč in povezav linearno naraščali, pri čemer je imel največji graf
-$2000$ vozlišč ter $1000000$ povezav. Na sliki \ref{fig:bfs_calculation_time_by_graph_size} so predstavljeni izmerjeni
-rezultati.
+Za empirično testiranje so bili ustvarjeni grafi z različnimi velikostmi. Največji izmed njih je vključeval 2000
+vozlišč in 1000000 povezav. Rezultati, prikazani na \ref{fig:bfs_calculation_time_by_graph_size}, kažejo, da se čas
+izračuna v paralelnem algoritmu povečuje linearno s številom vozlišč in povezav v grafu, podobno kot pri sekvenčnem
+algoritmu. Vendar je bila opazna manjša učinkovitost paralelnega pristopa.
 
 \begin{figure}[h!]
   \centering
@@ -697,26 +698,17 @@ rezultati.
   \label{fig:bfs_calculation_time_by_graph_size}
 \end{figure}
 
-Čeprav tudi čas izračuna paralelnega algoritma narašča linearno z velikostjo grafa, je vseeno precej počasnejši od
-sekvenčnega algoritma. Po večih poskusih optimizacije paralelnega algoritma nisem našel algoritma, ki bi bil pri
-večino grafih hitrejši kot sekvenčni, razlogov pa je lahko več:
-\begin{itemize}
-  \item \textbf{Dodatna računaska obremenitev zaradi paralelizacije: } Paralelizacija algoritma zahteva dodatne operacije, kot so 
-        razdeljevanje dela med niti, sinhronizacija med nitmi in pošiljanje rezultatov nazaj v glavni program. 
-        Vse te operacije lahko povzročijo dodatno računsko obremenitev (overhead), ki upočasni izvajanje algoritma.
-  \item \textbf{Počasnost knjižnice Parany: } Knjižnica Parany prav tako podpira samo paralelizacijo na nivoju
-        procesorja, kar je lahko precej počasneje kot paralelizacija na nivoju pomnilnika za dano metodo. Prav tako
-        pa je bila ta knjižnica napisana več let nazaj ter posledično ni ustvarjena za OCaml 5 ter najnovejše
-        procesorske arhitekture.
-  \item \textbf{Naivna paralelizacija: } V zgornji kodi sem paraleliziral vsak funkcijski klic. Ideja, ki mi je zaradi
-        premajhnega obsega diplomske naloge ni uspelo implementirati je, da bi na neki točki avtomatsko ugotovil,
-        kateri deli kode so najbolj računsko zahtevni, ter te dele kode paraleliziral, druge pa bi pustil, da se
-        računajo na enem samem jedru.
-\end{itemize}
+Možni razlogi za to upočasnitev vključujejo dodatno računsko obremenitev, ki nastane zaradi potrebe po upravljanju več
+niti, sinhronizaciji med nitmi ter prenosu podatkov nazaj v glavni program. Prav tako je lahko počasnost povezana s
+knjižnico Parany, ki ni optimizirana za najnovejše procesorske arhitekture in podporo OCaml 5. Poleg tega je bila
+uporabljena metoda paralelizacije precej splošna, kar lahko vodi v neučinkovito izrabo procesorskih virov.
 
-Dodatno me je zanimalo še, kako se čas izračuna paralelnega BFS algoritma spreminja z večanjem števila domen.
-Zato sem si izbral graf z $500000$ povezavami, ter ga računal paralelno z različnim številom domen. Rezultati so
-prikazani na sliki \ref{fig:bfs_calculation_time_by_num_domains}.
+Dodaten eksperiment je bil izveden za oceno vpliva števila domen (niti) na čas izračuna. Testi so bili opravljeni na
+grafu z 500.000 povezavami, kjer so bila števila domen sistematično spreminjana. Kot prikazuje Slika 4.4, se je
+izkazalo, da večje število domen ne vodi nujno do hitrejšega izračuna. To še dodatno potrjuje, da je paralelna
+verzija BFS v nekaterih primerih lahko manj učinkovita kot sekvenčna.
+
+\ref{fig:bfs_calculation_time_by_num_domains}.
 
 \begin{figure}[h!]
   \centering
@@ -725,10 +717,9 @@ prikazani na sliki \ref{fig:bfs_calculation_time_by_num_domains}.
   \label{fig:bfs_calculation_time_by_graph_size}
 \end{figure}
 
-Vidimo lahko, da je paralelni algoritem spet počasnejši od sekvenčnega - pri eni domeni je seveda z sekvenčnim primerljiv,
-pri več kot eni domeni pa je počasnejši, kar prav tako potrjuje hipotezo, da je je paralelizacija algoritma za iskanje
-v širino na nivoju procesorja počasnejša od svojega sekvenčnega ekvivalenta.
-
+Zaključek analize nakazuje, da paralelni BFS morda ni najprimernejši za aplikacije, kjer je ključnega pomena hitrost izračuna.
+V prihodnosti bi bilo koristno raziskati možnosti za optimizacijo paralelne različice tega algoritma, vključno s
+selektivno paralelizacijo najbolj zahtevnih delov kode in razvojem metod, ki so prilagojene posebnostim različnih vrst grafov.
 
 \subsection{Paralelna implementacija Dijkstrovega algoritma} \label{section:dijkstra}
 
