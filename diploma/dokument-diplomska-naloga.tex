@@ -152,14 +152,12 @@ problemi na področjih računalniške komunikacije ter podatkovne analitike. Spl
 koli odnose med danimi entitetami, vse od računanja razdalj med mesti, pa do računanje vodnega pretoka 
 od enega kraja do drugega.
 
-Kot kompleksnost grafov narašča, se povečujejo tudi zahteve za računsko
-moč pri njihovem obdelovanju. Čeprav so grafovski algoritmi v osnovi
-izračunljivi, lahko obdelava velikih ali zapletenih grafov postane izjemno
-zahtevna, tako v smislu časa izvajanja kot porabe pomnilnika.
-Načinov za reševanje tega problema je več, pogosto pa je eden izmed možnih načinov pospešitve
-programa paralelizacija, s čimer, kot bomo videli, bolje izkoristimo celotno računsko kapaciteto računalnika.
-Posledično je paralelizacija tovrstnih algoritmov v zadnjih letih postala tako zanimiva raziskovalna kot
-tudi aplikativna tema v računalništvu.
+Kot kompleksnost grafov narašča, se povečujejo tudi zahteve za računsko moč pri njihovem obdelovanju. 
+Čeprav so grafovski algoritmi v osnovi izračunljivi, lahko obdelava velikih ali zapletenih grafov postane izjemno
+zahtevna, tako v smislu časa izvajanja kot porabe pomnilnika. Načinov za reševanje tega problema je več, pogosto pa
+je eden izmed možnih načinov pospešitve programa paralelizacija, s čimer, kot bomo videli, bolje izkoristimo celotno
+računsko kapaciteto računalnika. Posledično je paralelizacija tovrstnih algoritmov v zadnjih letih postala tako
+zanimiva raziskovalna kot tudi aplikativna tema v računalništvu.
 
 Funkcijski programski jeziki zagotavljajo matematične abstrakcije na višjem nivoju, kot so jih to sposobni navadni
 imperativni programski jeziki, kot so na primer \textit{Python}, \textit{C++} in \textit{Java}. 
@@ -196,11 +194,11 @@ in ogrodja za paralelizacijo grafovskih algoritmov:
 
 Z izdajo različice 5.0.0 leta 2022 je tudi OCaml dobil podporo za paralelno računanje. Zato sem to priložnost 
 izkoristil, da svoje računalniške programe pišem v tem funkcijskem jeziku. 
-V svoji diplomski naloge se bom tako spustil v tovrstne knjižnice v funkcijskih jezikih, ki že obstajajo, 
+V svoji diplomski nalogi se bom tako spustil v tovrstne knjižnice v funkcijskih jezikih, ki že obstajajo, 
 pregledal novejše raziskave kar se tiče grafovskih algoritmov v imperativnih jezikih, 
 tovrstne ideje poskušal razumeti v kontekstu funkcijskih jezikov ter vse skupaj povezal v preprosto knjižnico v OCamlu.
 
-Ker je OCaml šele nedavno dobil podporo za paralelizacijo, je literatura na to temo omejeno.
+Ker je OCaml šele nedavno dobil podporo za paralelizacijo, je literature na to temo omejeno.
 Med obstoječimi viri je knjižnica OCaml Multicore \cite{ocaml_multicore_500}, ki se osredotoča na paralelizacijo redkih grafov.
 To je narekovalo potrebo po uporabi OCamlove dokumentacije o paralelizaciji \cite{ocaml_paralelisation_documentation} ter
 raziskovanju knjižnic, razvitih v drugih funkcijskih jezikih. Za osnovo pri razvoju grafa je bila uporabljena knjižnica,
@@ -247,7 +245,7 @@ so funkcijski programski jeziki bolj primerni za paralelizacijo iz več razlogov
     dodatno upravljanje sinhronizacije in stanja med procesi.
 
   \item \textbf{Lažje razumevanje in odpravljanje napak:} 
-    Odsotnost stranskih učinkov prav tako olajša razumevanje kode in njeno odpravljanje napak, kar je še posebej
+    Odsotnost stranskih učinkov prav tako olajša razumevanje kode in odpravljanje napak., kar je še posebej
     pomembno pri paralelnem programiranju, kjer je težko slediti stanju programa.
 
   \item \textbf{Modularnost in ponovna uporabnost:}
@@ -386,8 +384,8 @@ Tako kot pri neuteženem grafu, tudi tukaj poskrbim za vse metode, ki bi si jih 
 \subsection{Pregled OCamlove knjižnice \textit{Domainslib}} \label{sec:pregled_domainslib}
 
 \href{https://github.com/ocaml-multicore/domainslib}{Domainslib} je sočasna programska knjižnica za OCaml, 
-ki nam omogoča paralelizacijo na nivoju procesorja. Ponuja nam razne abstrakcije in orodja za pisanje vzporednih
-in sočasnih programov. Zgrajena je na t.i. domenah (ang. domains). To so lahke niti, vgrajene v OCaml.
+ki nam omogoča paralelizacijo na nivoju procesorja. Ponuja nam različne abstrakcije in orodja za pisanje vzporednih
+in sočasnih programov. Zgrajena je na t. i. domenah (ang. domains). Gre za lahke niti, vgrajene v OCaml.
 S prihodom OCamlove različice 5.0.0 je \texttt{Domainslib} postal tudi del standardne knjižnice OCaml.
 
 Tukaj povzamem glavne koncepte Domainsliba, ki jih bom uporabil v svoji diplomski nalogi:
@@ -410,9 +408,9 @@ Tukaj povzamem glavne koncepte Domainsliba, ki jih bom uporabil v svoji diplomsk
         Vse to nam precej olajša delo, če lahko večji kos računalniške naloge razdelimo na manjše kose, ki jih lahko
         izvajamo vzporedno že preko vgrajenih funkcij.
   \item \emph{Sinhronizacijski mehanizmi} (ang. synchronization primitives): Knjižnica nam ponuja sinhronizacijske mehanizme,
-        ki nam omogočajo sinhronizacijo med domenami. Za to se uporablja modul ~\texttt{Atomic}. Obratno lahko definiramo
+        ki nam omogočajo sinhronizacijo med domenami. Za to se uporablja modul \texttt{Atomic}. Obratno lahko definiramo
         mehanizme za vzajemno izključitev podatkovnih tokov (ang. mutex), ki nam omogočajo, da se določen kos kode
-        izvaja samo na eni domeni hkrati. Za to se uporablja modul ~\texttt{Mutex}.
+        izvaja samo na eni domeni hkrati. Za to se uporablja modul \texttt{Mutex}.
   \item \emph{Izravnavanje obremenitve} (ang. load balancing): Domainslib nam ponuja orodja za izravnavanje obremenitve, 
         ki nam omogočajo, da se obremenitev med domenami porazdeli čim bolj enakomerno.
 \end{itemize}
@@ -429,12 +427,12 @@ knjižnice Domainslib na GitHub-u na spletnem naslovu \url{https://github.com/oc
 \subsection{Uvodni primer: Računanje Fibonaccijevih števil}
 
 Čeprav ne gre za grafovski algoritem, je vseeno poučno, da najprej predstavimo osnovne koncepte
-paralelizacije na kar se da preprostem primeru. Izbral sem si paralelno računanje Fibonaccijevih števil
+paralelizacije na kar se da preprostem primeru. Izbral sem si primer paralelnega računanja Fibonaccijevih števil
 (na način, ki terja časovno zahtevnost $O(2^n)$, kot je razvidno iz slike \ref{fig:fib-graph}).
 Osnovno idejo problema sem povzel po \cite{parallel_fib_computation} in \cite{multicore_ocaml_article} ter jo prilagodil
 za lastne potrebe.
 
-Preprosto funkcijo, ki računa Fibonaccijevo število, lahko zapišemo na zelo preprost način:
+Preprosto funkcijo za računanje Fibonaccijevega števila, lahko zapišemo na zelo preprost način:
 
 \subsubsection{Sekvenčno računanje Fibonaccijevih števil}
 
