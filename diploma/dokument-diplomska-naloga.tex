@@ -486,17 +486,14 @@ Preprosto funkcijo za računanje Fibonaccijevega števila, lahko zapišemo na ze
 
 \subsubsection{Paralelno računanje Fibonaccijevih števil}
 
-Zato se seveda vprašamo, kako bi lahko to funkcijo paralelizirali. Očiten odgovor je, da bi lahko paralelno računali
-$fib(n-1)$ in $fib(n-2)$ ter to počeli, dokler ne pridemo do baze rekurzije. To lahko predstavimo z grafom, kot je
-prikazano na sliki \ref{fig:fib-graph}. Problem, na katerega sem naletel ob empiričnem testiranju svojega programa
-je, da je ta način paralelizacije precej neučinkovit, saj tako definirano število paralelnih nalog narašča zelo hitro
-(zgornja meja za število tako definiranih paralelnih procesov je $O(2^n)$).
-Zato sem v svojem programu uporabil naslednjo idejo: Paraleliziraj kose kode, ki vzamejo največ časa, 
-manj računsko zahtevne dele kode pa računaj sekvenčno.
+Raziskava paralelizacije funkcije za izračun Fibonaccijevih števil razkriva, da je možno paralelno računanje izrazov
+$fib(n-1)$ in $fib(n-2)$, kar se nadaljuje do baze rekurzije. Ta pristop, ilustriran na sliki \ref{fig:fib-graph}, pa
+pokaže, da takšna paralelizacija vodi v hitro rast števila paralelnih nalog, saj zgornja meja za število paralelnih
+procesov doseže $O((\frac{1 + \sqrt{5}}{2})^n)$.
 
-Empirično sem ugotovil, da se neparalelni program začne zatikati tam nekje pri računanju Fibonaccijevih števil
-večjih od $38$, zato sem program spisal tako, da števila večja od $38$ računam paralelno po zgoraj opisanem postopku
-(na vsakem koraku ustvarim dve asinhroni nalogi), števila manjša od $38$ pa računam neparalelno.
+V okviru optimizacije je bilo razvito naslednje načelo: paralelizacija naj se uporabi za dele kode z največjimi
+računskimi zahtevami, medtem ko se manj zahtevni segmenti izvajajo sekvenčno. Prag, pri katerem se preide na paralelno
+izračunavanje, je bil postavljen pri Fibonaccijevih številih večjih od $38$, medtem ko se manjša števila računajo sekvenčno.
 
 \begin{lstlisting}
 module T = Domainslib.Task
@@ -512,22 +509,26 @@ let rec fib_par pool n =
     T.await pool a + T.await pool b
 \end{lstlisting}
 
-Sicer smo že v prejšnjem razdelku opisali, kako se uporablja Domainslib, vendar pa se mi zdi smiselno, da tukaj
-v kontekstu izpostavimo nekaj pomembnih točk:
+Kot je že bilo opisano, knjižnica Domainslib omogoča paralelno obdelavo. Ključne točke njene uporabe v tem kontekstu so:
 \begin{itemize}
-  \item Z ukazom \texttt{module T = Domainslib.Task} ustvarimo okrajšavo za Domainslib.Task, kar nam olajša pisanje kode.
-  \item Funkcija \texttt{fib\_par} sprejme objekt tipa \texttt{pool} (pool je zadolžen za inicializacijo množice domen, namenjene za 
-  paralelno izvajanje. Tipično je ``pool'' inicializiran s številom domen).
-  \item preveri, če je število, ki ga računamo, manjše ali enako 38. 
-        Če je, potem izračuna Fibonaccijevo število na klasičen način (na eni niti oz. na eni domeni).
-        Sicer, pa ustvari dve asinhroni nalogi, ki računata Fibonaccijevo število za $n-1$ in $n-2$. 
-        Ti nalogi se bosta izvajali vzporedno.
+  \item Uporaba \texttt{module T = Domainslib.Task} za okrajšavo Domainslib.Task, kar poenostavi kodiranje.
+  \item Funkcija \texttt{fib\_par} sprejme \texttt{pool}, ki je odgovoren za inicializacijo množice domen,
+        namenjenih paralelnemu izvajanju. 
+  \item Če je število manjše ali enako 38, funkcija izračuna Fibonaccijevo število na klasičen način. 
+        Za večja števila pa se ustvarita dve asinhroni nalogi za $n-1$ in $n-2$, ki se izvajata vzporedno.
 \end{itemize}
 
 \subsubsection{Analiza časa računanja Fibonaccijevih števil}
 
-Najprej me je zanimalo, kako se čas izračuna Fibonaccijevih števil spreminja v odvisnosti od števila domen, zato sem
-v odvisnosti različnega števila domen dobil naslednje rezultate:
+Pred analizo časa izračuna Fibonaccijevih števil je pomembno omeniti, da so bili vsi izračuni opravljeni na
+osemjedrnem MacBooku Air M1. Ta podatek zagotavlja kontekst rezultatom, saj se lahko čas izračuna razlikuje
+glede na zmogljivosti in specifikacije uporabljenega računalnika. Tako je treba pri interpretaciji rezultatov
+upoštevati, da se lahko izračuni na drugih sistemih obnašajo drugače.
+
+Najprej je bila analizirana dinamika časa izračuna Fibonaccijevih števil v odvisnosti od števila domen. 
+Rezultati, prikazani na Sliki \ref{fig:fib_par_v_odvisnosti_od_domen}, kažejo, da večanje števila domen zmanjša čas
+izračuna, vendar ne linearno. Opazna je postopna stabilizacija časa izračuna pri približno 14 domenah. 
+Ta pojav je mogoče pripisati značilnostim računalniškega sistema in specifikam uporabljenega algoritma.
 
 \begin{figure}[h!]
   \centering
@@ -536,27 +537,10 @@ v odvisnosti različnega števila domen dobil naslednje rezultate:
   \label{fig:fib_par_v_odvisnosti_od_domen}
 \end{figure}
 
-Vidimo, da število domen vpliva na hitrost izračuna: Z večanjem števila domen se čas izračuna Fibonaccijevega števila
-zmanjšuje, kar bi za paraleliziran računalniški program tudi pričakovali. Vendar pa se čas izračuna Fibonaccijevega
-števila ne zmanjšuje linearno z večanjem števila domen, temveč sprva relativno hitro, nato pa se čas izračuna pri $14.$
-domeni ustali tam nekje pri treh četrtinkah sekunde. Seveda se to razlikuje od tega, na kako močnem računalniku
-program poganjamo, vendar pa bi pričakovali, da je razmerje časov izračuna Fibonaccijevih števil pri pri sekvenčnem
-ter paralelnem programu podobno na vseh računalnikih. Omenil bi, da sem dane izračune poganjal na osemjedrnem Applovem
-MacBooku Air M1. 
-
-Vseeno - opomniti gre, da je točno tak eksperiment točno s takimi rezultati praktično nemogoče replicirati.
-Že samo s tem, da sem prvič program poganjal medtem ko sem imel odprte še tri druge aplikacije, 
-drugič pa samo medtem ko sem imel odprt zgolj naš program, sem v drugem primeru dobil skoraj dvakrat hitrejši čas izračuna.
-
-Nato pa me je še zanimalo, kako se čas izračuna Fibonaccijevih števil spreminja v odvisnosti od zahtevanega
-Fibonaccijevega števila ter kako se pri tem razlikuje čas izračuna med paralelnim in neparalelnim programom.
-Kot že rečeno, sem empirično ugotovil, da se neparalelni program začne zatikati pri računanju Fibonaccijevih števil
-večjih od $38$, zato sem tako za paralelni kot neparalelni program izračunal čase izračuna Fibonaccijevih števil od $38.$
-do vključno $45.$ števila, pri čemer sem za paralelne izračune povsod uporabil $8$ domen. Dodatno sem pri tem grafu
-analiziral še, kako se čas izračuna Fibonaccijevih števil spreminja z nižanjem praga sekvečnosti (prag fibonaccijevega,
-kjer paralelni program nehamo računati paralelno, temveč sekvenčno). Zanimalo me je še, kako se čas izračuna
-Fibonaccijevih spreminja, če prag sekvenčnosti zmanjšamo. V našem primeru sem tako izbral dva praga sekvenčnosti:
-$35$ in $38$. Rezultati so prikazani na sliki \ref{fig:fib_par_v_odvisnosti_od_n}.
+Nadaljnja analiza je bila usmerjena na primerjavo časov izračuna med paralelnim in neparalelnim izvajanjem programa. 
+Empirično je bilo ugotovljeno, da neparalelni izračun začne zaostajati pri Fibonaccijevih številih večjih od 38. 
+V nasprotju s tem se pri paralelnem izvajanju čas izračuna povečuje manj intenzivno, kot je razvidno iz Slike 
+\ref{fig:fib_par_v_odvisnosti_od_n}. Ta razlika potrjuje učinkovitost paralelizacije pri obdelavi večjih nalog.
 
 \begin{figure}[h!]
   \centering
@@ -565,10 +549,10 @@ $35$ in $38$. Rezultati so prikazani na sliki \ref{fig:fib_par_v_odvisnosti_od_n
   \label{fig:fib_par_v_odvisnosti_od_n}
 \end{figure}
 
-Vidimo, da se čas izračuna Fibonaccijevih števil pri paralelnem programu z večanjem zahtevanega Fibonaccijevega števila
-povečuje počasneje kot pri sekvenčnem programu. Pri neparalelnem programu se čas izvajanja, kot bi
-si mislili, povečuje eksponentno (saj je časovna zahtevnost računanja eksponentna), pri paralelnem programu pa se čas
-izvajanja povečuje počasneje.
+Zanimivo je tudi opaziti, kako se čas izračuna spreminja pri različnih pragih sekvenčnosti. 
+V obravnavanem primeru sta bila uporabljena dva različna praga sekvenčnosti (35 in 38), kar je omogočilo dodatne
+vpoglede v učinkovitost in skalabilnost paraleliziranega pristopa.
+
 
 \subsection{Paralelno iskanje v širino (PBFS)}
 
