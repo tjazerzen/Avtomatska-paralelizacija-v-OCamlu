@@ -27,7 +27,7 @@
 ```
 (executable
   (name bfs)
-  (libraries base stdio domainslib)
+  (libraries base stdio domainslib parany)
   (modules bfs graph)
   (flags :standard -w "-32-70") ; If needed - suppress warnings 32 and 70
 )

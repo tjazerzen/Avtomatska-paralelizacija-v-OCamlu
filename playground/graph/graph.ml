@@ -48,7 +48,7 @@ module UnweightedGraph : sig
   val nodes : t -> Node.t list
   val edges : t -> (Node.t * Node.t) list
   val to_string : t -> string
-  val neighbours : Node.t -> t -> Node.t list
+  val neighbours : Node.t -> t -> NodeSet.t
   val find_node_by_id : int -> t -> Node.t option
   val create_new_graph : num_nodes:int -> num_edges:int -> directed:bool -> t
 end = struct
@@ -128,7 +128,7 @@ end = struct
            NodeSet.fold (fun node2 acc -> (node1, node2) :: acc) nodes [])
     |> List.flatten
 
-  let neighbours node graph = NodeMap.find node graph.edges |> NodeSet.elements
+  let neighbours node graph = NodeMap.find node graph.edges
 
   let find_node_by_id id graph =
     let nodes = nodes graph in

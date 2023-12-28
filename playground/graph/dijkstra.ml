@@ -37,7 +37,6 @@ end = struct
   exception Queue_is_empty
 
   let empty () = { priority_queue = Empty; mutex = Mutex.create () }
-
   let is_empty (pq : t) = pq.priority_queue = Empty
 
   let insert (new_node : Node.t) (new_priority : priority) (pq : t) : t =
@@ -99,7 +98,8 @@ module Dijkstra : sig
   val sequential : WeightedGraph.t -> Node.t -> Node.t -> priority * Node.t list
   (** [sequential graph start_node end_node] is a sequential implementation of Dijkstra's algorithm for finding the shortest path between [start_node] and [end_node] in the weighted graph [graph]. It returns a tuple of the shortest distance and the list of nodes in the shortest path. *)
 
-  val parallel : WeightedGraph.t -> Node.t -> Node.t -> T.pool -> priority * Node.t list
+  val parallel :
+    WeightedGraph.t -> Node.t -> Node.t -> T.pool -> priority * Node.t list
   (** [parallel graph start_node end_node] is a parallel implementation of Dijkstra's algorithm for finding the shortest path between [start_node] and [end_node] in the weighted graph [graph]. It returns a tuple of the shortest distance and the list of nodes in the shortest path. *)
 end = struct
   let sequential (graph : WeightedGraph.t) start_node end_node =
@@ -146,11 +146,10 @@ end = struct
             ~body:(fun i ->
               let neighbor, weight = List.nth neighbours i in
               if List.mem neighbor new_visited then ()
-              else
-                (Mutex.lock mutex;
+              else (
+                Mutex.lock mutex;
                 new_pq := PQ.insert neighbor (current_cost +. weight) !new_pq;
-                Mutex.unlock mutex;)
-              );
+                Mutex.unlock mutex));
           (* T.teardown_pool pool; *)
           loop !new_pq new_visited
     in

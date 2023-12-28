@@ -28,13 +28,6 @@ let () =
   Printf.printf "UnweightedGraph: %s\n" (UnweightedGraph.to_string my_graph)
 
 let () = print_endline "Printing neighbors of node1..."
-
-let () =
-  Printf.printf "Neighbors: %s\n"
-    (my_graph
-    |> UnweightedGraph.neighbours node1
-    |> List.map Node.to_string |> String.concat ", ")
-
 let () = print_endline "Removing node1 from graph..."
 let my_graph = UnweightedGraph.remove_node node1 my_graph
 let () = print_endline "Printing graph to string once again..."
@@ -98,13 +91,6 @@ let () =
     (WeightedGraph.to_string my_weighted_graph)
 
 let () = print_endline "Printing neighbors of node1..."
-
-let () =
-  Printf.printf "Neighbors: %s\n"
-    (my_weighted_graph
-    |> WeightedGraph.neighbours node1
-    |> List.map Node.to_string |> String.concat ", ")
-
 let () = print_endline "Removing node1 from weighted graph..."
 let my_weighted_graph = WeightedGraph.remove_node node1 my_weighted_graph
 let () = print_endline "Printing weighted graph to string once again..."

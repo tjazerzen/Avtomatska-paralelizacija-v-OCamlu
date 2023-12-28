@@ -25,11 +25,6 @@ end
 (** [Bfs] is a module that implements the breadth-first search algorithm. *)
 
 module BfsAlgorithms : Bfs = struct
-  (** [visit_node node visited graph] returns a list of nodes that are neighbours of [node] in [graph] and have not been visited yet. *)
-  let visit_node (node : Node.t) (visited : NodeSet.t)
-      (graph : UnweightedGraph.t) : Node.t list =
-    let neighbours : Node.t list = UnweightedGraph.neighbours node graph in
-    List.filter (fun node -> not (NodeSet.mem node visited)) neighbours
 
   let rec loop (visited : NodeSet.t) (stages : NodeSet.t list)
       (next_stage_implementation :
@@ -56,8 +51,10 @@ module BfsAlgorithms : Bfs = struct
         (graph : UnweightedGraph.t) : NodeSet.t =
       let new_nodes : Node.t list =
         previous_stage |> NodeSet.elements
-        |> Parmap.parmap num_domains (fun node -> visit_node node visited graph)
-        |> List.flatten
+        |> Parmap.parmap num_domains (fun node -> UnweightedGraph.neighbours node graph)
+        |> List.fold_left NodeSet.union NodeSet.empty
+        |> NodeSet.elements
+        |> List.filter (fun node -> not (NodeSet.mem node visited))
       in
       List.fold_left
         (fun set node -> NodeSet.add node set)
@@ -77,8 +74,10 @@ module BfsAlgorithms : Bfs = struct
         (graph : UnweightedGraph.t) : NodeSet.t =
       let new_nodes : Node.t list =
         previous_stage |> NodeSet.elements
-        |> List.map (fun node -> visit_node node visited graph)
-        |> List.flatten
+        |> List.map (fun node -> UnweightedGraph.neighbours node graph)
+        |> List.fold_left NodeSet.union NodeSet.empty
+        |> NodeSet.elements
+        |> List.filter (fun node -> not (NodeSet.mem node visited))
       in
       List.fold_left
         (fun set node -> NodeSet.add node set)
