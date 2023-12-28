@@ -2,5 +2,5 @@
   (name bfs_examples)
   (libraries base stdio domainslib parany)
   (modules bfs graph bfs_examples graph_examples)
-  (flags :standard -w "-21")
+  (flags :standard -w "-21-32-27")
   (promote (until-clean)))

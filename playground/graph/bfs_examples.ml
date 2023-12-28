@@ -1,7 +1,8 @@
 open Graph
+open Domainslib
+open Bfs
 
 (* open BfsAlgorithms *)
-open Bfs
 
 (*Helper methods*)
 
@@ -57,13 +58,23 @@ let () =
 let () =
   info_bfs_calculation_print small_graph_start_node_id ~is_sequential:false
 
-let () =
+let task_pool = T.setup_pool ~num_domains:5 ()
+
+let bfs_parallel_wrapper pool =
+  BfsAlgorithms.parallel small_graph small_graph_start_node
+
+let result = Task.run task_pool (fun () -> bfs_parallel_wrapper task_pool);;
+
+T.teardown_pool task_pool;;
+
+
+(* let () =
   BfsAlgorithms.parallel small_graph small_graph_start_node ~num_domains
-  |> print_bfs_result
+  |> print_bfs_result *)
 
 (*---------------LARGE GRAPH-----------------*)
 (*Reading the graph*)
-let large_graph =
+(* let large_graph =
   UnweightedGraph.create_new_graph ~num_nodes:large_graph_vertex_count
     ~num_edges:large_graph_edge_count ~directed:false
 
@@ -99,7 +110,7 @@ let () =
 
 let () =
   BfsPerformanceAnalysis.bfs_par_calculation_time_num_domains_to_csv large_graph
-    large_graph_start_node ~max_domains:8
+    large_graph_start_node ~max_domains:8 *)
 
 (*Printing sequential BFS performance to csv...*)
 (* This code block defines a list of tuples representing combinations of
@@ -107,7 +118,7 @@ let () =
    performance of sequential BFS on graphs with varying sizes. 
   *)
 
-let vertex_combinations = [
+(* let vertex_combinations = [
   500; 
   1000; 
   1500; 
@@ -146,4 +157,4 @@ let () =
 
 let () =
   BfsPerformanceAnalysis.bfs_calculation_time_combinations_to_csv combinations
-    ~num_domains:8
+    ~num_domains:8 *)
