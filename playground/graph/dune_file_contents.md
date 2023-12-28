@@ -37,7 +37,7 @@
 ```
 (executable
   (name bfs_examples)
-  (libraries base stdio domainslib)
+  (libraries base stdio domainslib parany)
   (modules bfs graph bfs_examples graph_examples)
   (promote (until-clean)))
 ```
