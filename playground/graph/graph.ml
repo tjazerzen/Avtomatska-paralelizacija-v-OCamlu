@@ -139,7 +139,6 @@ end = struct
       : t =
     if num_edges > num_nodes * (num_nodes - 1) / 2 then
       print_endline("Number of nodes: " ^ string_of_int num_nodes ^ "\nNumber of edges: " ^ string_of_int num_edges ^ "\n");
-      failwith "Too many edges for the specified number of nodes";
     let graph = empty ~directed in
     let nodes = List.init num_nodes (fun i -> Node.create i) in
     let graph =
