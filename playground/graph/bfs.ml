@@ -1,5 +1,4 @@
 open Graph
-open Parany
 module T = Domainslib.Task
 
 (** This module type will implement the breadth-first search algorithm on a graph. 
@@ -42,6 +41,13 @@ module BfsAlgorithms : Bfs = struct
             (next :: stages) next_stage_implementation graph
     | [] -> failwith "Should not happen"
 
+  let parallel_map (f : 'a -> 'b) (task_pool : T.pool) (arr : 'a array) : 'b array =
+    let len = Array.length arr in
+    let res = Array.make len (f arr.(0)) in
+    T.parallel_for task_pool ~start:0 ~finish:(len - 1) ~body:(fun i ->
+        res.(i) <- f arr.(i));
+    res
+  
   (** [parallel graph start_node] is a function that implements the breadth-first search algorithm on a graph [graph] starting from a given node [start_node]. 
     It returns a list of sets of nodes, where each set contains all nodes at a certain distance from the starting node. 
     This function uses parallelism to speed up the computation. *)
@@ -49,16 +55,19 @@ module BfsAlgorithms : Bfs = struct
       ~(num_domains : int) : NodeSet.t list =
     let next_stage_par (visited : NodeSet.t) (previous_stage : NodeSet.t)
         (graph : UnweightedGraph.t) : NodeSet.t =
-      let new_nodes : Node.t list =
-        previous_stage |> NodeSet.elements
-        |> Parmap.parmap num_domains (fun node -> UnweightedGraph.neighbours node graph)
-        |> List.fold_left NodeSet.union NodeSet.empty
+      let num_domains = 8 in
+      let task_pool = T.setup_pool ~num_domains:(num_domains - 1) () in
+      let new_nodes : Node.t list = previous_stage 
         |> NodeSet.elements
-        |> List.filter (fun node -> not (NodeSet.mem node visited))
+        |> Array.of_list
+        |> parallel_map (fun node -> UnweightedGraph.neighbours node graph) task_pool
+        |> Array.to_list
+        |> List.fold_left NodeSet.union NodeSet.empty
+        |> NodeSet.diff visited
+        |> NodeSet.elements
       in
-      List.fold_left
-        (fun set node -> NodeSet.add node set)
-        NodeSet.empty new_nodes
+      T.teardown_pool task_pool;
+      List.fold_left (fun set node -> NodeSet.add node set) NodeSet.empty new_nodes
     in
     loop
       (NodeSet.singleton start_node)
