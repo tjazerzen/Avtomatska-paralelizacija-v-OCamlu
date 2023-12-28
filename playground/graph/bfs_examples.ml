@@ -102,24 +102,42 @@ let () =
     large_graph_start_node ~max_domains:8
 
 (*Printing sequential BFS performance to csv...*)
-(* This code block defines a list of tuples representing combinations of node and edge counts for a graph. The tuples are used to calculate the performance of sequential BFS on graphs with varying sizes. *)
-let combinations =
-  [
-    (10, 10);
-    (50, 250);
-    (100, 1000);
-    (500, 12500);
-    (1000, 50000);
-    (1500, 112500);
-    (2000, 200000);
-    (2500, 312500);
-    (3000, 450000);
-    (3500, 612500);
-    (4000, 800000);
-    (4500, 1012500);
-    (5000, 1250000);
-    (5500, 1512500);
-  ]
+(* This code block defines a list of tuples representing combinations of
+   node and edge counts for a graph. The tuples are used to calculate the 
+   performance of sequential BFS on graphs with varying sizes. 
+  *)
+
+let vertex_combinations = [
+  500; 
+  1000; 
+  1500; 
+  2000; 
+  2500; 
+  3000; 
+  3500; 
+  4000; 
+  4500; 
+  5000; 
+  5500;
+  6000;
+  6500;
+  7000;
+  7500;
+  8000;
+  8500;
+  9000;
+  9500;
+  10000;
+]
+
+
+let minimizing_factor = 0.01
+let edge_combinations = vertex_combinations
+  |> List.map float_of_int
+  |> List.map (fun v -> (v *. (v -. 1.0) *. minimizing_factor) /. 2.0)
+  |> List.map int_of_float
+
+let combinations = List.combine vertex_combinations edge_combinations
 
 let () =
   Printf.printf
