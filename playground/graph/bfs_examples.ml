@@ -28,7 +28,7 @@ let small_graph_edge_count = 10
 
 (*Constants for large graph*)
 let large_graph_start_node_id = 2
-let large_graph_vertex_count = 1000
+let large_graph_vertex_count = 2000
 let large_graph_edge_count = 500000
 
 (*---------------SMALL GRAPH-----------------*)
@@ -105,21 +105,20 @@ let () =
 (* This code block defines a list of tuples representing combinations of node and edge counts for a graph. The tuples are used to calculate the performance of sequential BFS on graphs with varying sizes. *)
 let combinations =
   [
-    (134, 67000);
-    (267, 133500);
-    (401, 200500);
-    (534, 267000);
-    (668, 334000);
-    (801, 400500);
-    (935, 467500);
-    (1068, 534000);
-    (1202, 601000);
-    (1335, 667500);
-    (1469, 734500);
-    (1602, 801000);
-    (1736, 868000);
-    (1869, 934500);
-    (2003, 1001000);
+    (10, 10);
+    (50, 250);
+    (100, 1000);
+    (500, 12500);
+    (1000, 50000);
+    (1500, 112500);
+    (2000, 200000);
+    (2500, 312500);
+    (3000, 450000);
+    (3500, 612500);
+    (4000, 800000);
+    (4500, 1012500);
+    (5000, 1250000);
+    (5500, 1512500);
   ]
 
 let () =
