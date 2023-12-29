@@ -58,14 +58,14 @@ let () =
 let () =
   info_bfs_calculation_print small_graph_start_node_id ~is_sequential:false
 
-let task_pool = T.setup_pool ~num_domains ()
+(* let task_pool = T.setup_pool ~num_domains ()
 
 let result =
   Task.run task_pool (fun () ->
       BfsAlgorithms.parallel small_graph small_graph_start_node task_pool)
 ;;
 
-T.teardown_pool task_pool
+T.teardown_pool task_pool *)
 
 (*---------------LARGE GRAPH-----------------*)
 (*Reading the graph*)

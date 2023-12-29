@@ -61,16 +61,12 @@ module BfsAlgorithms : Bfs = struct
       NodeSet.t list =
     let next_stage_seq (visited : NodeSet.t) (previous_stage : NodeSet.t)
         (graph : UnweightedGraph.t) : NodeSet.t =
-      let new_nodes : Node.t list =
-        previous_stage |> NodeSet.elements
+      previous_stage |> NodeSet.elements
         |> List.map (fun node -> UnweightedGraph.neighbours node graph)
         |> List.fold_left NodeSet.union NodeSet.empty
         |> NodeSet.elements
         |> List.filter (fun node -> not (NodeSet.mem node visited))
-      in
-      List.fold_left
-        (fun set node -> NodeSet.add node set)
-        NodeSet.empty new_nodes
+        |> List.fold_left (fun set node -> NodeSet.add node set) NodeSet.empty
     in
     let start_visited = NodeSet.singleton start_node in
     loop start_visited [ start_visited ] next_stage_seq graph
