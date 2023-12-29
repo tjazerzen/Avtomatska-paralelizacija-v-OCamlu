@@ -125,7 +125,8 @@ end = struct
     let cost, path = loop pq_start [] in
     (cost, List.rev path)
 
-  let parallel (graph : WeightedGraph.t) start_node end_node pool =
+  let parallel (graph : WeightedGraph.t) (start_node : Node.t)
+      (end_node : Node.t) (task_pool : T.pool) =
     let rec loop pq visited =
       if PQ.is_empty pq then raise Not_found
       else
@@ -137,11 +138,9 @@ end = struct
             WeightedGraph.edges graph |> NodeMap.find current_node
             |> NodeMap.bindings
           in
-          (* let pool = T.setup_pool ~num_domains:(List.length neighbours - 1) () *)
-          (* in *)
           let new_pq = ref pq in
           let mutex = Mutex.create () in
-          T.parallel_for pool ~start:0
+          T.parallel_for task_pool ~start:0
             ~finish:(List.length neighbours - 1)
             ~body:(fun i ->
               let neighbor, weight = List.nth neighbours i in
@@ -150,7 +149,6 @@ end = struct
                 Mutex.lock mutex;
                 new_pq := PQ.insert neighbor (current_cost +. weight) !new_pq;
                 Mutex.unlock mutex));
-          (* T.teardown_pool pool; *)
           loop !new_pq new_visited
     in
     let pq_start = PQ.empty () |> PQ.insert start_node 0.0 in

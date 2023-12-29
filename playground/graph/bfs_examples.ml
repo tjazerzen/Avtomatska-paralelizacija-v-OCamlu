@@ -1,6 +1,5 @@
 open Graph
-
-(* open Domainslib *)
+open Domainslib
 open Bfs
 
 (* open BfsAlgorithms *)
@@ -59,22 +58,14 @@ let () =
 let () =
   info_bfs_calculation_print small_graph_start_node_id ~is_sequential:false
 
-let task_pool = T.setup_pool ~num_domains:5 ()
-
-(* let bfs_parallel_wrapper pool =
-   BfsAlgorithms.parallel small_graph small_graph_start_node *)
+let task_pool = T.setup_pool ~num_domains ()
 
 let result =
-  BfsAlgorithms.parallel small_graph small_graph_start_node ~task_pool
+  Task.run task_pool (fun () ->
+      BfsAlgorithms.parallel small_graph small_graph_start_node task_pool)
 ;;
 
-(* let result = Task.run task_pool (fun () -> bfs_parallel_wrapper task_pool);; *)
-
 T.teardown_pool task_pool
-
-(* let () =
-   BfsAlgorithms.parallel small_graph small_graph_start_node ~num_domains
-   |> print_bfs_result *)
 
 (*---------------LARGE GRAPH-----------------*)
 (*Reading the graph*)
@@ -94,10 +85,14 @@ T.teardown_pool task_pool
    let () =
      info_bfs_calculation_print large_graph_start_node_id ~is_sequential:false
 
+   let task_pool = T.setup_pool ~num_domains ()
+
    let _ =
      Printf.printf "Parallel BFS calculation time: %f\n"
        (BfsPerformanceAnalysis.bfs_par_calculation_time large_graph
-          large_graph_start_node num_domains)
+         large_graph_start_node ~task_pool);;
+
+   T.teardown_pool task_pool;;
 
    (*Sequential BFS*)
    let () =
@@ -106,21 +101,20 @@ T.teardown_pool task_pool
    let () =
      Printf.printf "Sequential BFS calculation time: %f\n"
        (BfsPerformanceAnalysis.bfs_seq_calculation_time large_graph
-          large_graph_start_node)
+         large_graph_start_node)
 
    let () =
      Printf.printf
-       "Printing parallel BFS performance based on num_domains to csv...\n"
+       "Printing parallel BFS performance based on num_domains to csv...\n" *)
 
-   let () =
-     BfsPerformanceAnalysis.bfs_par_calculation_time_num_domains_to_csv large_graph
-       large_graph_start_node ~max_domains:8 *)
+(*let () =
+  BfsPerformanceAnalysis.bfs_par_calculation_time_num_domains_to_csv large_graph
+    large_graph_start_node ~max_domains:8 *)
 
 (*Printing sequential BFS performance to csv...*)
 (* This code block defines a list of tuples representing combinations of
    node and edge counts for a graph. The tuples are used to calculate the
-   performance of sequential BFS on graphs with varying sizes.
-*)
+   performance of sequential BFS on graphs with varying sizes. *)
 
 (* let vertex_combinations = [
      500;

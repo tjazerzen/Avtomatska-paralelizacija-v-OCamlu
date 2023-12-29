@@ -9,9 +9,8 @@ module T = Domainslib.Task
     while the [sequential] function runs on a single thread. 
     *)
 module type Bfs = sig
-  val parallel :
-    UnweightedGraph.t -> Node.t -> task_pool:T.pool -> NodeSet.t list
-  (** [parallel graph start_node] is a function that implements the breadth-first search algorithm on a graph [graph] starting from a given node [start_node]. 
+  val parallel : UnweightedGraph.t -> Node.t -> T.pool -> NodeSet.t list
+  (** [parallel graph start_node task_pool] is a function that implements the breadth-first search algorithm on a graph [graph] starting from a given node [start_node]. 
   It returns a list of sets of nodes, where each set contains all nodes at a certain distance from the starting node. 
   This function uses parallelism to speed up the computation. *)
 
@@ -42,35 +41,22 @@ module BfsAlgorithms : Bfs = struct
         res.(i) <- f arr.(i));
     res
 
-  (** [parallel graph start_node] is a function that implements the breadth-first search algorithm on a graph [graph] starting from a given node [start_node]. 
-    It returns a list of sets of nodes, where each set contains all nodes at a certain distance from the starting node. 
-    This function uses parallelism to speed up the computation. *)
   let parallel (graph : UnweightedGraph.t) (start_node : Node.t)
-      ~(task_pool : T.pool) : NodeSet.t list =
+      (task_pool : T.pool) : NodeSet.t list =
     let next_stage_par (visited : NodeSet.t) (previous_stage : NodeSet.t)
         (graph : UnweightedGraph.t) : NodeSet.t =
-      let new_nodes : Node.t list =
-        previous_stage |> NodeSet.elements |> Array.of_list
-        |> parallel_map
-             (fun node -> UnweightedGraph.neighbours node graph)
-             task_pool
-        |> Array.to_list
-        |> List.fold_left NodeSet.union NodeSet.empty
-        |> NodeSet.diff visited |> NodeSet.elements
-      in
-      List.fold_left
-        (fun set node -> NodeSet.add node set)
-        NodeSet.empty new_nodes
+      previous_stage |> NodeSet.elements |> Array.of_list
+      |> parallel_map
+           (fun node -> UnweightedGraph.neighbours node graph)
+           task_pool
+      |> Array.to_list
+      |> List.fold_left NodeSet.union NodeSet.empty
+      |> NodeSet.diff visited |> NodeSet.elements
+      |> List.fold_left (fun set node -> NodeSet.add node set) NodeSet.empty
     in
-    T.run task_pool (fun () ->
-        loop
-          (NodeSet.singleton start_node)
-          [ NodeSet.singleton start_node ]
-          next_stage_par graph)
+    let start_visited = NodeSet.singleton start_node in
+    loop start_visited [ start_visited ] next_stage_par graph
 
-  (** [sequential graph start_node] is a function that implements the breadth-first search algorithm on a graph [graph] starting from a given node [start_node]. 
-    It returns a list of sets of nodes, where each set contains all nodes at a certain distance from the starting node. 
-    This function runs on a single thread. *)
   let sequential (graph : UnweightedGraph.t) (start_node : Node.t) :
       NodeSet.t list =
     let next_stage_seq (visited : NodeSet.t) (previous_stage : NodeSet.t)
@@ -86,10 +72,8 @@ module BfsAlgorithms : Bfs = struct
         (fun set node -> NodeSet.add node set)
         NodeSet.empty new_nodes
     in
-    loop
-      (NodeSet.singleton start_node)
-      [ NodeSet.singleton start_node ]
-      next_stage_seq graph
+    let start_visited = NodeSet.singleton start_node in
+    loop start_visited [ start_visited ] next_stage_seq graph
 end
 
 module MakeBfsPerformanceAnalysis (Bfs : Bfs) : sig
@@ -109,8 +93,11 @@ end = struct
     This function uses parallelism to speed up the computation. *)
   let bfs_par_calculation_time (graph : UnweightedGraph.t) (start_node : Node.t)
       ~(task_pool : T.pool) : float =
+    (* let bfs_par_wrapper task_pool = Bfs.parallel graph start_node task_pool in *)
     let start_time = Unix.gettimeofday () in
-    let _ = Bfs.parallel graph start_node ~task_pool in
+    (* TODO: Fix this*)
+    let _ = Bfs.parallel graph start_node task_pool in
+    (* let _ = bfs_par_wrapper task_pool in *)
     (* Printf.printf "Parallel BFS took %f seconds\n" *)
     Unix.gettimeofday () -. start_time
   (* result *)
