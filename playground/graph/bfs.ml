@@ -96,7 +96,6 @@ end = struct
       : float =
     let start_time = Unix.gettimeofday () in
     let _ = Bfs.sequential graph start_node in
-    (* Printf.printf "Sequential BFS took %f seconds\n" *)
     Unix.gettimeofday () -. start_time
 
   let bfs_par_calculation_time_num_domains_to_csv (graph : UnweightedGraph.t)

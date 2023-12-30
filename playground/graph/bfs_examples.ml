@@ -64,6 +64,8 @@ let result =
   Task.run task_pool (fun () ->
       BfsAlgorithms.parallel small_graph small_graph_start_node task_pool);;
 
+result |> print_bfs_result;;
+
 T.teardown_pool task_pool
 
 (*---------------LARGE GRAPH-----------------*)
@@ -111,43 +113,41 @@ let () =
    node and edge counts for a graph. The tuples are used to calculate the
    performance of sequential BFS on graphs with varying sizes. *)
 
-(* let vertex_combinations = [
-     500;
-     1000;
-     1500;
-     2000;
-     2500;
-     3000;
-     3500;
-     4000;
-     4500;
-     5000;
-     5500;
-     6000;
-     6500;
-     7000;
-     7500;
-     8000;
-     8500;
-     9000;
-     9500;
-     10000;
-   ]
+let vertex_combinations = [
+  500;
+  1000;
+  1500;
+  2000;
+  2500;
+  3000;
+  3500;
+  4000;
+  4500;
+  5000;
+  5500;
+  6000;
+  6500;
+  7000;
+  7500;
+  8000;
+  8500;
+  9000;
+  9500;
+  10000;
+]
 
 
-   let minimizing_factor = 0.01
-   let edge_combinations = vertex_combinations
-     |> List.map float_of_int
-     |> List.map (fun v -> (v *. (v -. 1.0) *. minimizing_factor) /. 2.0)
-     |> List.map int_of_float
+let minimizing_factor = 0.1
+let edge_combinations = vertex_combinations
+  |> List.map float_of_int
+  |> List.map (fun v -> (v *. (v -. 1.0) *. minimizing_factor) /. 2.0)
+  |> List.map int_of_float
 
-   let combinations = List.combine vertex_combinations edge_combinations
+let combinations = List.combine vertex_combinations edge_combinations
 
-   let () =
-     Printf.printf
-       "Printing sequential BFS performance based on number of nodes and edges to \
-        csv...\n"
+let () =
+  Printf.printf
+    "Printing sequential BFS performance based on number of nodes and edges to \
+    csv...\n"
 
-   let () =
-     BfsPerformanceAnalysis.bfs_calculation_time_combinations_to_csv combinations
-       ~num_domains:8 *)
+let () = BfsPerformanceAnalysis.bfs_calculation_time_combinations_to_csv combinations num_domains
