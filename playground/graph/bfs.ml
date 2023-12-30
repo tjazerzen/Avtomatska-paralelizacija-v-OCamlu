@@ -41,18 +41,28 @@ module BfsAlgorithms : Bfs = struct
         res.(i) <- f arr.(i));
     res
 
+  let _calculate_next_stage (visited: NodeSet.t) (previous_stage : NodeSet.t) (mapper : Node.t list -> NodeSet.t list) : NodeSet.t = 
+    let all_neighbors = previous_stage
+      |> NodeSet.elements
+      |> mapper
+      |> List.fold_left NodeSet.union NodeSet.empty
+    in
+    NodeSet.diff all_neighbors visited
+      |> NodeSet.elements
+      |> List.fold_left (fun set node -> NodeSet.add node set) NodeSet.empty
+
+
   let parallel (graph : UnweightedGraph.t) (start_node : Node.t)
       (task_pool : T.pool) : NodeSet.t list =
     let next_stage_par (visited : NodeSet.t) (previous_stage : NodeSet.t)
         (graph : UnweightedGraph.t) : NodeSet.t =
-      previous_stage |> NodeSet.elements |> Array.of_list
-      |> parallel_map
-           (fun node -> UnweightedGraph.neighbours node graph)
-           task_pool
-      |> Array.to_list
-      |> List.fold_left NodeSet.union NodeSet.empty
-      |> NodeSet.diff visited |> NodeSet.elements
-      |> List.fold_left (fun set node -> NodeSet.add node set) NodeSet.empty
+      let mapper_par : Node.t list -> NodeSet.t list = fun nodes -> 
+        nodes 
+        |> Array.of_list 
+        |> parallel_map (fun node -> UnweightedGraph.neighbours node graph) task_pool 
+        |> Array.to_list
+      in
+      _calculate_next_stage visited previous_stage mapper_par
     in
     let start_visited = NodeSet.singleton start_node in
     loop start_visited [ start_visited ] next_stage_par graph
@@ -61,12 +71,10 @@ module BfsAlgorithms : Bfs = struct
       NodeSet.t list =
     let next_stage_seq (visited : NodeSet.t) (previous_stage : NodeSet.t)
         (graph : UnweightedGraph.t) : NodeSet.t =
-      previous_stage |> NodeSet.elements
-        |> List.map (fun node -> UnweightedGraph.neighbours node graph)
-        |> List.fold_left NodeSet.union NodeSet.empty
-        |> NodeSet.elements
-        |> List.filter (fun node -> not (NodeSet.mem node visited))
-        |> List.fold_left (fun set node -> NodeSet.add node set) NodeSet.empty
+      let mapper_seq : Node.t list -> NodeSet.t list = fun nodes ->
+        nodes |> List.map (fun node -> UnweightedGraph.neighbours node graph)
+      in
+      _calculate_next_stage visited previous_stage mapper_seq
     in
     let start_visited = NodeSet.singleton start_node in
     loop start_visited [ start_visited ] next_stage_seq graph
