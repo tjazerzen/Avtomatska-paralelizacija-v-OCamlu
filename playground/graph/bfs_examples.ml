@@ -68,47 +68,43 @@ T.teardown_pool task_pool
 
 (*---------------LARGE GRAPH-----------------*)
 (*Reading the graph*)
-(* let large_graph =
-     UnweightedGraph.create_new_graph ~num_nodes:large_graph_vertex_count
-       ~num_edges:large_graph_edge_count ~directed:false
+let large_graph =
+  UnweightedGraph.create_new_graph ~num_nodes:large_graph_vertex_count
+    ~num_edges:large_graph_edge_count ~directed:false
 
-   let () =
-     Printf.printf "Creating graph with %d vertices and %d edges...\n"
-       large_graph_vertex_count large_graph_edge_count
+let () =
+  Printf.printf "Creating graph with %d vertices and %d edges...\n"
+    large_graph_vertex_count large_graph_edge_count
 
-   let large_graph_start_node =
-     Option.get
-       (UnweightedGraph.find_node_by_id large_graph_start_node_id large_graph)
+let large_graph_start_node =
+  Option.get
+    (UnweightedGraph.find_node_by_id large_graph_start_node_id large_graph)
 
-   (*Parallel BFS*)
-   let () =
-     info_bfs_calculation_print large_graph_start_node_id ~is_sequential:false
+(*Parallel BFS*)
+let () =
+  info_bfs_calculation_print large_graph_start_node_id ~is_sequential:false
 
-   let task_pool = T.setup_pool ~num_domains ()
+let calculation_time = BfsPerformanceAnalysis.bfs_par_calculation_time large_graph
+    large_graph_start_node num_domains;;
 
-   let _ =
-     Printf.printf "Parallel BFS calculation time: %f\n"
-       (BfsPerformanceAnalysis.bfs_par_calculation_time large_graph
-         large_graph_start_node ~task_pool);;
+Printf.printf "Parallel BFS calculation time: %f\n" calculation_time;;
 
-   T.teardown_pool task_pool;;
+(*Sequential BFS*)
+let () =
+  info_bfs_calculation_print large_graph_start_node_id ~is_sequential:true
 
-   (*Sequential BFS*)
-   let () =
-     info_bfs_calculation_print large_graph_start_node_id ~is_sequential:true
+let () =
+  Printf.printf "Sequential BFS calculation time: %f\n"
+    (BfsPerformanceAnalysis.bfs_seq_calculation_time large_graph
+      large_graph_start_node)
 
-   let () =
-     Printf.printf "Sequential BFS calculation time: %f\n"
-       (BfsPerformanceAnalysis.bfs_seq_calculation_time large_graph
-         large_graph_start_node)
+let () =
+  Printf.printf
+    "Printing parallel BFS performance based on num_domains to csv...\n"
 
-   let () =
-     Printf.printf
-       "Printing parallel BFS performance based on num_domains to csv...\n" *)
-
-(*let () =
+let () =
   BfsPerformanceAnalysis.bfs_par_calculation_time_num_domains_to_csv large_graph
-    large_graph_start_node ~max_domains:8 *)
+    large_graph_start_node ~max_domains:8
 
 (*Printing sequential BFS performance to csv...*)
 (* This code block defines a list of tuples representing combinations of

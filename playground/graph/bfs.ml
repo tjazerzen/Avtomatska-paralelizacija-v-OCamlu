@@ -73,33 +73,25 @@ end
 
 module MakeBfsPerformanceAnalysis (Bfs : Bfs) : sig
   val bfs_par_calculation_time :
-    UnweightedGraph.t -> Node.t -> task_pool:T.pool -> float
+    UnweightedGraph.t -> Node.t -> int -> float
 
   val bfs_seq_calculation_time : UnweightedGraph.t -> Node.t -> float
 
-  (* val bfs_par_calculation_time_num_domains_to_csv :
-     UnweightedGraph.t -> Node.t -> max_domains:int -> unit *)
+  val bfs_par_calculation_time_num_domains_to_csv :
+     UnweightedGraph.t -> Node.t -> max_domains:int -> unit
 
   val bfs_calculation_time_combinations_to_csv :
-    (int * int) list -> task_pool:T.pool -> unit
+    (int * int) list -> int -> unit
 end = struct
-  (** [bfs_par_calculation_time graph start_node num_domains] runs the breadth-first search algorithm on a graph [graph] starting from a given node [start_node]. 
-    It returns a list of sets of nodes, where each set contains all nodes at a certain distance from the starting node. 
-    This function uses parallelism to speed up the computation. *)
   let bfs_par_calculation_time (graph : UnweightedGraph.t) (start_node : Node.t)
-      ~(task_pool : T.pool) : float =
-    (* let bfs_par_wrapper task_pool = Bfs.parallel graph start_node task_pool in *)
+      (num_domains : int) : float =
+    let task_pool = T.setup_pool ~num_domains:(num_domains - 1) () in
     let start_time = Unix.gettimeofday () in
-    (* TODO: Fix this*)
-    let _ = Bfs.parallel graph start_node task_pool in
-    (* let _ = bfs_par_wrapper task_pool in *)
-    (* Printf.printf "Parallel BFS took %f seconds\n" *)
-    Unix.gettimeofday () -. start_time
-  (* result *)
+    let _ = T.run task_pool (fun () -> Bfs.parallel graph start_node task_pool) in
+    let calculcation_time = Unix.gettimeofday () -. start_time in
+    T.teardown_pool task_pool;
+    calculcation_time
 
-  (** [bfs_seq_calculation_time graph start_node] runs the breadth-first search algorithm on a graph [graph] starting from a given node [start_node]. 
-    It returns a list of sets of nodes, where each set contains all nodes at a certain distance from the starting node. 
-    This function runs on a single thread. *)
   let bfs_seq_calculation_time (graph : UnweightedGraph.t) (start_node : Node.t)
       : float =
     let start_time = Unix.gettimeofday () in
@@ -107,7 +99,7 @@ end = struct
     (* Printf.printf "Sequential BFS took %f seconds\n" *)
     Unix.gettimeofday () -. start_time
 
-  (* let bfs_par_calculation_time_num_domains_to_csv (graph : UnweightedGraph.t)
+  let bfs_par_calculation_time_num_domains_to_csv (graph : UnweightedGraph.t)
        (start_node : Node.t) ~(max_domains : int) : unit =
      let out_channel =
        open_out "computation_time_analysis/bfs_par_domains.csv"
@@ -123,10 +115,10 @@ end = struct
      in
      output_string out_channel "num_domains,time\n";
      bfs_par_calculation_time_num_domains_to_csv_aux 1;
-     close_out out_channel *)
+     close_out out_channel
 
   let bfs_calculation_time_combinations_to_csv (combinations : (int * int) list)
-      ~(task_pool : T.pool) : unit =
+      (num_domains : int) : unit =
     let out_channel =
       open_out "computation_time_analysis/bfs_par_combinations.csv"
     in
@@ -136,7 +128,7 @@ end = struct
       in
       let start_node = Option.get (UnweightedGraph.find_node_by_id 1 graph) in
       let parallel_calculation_time =
-        bfs_par_calculation_time graph start_node ~task_pool
+        bfs_par_calculation_time graph start_node num_domains
       in
       let sequential_calculation_time =
         bfs_seq_calculation_time graph start_node
