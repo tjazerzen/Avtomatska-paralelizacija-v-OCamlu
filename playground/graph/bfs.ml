@@ -23,15 +23,27 @@ end
 (** [Bfs] is a module that implements the breadth-first search algorithm. *)
 
 module BfsAlgorithms : Bfs = struct
-  let rec loop (visited : NodeSet.t) (stages : NodeSet.t list)
-      (next_stage : NodeSet.t -> NodeSet.t -> UnweightedGraph.t -> NodeSet.t)
-      (graph : UnweightedGraph.t) : NodeSet.t list =
-    match stages with
-    | last_stage :: _ ->
-        let next : NodeSet.t = next_stage visited last_stage graph in
-        if NodeSet.is_empty next then List.rev stages
-        else loop (NodeSet.union visited next) (next :: stages) next_stage graph
-    | [] -> failwith "Should not happen"
+  let loop (start_node : Node.t) (mapper : Node.t list -> NodeSet.t list) (graph : UnweightedGraph.t) : NodeSet.t list =
+    let rec loop_inner (visited : NodeSet.t) (stages : NodeSet.t list)
+        (mapper : Node.t list -> NodeSet.t list)
+        (graph : UnweightedGraph.t) : NodeSet.t list =
+      match stages with
+      | last_stage :: _ ->
+          let all_neighbors = last_stage
+            |> NodeSet.elements
+            |> mapper
+            |> List.fold_left NodeSet.union NodeSet.empty
+          in
+          let next = NodeSet.diff all_neighbors visited
+            |> NodeSet.elements
+            |> List.fold_left (fun set node -> NodeSet.add node set) NodeSet.empty
+          in
+          if NodeSet.is_empty next then List.rev stages
+          else loop_inner (NodeSet.union visited next) (next :: stages) mapper graph
+      | [] -> failwith "Should not happen"
+    in
+    let start_visited = NodeSet.singleton start_node in
+    loop_inner start_visited [ start_visited ] mapper graph
 
   let parallel_map (f : 'a -> 'b) (task_pool : T.pool) (arr : 'a array) :
       'b array =
@@ -41,43 +53,22 @@ module BfsAlgorithms : Bfs = struct
         res.(i) <- f arr.(i));
     res
 
-  let _calculate_next_stage (visited: NodeSet.t) (previous_stage : NodeSet.t) (mapper : Node.t list -> NodeSet.t list) : NodeSet.t = 
-    let all_neighbors = previous_stage
-      |> NodeSet.elements
-      |> mapper
-      |> List.fold_left NodeSet.union NodeSet.empty
-    in
-    NodeSet.diff all_neighbors visited
-      |> NodeSet.elements
-      |> List.fold_left (fun set node -> NodeSet.add node set) NodeSet.empty
-
-
   let parallel (graph : UnweightedGraph.t) (start_node : Node.t)
       (task_pool : T.pool) : NodeSet.t list =
-    let next_stage_par (visited : NodeSet.t) (previous_stage : NodeSet.t)
-        (graph : UnweightedGraph.t) : NodeSet.t =
-      let mapper_par : Node.t list -> NodeSet.t list = fun nodes -> 
-        nodes 
-        |> Array.of_list 
-        |> parallel_map (fun node -> UnweightedGraph.neighbours node graph) task_pool 
-        |> Array.to_list
-      in
-      _calculate_next_stage visited previous_stage mapper_par
+    let mapper_par : Node.t list -> NodeSet.t list = fun nodes -> 
+      nodes 
+      |> Array.of_list 
+      |> parallel_map (fun node -> UnweightedGraph.neighbours node graph) task_pool 
+      |> Array.to_list
     in
-    let start_visited = NodeSet.singleton start_node in
-    loop start_visited [ start_visited ] next_stage_par graph
+    loop start_node mapper_par graph
 
   let sequential (graph : UnweightedGraph.t) (start_node : Node.t) :
       NodeSet.t list =
-    let next_stage_seq (visited : NodeSet.t) (previous_stage : NodeSet.t)
-        (graph : UnweightedGraph.t) : NodeSet.t =
-      let mapper_seq : Node.t list -> NodeSet.t list = fun nodes ->
-        nodes |> List.map (fun node -> UnweightedGraph.neighbours node graph)
-      in
-      _calculate_next_stage visited previous_stage mapper_seq
+    let mapper_seq : Node.t list -> NodeSet.t list = fun nodes ->
+      nodes |> List.map (fun node -> UnweightedGraph.neighbours node graph)
     in
-    let start_visited = NodeSet.singleton start_node in
-    loop start_visited [ start_visited ] next_stage_seq graph
+    loop start_node mapper_seq graph
 end
 
 module MakeBfsPerformanceAnalysis (Bfs : Bfs) : sig
