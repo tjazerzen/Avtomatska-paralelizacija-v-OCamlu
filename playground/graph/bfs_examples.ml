@@ -29,8 +29,8 @@ let small_graph_edge_count = 10
 
 (*Constants for large graph*)
 let large_graph_start_node_id = 2
-let large_graph_vertex_count = 2000
-let large_graph_edge_count = 500000
+let large_graph_vertex_count = 6000
+let large_graph_edge_count = 1000000
 
 (*---------------SMALL GRAPH-----------------*)
 
@@ -115,6 +115,8 @@ let () =
    node and edge counts for a graph. The tuples are used to calculate the
    performance of sequential BFS on graphs with varying sizes. *)
 
+(* let minimizing_factor = 1.0 /. 16.0
+
 let vertex_combinations =
   [
     500;
@@ -139,8 +141,6 @@ let vertex_combinations =
     10000;
   ]
 
-let minimizing_factor = 0.1
-
 let edge_combinations =
   vertex_combinations |> List.map float_of_int
   |> List.map (fun v -> v *. (v -. 1.0) *. minimizing_factor /. 2.0)
@@ -155,4 +155,4 @@ let () =
 
 let () =
   BfsPerformanceAnalysis.bfs_calculation_time_combinations_to_csv combinations
-    num_domains
+    num_domains *)
