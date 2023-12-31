@@ -570,115 +570,108 @@ niti izvedbe. Navdih za implementacijo paralelnega BFS sem črpal iz \cite{spaa2
 V kontekstu funkcijskih programskih jezikov, kjer je rekurzija temeljni gradnik, sem k implementaciji BFS algoritma
 pristopil rekurzivno. 
 
-Algoritem izvaja iskanje po nivojih, pri čemer sistematično dodaja vse dosegljive vozle iz trenutnega nivoja v naslednji nivo.
-Specifično, za vsako vozlišče $u$ trenutnega nivoja $L$ se v naslednji nivo $L'$ vključijo vsi njegovi sosedi, ki še niso
-bili obiskani. To dosežemo z uporabo funkcije \textit{visit\_node}, ki identificira neobiskane sosede danega vozlišča v grafu.
+Algoritem izvaja iskanje po nivojih, pri čemer sistematično dodaja vsa dosegljiva vozlišča iz trenutnega nivoja v naslednji nivo.
+Splošno, za vsako vozlišče $u$ trenutnega nivoja $L$ se v naslednji nivo $L'$ vključijo vsi njegovi sosedi, ki še niso
+bili obiskani. 
 
-Implementacija se začne z metodo sequential, ki je vstopna točka algoritma. Ta funkcija začne rekurzivni proces z
-uporabo metode \textit{loop}. Metoda \textit{loop} prejme množico obiskanih vozlišč, trenutno zgrajeni seznam nivojev,
-funkcijo za izračun naslednjega nivoja in graf. Na vsakem koraku izračuna naslednji nivo s funkcijo \textit{next\_stage\_seq},
-ki za vsako vozlišče trenutnega nivoja izračuna neobiskane sosede. Ti sosedi se nato zložijo v enotno množico,
-ki predstavlja naslednji nivo. Proces se nadaljuje, dokler ne obstaja naslednji nivo za raziskovanje,
-nakar se vrne celoten seznam nivojev kot rezultat BFS.
+Ključna metoda v tej implementaciji je \textit{loop}, ki sproži postopek iskanja od začetnega vozlišča, uporabljajoč funkcijo
+\textit{mapper} za določanje naslednjega nivoja. Ta funkcija transformira seznam vozlišč trenutnega nivoja v množico
+vozlišč naslednjega nivoja, pri čemer se uporablja funkcija \textit{mapper\_seq} za pridobivanje sosednjih vozlišč.
+V paralelni verziji algoritma pa bomo uporabili paralelni verzijo funkcije \textit{map} za pridobivanje sosednjih vozlišč.
+Metoda \textit{loop} kliče pomožno funkcijo \textit{loop\_inner}. Ta funkcija obravnava trenutni seznam
+nivojev (\textit{stages}), pri čemer za vsak nivo identificira vse dosegljive in še neobiskane sosede.
+Ti sosedi so nato združeni v naslednji nivo, ki se doda v seznam nivojev. Proces se nadaljuje, dokler ne ostane brez
+vozlišč za raziskovanje, kar označuje zaključek BFS.
 
-Metoda \textit{next\_stage\_seq} deluje tako, da sprejme trenutni nivo in uporabi funkcijo \textit{map} za
-preoblikovanje vsakega vozlišča v njegove sosede z uporabo funkcije \textit{visit\_node}. 
-Rezultati se združijo v enoten seznam, ki predstavlja naslednji nivo.
-Ta pristop omogoča učinkovito in jasno razumevanje delovanja BFS v funkcijskem programiranju.
+Metoda \textit{sequential} predstavlja vstopno točko algoritma, ki z uporabo funkcije \textit{mapper\_seq} izvede
+sekvenčno verzijo BFS. Ta funkcija deluje tako, da na seznamu trenutnega nivoja za vsako vozlišče poišče sosede znotraj grafa.
+
+Taka implementacija omogoča učinkovito in jasno razumevanje delovanja BFS v funkcijskem programiranju. Prav tako je zaradi
+svoje modularne zasnove enostavno razširljiva na paralelno verzijo algoritma.
 
 \begin{lstlisting}[label=lst:bfs_sequential]
 module BfsAlgorithms : Bfs = struct
-  let visit_node (node : Node.t) (visited : NodeSet.t)
-      (graph : UnweightedGraph.t) : Node.t list =
-    let neighbours : Node.t list = 
-      UnweightedGraph.neighbours node graph in
-    List.filter (
-      fun node -> not (NodeSet.mem node visited)) neighbours
-
-  let rec loop (visited : NodeSet.t) 
-      (stages : NodeSet.t list)
-      next_stage_implementation
+  let loop (start_node : Node.t) 
+      (mapper : Node.t list -> NodeSet.t list)
       (graph : UnweightedGraph.t) : NodeSet.t list =
-    match stages with
-    | last_stage :: _ ->
-        let next : NodeSet.t =
-          next_stage_implementation visited last_stage graph
-        in
-        if NodeSet.is_empty next then List.rev stages
-        else
-          loop
-            (NodeSet.union visited next)
-            (next :: stages) next_stage_implementation graph
-    | [] -> failwith "Should not happen"
-
-  let sequential graph start_node : NodeSet.t list =
-    let next_stage_seq visited previous_stage
-        (graph : UnweightedGraph.t) : NodeSet.t =
-      let new_nodes : Node.t list =
-        previous_stage |> NodeSet.elements
-        |> List.map (
-          fun node -> visit_node node visited graph)
-        |> List.flatten
-      in
-      List.fold_left
-        (fun set node -> NodeSet.add node set)
-        NodeSet.empty new_nodes
+    let rec loop_inner (visited : NodeSet.t) 
+        (stages : NodeSet.t list)
+        (mapper : Node.t list -> NodeSet.t list) 
+        (graph : UnweightedGraph.t) : NodeSet.t list =
+      match stages with
+      | last_stage :: _ ->
+          let all_neighbors =
+            last_stage |> NodeSet.elements |> mapper
+            |> List.fold_left NodeSet.union NodeSet.empty
+          in
+          let next =
+            NodeSet.diff all_neighbors visited
+            |> NodeSet.elements
+            |> List.fold_left
+                 (fun set node -> NodeSet.add node set)
+                 NodeSet.empty
+          in
+          if NodeSet.is_empty next then List.rev stages
+          else
+            loop_inner
+              (NodeSet.union visited next)
+              (next :: stages) mapper graph
+      | [] -> failwith "Should not happen"
     in
-    loop
-      (NodeSet.singleton start_node)
-      [ NodeSet.singleton start_node ]
-      next_stage_seq graph
-end
+    let start_visited = NodeSet.singleton start_node in
+    loop_inner start_visited [ start_visited ] mapper graph
 
+  let sequential (graph : UnweightedGraph.t) 
+      (start_node : Node.t) : NodeSet.t list =
+    let mapper_seq : Node.t list -> NodeSet.t list =
+     fun nodes ->
+      nodes |> List.map (
+        fun node -> UnweightedGraph.neighbours node graph)
+    in
+    loop start_node mapper_seq graph
+end
 \end{lstlisting}
 
 \subsubsection{Paralelni BFS}
 
-V paralelni različici algoritma BFS je osrednji cilj optimizirati izvajanje tako, da se izkoristijo večprocesorske zmogljivosti.
-Ta pristop sem implementiral v metodi \texttt{parallel}, ki sledi modularni zasnovi, ki sem jo uporabil pri sekvenčnem
-ekvivalentu \texttt{sequential}.
+Paralelna in sekvenčna verzija algoritma sta si zelo podobni. Glavna razlika je v tem, da paralelna verzija uporablja
+paralelno verzijo funkcije \textit{map} za pridobivanje sosednjih vozlišč. Paralelno verzijo funkcije \textit{map}
+sem implementiral tako, da sem seznam najprej pretvoril v \texttt{Array.t}, nato pa sem uporabil funkcijo Domainsliba
+\texttt{Domainslib.Task.parallel\_for} za vzporedno izvajanje funkcije \textit{f} na vsakem elementu seznama, nato
+pa sem rezultate pretvoril nazaj v OCamlov seznam. S tem povečamo hitrost iskanja naslednjega nivoja vozlišč.
 
-Paralelna implementacija temelji na tem, da so izračuni sosede vsakega vozlišča na trenutnem nivoju izvedeni vzporedno.
-Ta proces je dosežen z uporabo knjižnice \texttt{Parmap}, ki omogoča enostavno paralelizacijo metode \texttt{map}.
-Ta knjižnica prihrani dodatno delo pri upravljanju niti, saj zahteva le zamenjavo standardne funkcije \texttt{map} z
-\texttt{parmap} in dodajanje števila domen, ki jih želimo uporabiti.
-
-V naslednjem izseku kode je prikazana ključna implementacija:
+%% TODO: Ostal tukaj
 
 \begin{lstlisting}[label=lst:bfs_parallel]
 module BfsAlgorithms : Bfs = struct
   ...
 
-  let parallel graph start_node
-      ~(num_domains : int) : NodeSet.t list =
-    let next_stage_par visited previous_stage graph =
-      let new_nodes : Node.t list =
-        previous_stage |> NodeSet.elements
-        |> Parmap.parmap num_domains (
-          fun node -> visit_node node visited graph)
-        |> List.flatten
-      in
-      List.fold_left
-        (fun set node -> NodeSet.add node set)
-        NodeSet.empty new_nodes
+  let parallel_map (f : 'a -> 'b)
+      (task_pool : T.pool)
+      (arr : 'a array) : 'b array =
+    let len = Array.length arr in
+    let res = Array.make len (f arr.(0)) in
+    T.parallel_for task_pool ~start:0 ~finish:(len - 1) ~body:(fun i ->
+        res.(i) <- f arr.(i));
+    res
+
+  let parallel (graph : UnweightedGraph.t)
+      (start_node : Node.t)
+      (task_pool : T.pool) : NodeSet.t list =
+    let mapper_par : Node.t list -> NodeSet.t list =
+     fun nodes ->
+      nodes |> Array.of_list
+      |> parallel_map
+           (fun node -> UnweightedGraph.neighbours node graph)
+           task_pool
+      |> Array.to_list
     in
-    loop
-      (NodeSet.singleton start_node)
-      [ NodeSet.singleton start_node ]
-      next_stage_par graph
+    loop start_node mapper_par graph
 
   ...
 end
 
 \end{lstlisting}
-
-Funkcija \texttt{parallel} sledi podobnemu vzorcu kot \texttt{sequential}. Glavna razlika je v uporabi funkcije
-\texttt{parmap} za vzporedno obdelavo vsakega vozlišča na trenutnem nivoju. Ta pristop omogoča, da se vsako vozlišče
-in njegovi sosedi obdelajo vzporedno, kar lahko znatno zmanjša celotni čas izvajanja BFS v primernem večprocesorskem okolju.
-
-Ta paralelna implementacija BFS je ključen korak pri raziskovanju in izkoriščanju možnosti vzporednega programiranja
-v funkcijskih jezikih. Omogoča nam, da razširimo klasične algoritme in izkoristimo sodobno večprocesorsko strojno
-opremo za boljše zmogljivosti.
 
 \subsubsection{Analiza časa računanja BFS algoritmov}
 

@@ -115,7 +115,7 @@ let () =
    node and edge counts for a graph. The tuples are used to calculate the
    performance of sequential BFS on graphs with varying sizes. *)
 
-(* let minimizing_factor = 1.0 /. 16.0
+let minimizing_factor = 1.0 /. 16.0
 
 let vertex_combinations =
   [
@@ -155,4 +155,4 @@ let () =
 
 let () =
   BfsPerformanceAnalysis.bfs_calculation_time_combinations_to_csv combinations
-    num_domains *)
+    num_domains
