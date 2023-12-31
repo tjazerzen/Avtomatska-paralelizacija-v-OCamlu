@@ -59,6 +59,7 @@ module BfsAlgorithms : Bfs = struct
         res.(i) <- f arr.(i));
     res
 
+  (**You need to run Domainslib.Task.run ... when running the parallel version*)
   let parallel (graph : UnweightedGraph.t) (start_node : Node.t)
       (task_pool : T.pool) : NodeSet.t list =
     let mapper_par : Node.t list -> NodeSet.t list =
