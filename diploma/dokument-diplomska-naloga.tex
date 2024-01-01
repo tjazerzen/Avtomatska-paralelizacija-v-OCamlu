@@ -634,13 +634,12 @@ end
 
 \subsubsection{Paralelni BFS}
 
-Paralelna in sekvenčna verzija algoritma sta si zelo podobni. Glavna razlika je v tem, da paralelna verzija uporablja
-paralelno verzijo funkcije \textit{map} za pridobivanje sosednjih vozlišč. Paralelno verzijo funkcije \textit{map}
-sem implementiral tako, da sem seznam najprej pretvoril v \texttt{Array.t}, nato pa sem uporabil funkcijo Domainsliba
-\texttt{Domainslib.Task.parallel\_for} za vzporedno izvajanje funkcije \textit{f} na vsakem elementu seznama, nato
-pa sem rezultate pretvoril nazaj v OCamlov seznam. S tem povečamo hitrost iskanja naslednjega nivoja vozlišč.
-
-%% TODO: Ostal tukaj
+Glavna razlika med sekvenčno in paralelno verzijo algoritma je v tem, da paralelna verzija uporablja paralelno verzijo
+funkcije \textit{map} za pridobivanje sosednjih vozlišč. Paralelna verzija funkcije \textit{map} je implementirana
+v modulu \texttt{BfsAlgorithms} kot funkcija \texttt{parallel\_map}. Ta funkcija sprejme funkcijo \textit{f}, ki jo
+želimo vzporedno izvajati na seznamu elementov, ter seznam elementov, na katerih želimo izvajati funkcijo \textit{f}.
+Nato funkcija \texttt{parallel\_map} vzporedno izvede funkcijo \textit{f} na vsakem elementu seznama, ter vrne seznam
+rezultatov. Implementacija funkcije \texttt{parallel\_map} je prikazana v \ref{lst:bfs_parallel}.
 
 \begin{lstlisting}[label=lst:bfs_parallel]
 module BfsAlgorithms : Bfs = struct
@@ -651,7 +650,11 @@ module BfsAlgorithms : Bfs = struct
       (arr : 'a array) : 'b array =
     let len = Array.length arr in
     let res = Array.make len (f arr.(0)) in
-    T.parallel_for task_pool ~start:0 ~finish:(len - 1) ~body:(fun i ->
+    T.parallel_for 
+      task_pool 
+      ~start:0 
+      ~finish:(len - 1) 
+      ~body:(fun i ->
         res.(i) <- f arr.(i));
     res
 
@@ -662,8 +665,8 @@ module BfsAlgorithms : Bfs = struct
      fun nodes ->
       nodes |> Array.of_list
       |> parallel_map
-           (fun node -> UnweightedGraph.neighbours node graph)
-           task_pool
+        (fun node -> UnweightedGraph.neighbours node graph)
+        task_pool
       |> Array.to_list
     in
     loop start_node mapper_par graph
@@ -673,16 +676,62 @@ end
 
 \end{lstlisting}
 
+Paralelna izvedba BFS algoritma ključno vključuje uporabo metode \textit{T.run} iz knjižnice Domainslib. Ta metoda je
+nujna za obvladovanje notranjih algebraičnih učinkov, ki nastanejo zaradi sinhronizacije nalog med različnimi procesorskimi nitmi.
+Ko v paralelni izvedbi uporabimo funkcijo \textit{parallel\_for}, \textit{T.run} zagotavlja, da so vse vzporedno
+izvajane naloge pravilno usklajene. Tako omogoča učinkovito delovanje paralelnega BFS algoritma, saj skrbi za
+brezkonfliktno koordinacijo vzporednih procesov.
+
+Notranji algebraični učinki pri paralelnem izvajanju se nanašajo na procese, ki so potrebni za usklajevanje dostopa do
+skupnih podatkovnih struktur in za koordinacijo nadaljevanja obdelave po zaključku posameznih vzporednih nalog.
+\textit{T.run} deluje kot nadzorni okvir, ki zagotavlja sinhronizacijo in koordinacijo teh procesov.
+To pomeni, da \textit{T.run} omogoča neodvisno izvajanje posameznih niti, hkrati pa skrbi za ustrezno upravljanje
+skupnega stanja in usklajevanje dela med niti.
+
+Za praktičen primer uporabe paralelnega BFS in merjenje časa izvajanja lahko uporabimo naslednji pristop, kot je prikazano v spodnjem izseku kode:
+
+\begin{lstlisting}[label=lst:bfs_calculation_time]
+let bfs_par_calculation_time 
+    (graph : UnweightedGraph.t) 
+    (start_node : Node.t)
+    (num_domains : int) : float =
+  let task_pool = T.setup_pool ~num_domains () in
+  let start_time = Unix.gettimeofday () in
+  let _ = T.run task_pool (
+    fun () -> Bfs.parallel graph start_node task_pool) in
+  let calculation_time =
+    Unix.gettimeofday () -. start_time in
+  T.teardown_pool task_pool;
+  calculation_time
+\end{lstlisting}
+
+Ta funkcija ustvari bazen nalog (\textit{task\_pool}) glede na določeno število domen in nato uporabi \textit{T.run} za
+izvajanje paralelnega BFS algoritma. Po izvedbi se izmeri časovna razlika, kar nam da čas izračuna algoritma.
+Na koncu se bazen nalog razstavi, s čimer se osvobodijo viri, ki so bili uporabljeni za izvajanje algoritma.
+
 \subsubsection{Analiza časa računanja BFS algoritmov}
 
-V tem odseku je predstavljena analiza časovne učinkovitosti paralelne različice algoritma za iskanje v širino (BFS)
-v primerjavi s sekvenčnim pristopom. V nasprotju s pričakovanji, ki bi predvidevala pohitritev z uporabo paralelizacije,
-so rezultati pokazali, da paralelni pristop dejansko povzroči upočasnitev procesa.
+Analiza časovne učinkovitosti paralelnega algoritma za iskanje v širino (BFS) v primerjavi s sekvenčnim pristopom je
+razkrila, da med obema pristopoma ni bistvenih razlik v hitrosti izračuna.
+Ta ugotovitev je bila dosežena z izvedbo testov na različno velikih grafih.
 
-Za empirično testiranje so bili ustvarjeni grafi z različnimi velikostmi. Največji izmed njih je vključeval 2000
-vozlišč in 1000000 povezav. Rezultati, prikazani na \ref{fig:bfs_calculation_time_by_graph_size}, kažejo, da se čas
-izračuna v paralelnem algoritmu povečuje linearno s številom vozlišč in povezav v grafu, podobno kot pri sekvenčnem
-algoritmu. Vendar je bila opazna manjša učinkovitost paralelnega pristopa.
+Testiranje paralelnega BFS algoritma je bilo izvedeno na grafu z 6000 vozlišči in 1000000 povezavami, pri čemer je
+bilo število uporabljenih domen sistematično spreminjano. Izbrana velikost grafa je zagotavljala ravnotežje med
+natančnostjo meritev in izogibanjem prekomerni računski obremenitvi. Rezultati testov, prikazani v \ref{fig:bfs_calculation_time_by_num_domains},
+ne kažejo jasne korelacije med časom izračuna in številom uporabljenih domen.
+
+\begin{figure}[h!]
+  \centering
+  \caption{Čas izračuna paralelnega BFS algoritma v odvisnosti od števila domen}
+  \includegraphics[width=15cm]{slike/bfs_v_odvisnosti_od_stevila_domen.jpg}
+  \label{fig:bfs_calculation_time_by_num_domains}
+\end{figure}
+
+Poleg tega je bila izvedena primerjava časov izračuna sekvenčne in paralelne izvedbe algoritma na grafih z različnimi velikostmi.
+Rezultati so prikazani na \ref{fig:bfs_calculation_time_by_graph_size} in kažejo, da čas izračuna tako za sekvenčni kot za paralelni
+pristop linearno narašča s številom vozlišč in povezav v grafu. Vendar pa med časom izračuna sekvenčnega in paralelnega algoritma
+niso bile opažene bistvene razlike. Pri analizi je bilo ohranjeno konstantno razmerje med številom povezav v grafu in vsemi
+možnimi povezavami, imenovano faktor minimizacije. Podobni rezultati so bili opaženi tudi pri drugih faktorjih minimizacije.
 
 \begin{figure}[h!]
   \centering
@@ -691,28 +740,13 @@ algoritmu. Vendar je bila opazna manjša učinkovitost paralelnega pristopa.
   \label{fig:bfs_calculation_time_by_graph_size}
 \end{figure}
 
-Možni razlogi za to upočasnitev vključujejo dodatno računsko obremenitev, ki nastane zaradi potrebe po upravljanju več
-niti, sinhronizaciji med nitmi ter prenosu podatkov nazaj v glavni program. Prav tako je lahko počasnost povezana s
-knjižnico Parany, ki ni optimizirana za najnovejše procesorske arhitekture in podporo OCaml 5. Poleg tega je bila
-uporabljena metoda paralelizacije precej splošna, kar lahko vodi v neučinkovito izrabo procesorskih virov.
-
-Dodaten eksperiment je bil izveden za oceno vpliva števila domen (niti) na čas izračuna. Testi so bili opravljeni na
-grafu z 500.000 povezavami, kjer so bila števila domen sistematično spreminjana. Kot prikazuje Slika 4.4, se je
-izkazalo, da večje število domen ne vodi nujno do hitrejšega izračuna. To še dodatno potrjuje, da je paralelna
-verzija BFS v nekaterih primerih lahko manj učinkovita kot sekvenčna.
-
-\ref{fig:bfs_calculation_time_by_num_domains}.
-
-\begin{figure}[h!]
-  \centering
-  \caption{Čas izračuna paralelnega BFS algoritma v odvisnosti od števila domen}
-  \includegraphics[width=15cm]{slike/bfs_v_odvisnosti_od_stevila_domen.jpg}
-  \label{fig:bfs_calculation_time_by_graph_size}
-\end{figure}
-
-Zaključek analize nakazuje, da paralelni BFS morda ni najprimernejši za aplikacije, kjer je ključnega pomena hitrost izračuna.
-V prihodnosti bi bilo koristno raziskati možnosti za optimizacijo paralelne različice tega algoritma, vključno s
-selektivno paralelizacijo najbolj zahtevnih delov kode in razvojem metod, ki so prilagojene posebnostim različnih vrst grafov.
+Ti rezultati kažejo, da paralelna implementacija BFS algoritma v nekaterih scenarijih ne prinaša pričakovanih izboljšav v času izračuna.
+Podobne ugotovitve so zabeležene tudi v drugih študijah. Na primer, v delu \cite{burns1995analyzing} avtorji ugotavljajo,
+da se pri paralelni implementaciji algoritma lahko pojavijo težave, kot je neenakomerna obremenitev procesorjev, kar
+lahko vpliva na celotno učinkovitost. Podobno v študiji \cite{aggarwal2006breadth} avtorji opozarjajo na izzive, povezane
+s sinhronizacijo in obremenitvijo v paralelnih izvedbah BFS algoritma na večjedrni računalniški arhitekturi.
+Ta spoznanja odpirajo potrebo po nadaljnjih raziskavah in optimizaciji, s ciljem izboljšati učinkovitost paralelnih implementacij,
+zlasti v primeru posebnih vrst grafov, kjer bi bili paralelni algoritmi lahko hitrejši od sekvenčnih.
 
 \subsection{Paralelna implementacija Dijkstrovega algoritma} \label{section:dijkstra}
 
