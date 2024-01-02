@@ -40,7 +40,7 @@ with PQ.Queue_is_empty -> Printf.printf "Cannot extract from an empty queue\n"
 
 (*--------------------------DIJKSTRA--------------------------*)
 
-let () = Printf.printf "-----------------DIJKSTRA-----------------\n"
+(* let () = Printf.printf "-----------------DIJKSTRA-----------------\n"
 
 (*The shortest path will be node0 --> node2 --> node3*)
 let small_graph =
@@ -76,4 +76,4 @@ Task.teardown_pool task_pool
 let () =
   List.iter (fun node -> Printf.printf "%s\n" (Node.to_string node)) visited
 
-let () = Printf.printf "Cost: %f\n" cost
+let () = Printf.printf "Cost: %f\n" cost *)

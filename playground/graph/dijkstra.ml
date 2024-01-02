@@ -6,9 +6,6 @@ type priority = float
 
 (** The module [PQ] provides a priority queue implementation used in Dijkstra's algorithm to keep track of the nodes to visit next. *)
 module PQ : sig
-  type elt
-  (** The type of elements stored in the priority queue. *)
-
   type t
   (** The type [t] represents a priority queue, which is used in Dijkstra's algorithm to keep track of the nodes to visit next. *)
 
@@ -31,17 +28,16 @@ module PQ : sig
   (** [extract pq] returns a tuple of the priority, node, and priority queue of the lowest priority element in [pq]. Raises [Queue_is_empty] if [pq] is empty. *)
 end = struct
   type priority = float
-  type elt = Empty | PQNode of priority * Node.t * elt * elt
-  type t = { priority_queue : elt }
+  type t = Empty | PQNode of priority * Node.t * t * t
 
   exception Queue_is_empty
 
-  let empty () = { priority_queue = Empty }
-  let is_empty (pq : t) = pq.priority_queue = Empty
+  let empty () = Empty
+  let is_empty (pq : t) = pq = Empty
 
   let insert (new_node : Node.t) (new_priority : priority) (pq : t) : t =
-    let rec insert_aux new_node new_priority queue =
-      match queue with
+    let rec insert_aux new_node new_priority pq =
+      match pq with
       | Empty -> PQNode (new_priority, new_node, Empty, Empty)
       | PQNode (existing_priority, existing_node, left, right) ->
           if new_priority <= existing_priority then
@@ -57,14 +53,11 @@ end = struct
                 insert_aux new_node new_priority right,
                 left )
     in
-    let updated_priority_queue =
-      insert_aux new_node new_priority pq.priority_queue
-    in
-    { priority_queue = updated_priority_queue }
+    insert_aux new_node new_priority pq
 
   let remove_top (pq : t) =
-    let rec remove_top_aux priority_queue =
-      match priority_queue with
+    let rec remove_top_aux pq =
+      match pq with
       | Empty -> raise Queue_is_empty
       | PQNode (_, _, left, Empty) -> left
       | PQNode (_, _, Empty, right) -> right
@@ -77,16 +70,16 @@ end = struct
             PQNode (left_priority, left_node, remove_top_aux left, right)
           else PQNode (right_priority, right_node, left, remove_top_aux right)
     in
-    { priority_queue = remove_top_aux pq.priority_queue }
+    remove_top_aux pq
 
   let extract (pq : t) =
-    let extract_aux priority_queue =
-      match priority_queue with
+    let extract_aux pq =
+      match pq with
       | Empty -> raise Queue_is_empty
       | PQNode (priority, elt, _, _) as queue ->
-          (priority, elt, remove_top { priority_queue = queue })
+          (priority, elt, remove_top queue)
     in
-    let priority, extracted_node, updated_pq = extract_aux pq.priority_queue in
+    let priority, extracted_node, updated_pq = extract_aux pq in
     (priority, extracted_node, updated_pq)
 end
 
