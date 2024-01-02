@@ -68,7 +68,8 @@ let task_pool = T.setup_pool ~num_domains:5 ()
 
 let cost, visited =
   Task.run task_pool (fun () ->
-      Dijkstra.parallel small_graph node0 node3 task_pool);;
+      Dijkstra.parallel small_graph node0 node3 task_pool)
+;;
 
 Task.teardown_pool task_pool
 

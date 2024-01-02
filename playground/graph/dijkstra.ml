@@ -72,7 +72,7 @@ end = struct
     in
     remove_top_aux pq
 
-  let extract (pq : t) : (priority * Node.t * t) =
+  let extract (pq : t) : priority * Node.t * t =
     let extract_aux pq =
       match pq with
       | Empty -> raise Queue_is_empty
@@ -91,36 +91,32 @@ module Dijkstra : sig
     WeightedGraph.t -> Node.t -> Node.t -> T.pool -> priority * Node.t list
   (** [parallel graph start_node end_node] is a parallel implementation of Dijkstra's algorithm for finding the shortest path between [start_node] and [end_node] in the weighted graph [graph]. It returns a tuple of the shortest distance and the list of nodes in the shortest path. *)
 end = struct
-  
-  let sequential (graph : WeightedGraph.t) start_node end_node =
-    let rec loop (pq : PQ.t) (visited : Node.t list) =
-      if pq = PQ.empty () then raise Not_found
-      else
-        let current_cost, current_node, pq = PQ.extract pq in
-        let new_visited = current_node :: visited in
-        if current_node = end_node then (current_cost, new_visited)
-        else
-          let neighbours =
-            graph |> WeightedGraph.edges |> NodeMap.find current_node
-            |> NodeMap.bindings
-          in
-          let new_pq =
-            List.fold_left
-              (fun pq (neighbor, weight) ->
-                if List.mem neighbor new_visited then pq
-                else PQ.insert neighbor (current_cost +. weight) pq)
-              pq
-              neighbours
-          in
-          loop new_pq new_visited
+  let loop (graph : WeightedGraph.t) (start_node : Node.t) (end_node : Node.t)
+      ?(task_pool : T.pool option) =
+    let update_pq pq neighbours current_cost new_visited
+        ?(task_pool : T.pool option) =
+      match task_pool with
+      | None ->
+          List.fold_left
+            (fun pq (neighbor, weight) ->
+              if List.mem neighbor new_visited then pq
+              else PQ.insert neighbor (current_cost +. weight) pq)
+            pq neighbours
+      | Some task_pool ->
+          let mutex = Mutex.create () in
+          let pq_ref = ref pq in
+          T.parallel_for task_pool ~start:0
+            ~finish:(List.length neighbours - 1)
+            ~body:(fun i ->
+              let neighbor, weight = List.nth neighbours i in
+              if List.mem neighbor new_visited then ()
+              else (
+                Mutex.lock mutex;
+                pq_ref := PQ.insert neighbor (current_cost +. weight) !pq_ref;
+                Mutex.unlock mutex));
+          !pq_ref
     in
-    let pq_start = PQ.empty () |> PQ.insert start_node 0.0 in
-    let cost, path = loop pq_start [] in
-    (cost, List.rev path)
-
-  let parallel (graph : WeightedGraph.t) (start_node : Node.t)
-      (end_node : Node.t) (task_pool : T.pool) =
-    let rec loop pq visited =
+    let rec loop_inner pq visited =
       if PQ.is_empty pq then raise Not_found
       else
         let current_cost, current_node, pq = PQ.extract pq in
@@ -131,20 +127,18 @@ end = struct
             graph |> WeightedGraph.edges |> NodeMap.find current_node
             |> NodeMap.bindings
           in
-          let new_pq = ref pq in
-          let mutex = Mutex.create () in
-          T.parallel_for task_pool ~start:0
-            ~finish:(List.length neighbours - 1)
-            ~body:(fun i ->
-              let neighbor, weight = List.nth neighbours i in
-              if List.mem neighbor new_visited then ()
-              else (
-                Mutex.lock mutex;
-                new_pq := PQ.insert neighbor (current_cost +. weight) !new_pq;
-                Mutex.unlock mutex));
-          loop !new_pq new_visited
+          let new_pq =
+            update_pq pq neighbours current_cost new_visited ?task_pool
+          in
+          loop_inner new_pq new_visited
     in
     let pq_start = PQ.empty () |> PQ.insert start_node 0.0 in
-    let cost, path = loop pq_start [] in
-    (cost, List.rev path)
+    loop_inner pq_start []
+
+  let sequential (graph : WeightedGraph.t) start_node end_node =
+    loop graph start_node end_node ?task_pool:None
+
+  let parallel (graph : WeightedGraph.t) (start_node : Node.t)
+      (end_node : Node.t) (task_pool : T.pool) =
+    loop graph start_node end_node ~task_pool
 end
