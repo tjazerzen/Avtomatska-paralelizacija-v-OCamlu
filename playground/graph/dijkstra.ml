@@ -32,15 +32,14 @@ module PQ : sig
 end = struct
   type priority = float
   type elt = Empty | PQNode of priority * Node.t * elt * elt
-  type t = { priority_queue : elt; mutex : Mutex.t }
+  type t = { priority_queue : elt }
 
   exception Queue_is_empty
 
-  let empty () = { priority_queue = Empty; mutex = Mutex.create () }
+  let empty () = { priority_queue = Empty }
   let is_empty (pq : t) = pq.priority_queue = Empty
 
   let insert (new_node : Node.t) (new_priority : priority) (pq : t) : t =
-    (* Mutex.lock pq.mutex; *)
     let rec insert_aux new_node new_priority queue =
       match queue with
       | Empty -> PQNode (new_priority, new_node, Empty, Empty)
@@ -61,8 +60,7 @@ end = struct
     let updated_priority_queue =
       insert_aux new_node new_priority pq.priority_queue
     in
-    (* Mutex.unlock pq.mutex; *)
-    { pq with priority_queue = updated_priority_queue }
+    { priority_queue = updated_priority_queue }
 
   let remove_top (pq : t) =
     let rec remove_top_aux priority_queue =
@@ -79,18 +77,16 @@ end = struct
             PQNode (left_priority, left_node, remove_top_aux left, right)
           else PQNode (right_priority, right_node, left, remove_top_aux right)
     in
-    { pq with priority_queue = remove_top_aux pq.priority_queue }
+    { priority_queue = remove_top_aux pq.priority_queue }
 
   let extract (pq : t) =
-    (* Mutex.lock pq.mutex; *)
     let extract_aux priority_queue =
       match priority_queue with
       | Empty -> raise Queue_is_empty
       | PQNode (priority, elt, _, _) as queue ->
-          (priority, elt, remove_top { pq with priority_queue = queue })
+          (priority, elt, remove_top { priority_queue = queue })
     in
     let priority, extracted_node, updated_pq = extract_aux pq.priority_queue in
-    (* Mutex.unlock pq.mutex; *)
     (priority, extracted_node, updated_pq)
 end
 
