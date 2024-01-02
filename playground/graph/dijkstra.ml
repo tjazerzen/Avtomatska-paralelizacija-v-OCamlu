@@ -55,7 +55,7 @@ end = struct
     in
     insert_aux new_node new_priority pq
 
-  let remove_top (pq : t) =
+  let remove_top (pq : t) : t =
     let rec remove_top_aux pq =
       match pq with
       | Empty -> raise Queue_is_empty
@@ -72,7 +72,7 @@ end = struct
     in
     remove_top_aux pq
 
-  let extract (pq : t) =
+  let extract (pq : t) : (priority * Node.t * t) =
     let extract_aux pq =
       match pq with
       | Empty -> raise Queue_is_empty
@@ -91,22 +91,26 @@ module Dijkstra : sig
     WeightedGraph.t -> Node.t -> Node.t -> T.pool -> priority * Node.t list
   (** [parallel graph start_node end_node] is a parallel implementation of Dijkstra's algorithm for finding the shortest path between [start_node] and [end_node] in the weighted graph [graph]. It returns a tuple of the shortest distance and the list of nodes in the shortest path. *)
 end = struct
+  
   let sequential (graph : WeightedGraph.t) start_node end_node =
-    let rec loop pq visited =
+    let rec loop (pq : PQ.t) (visited : Node.t list) =
       if pq = PQ.empty () then raise Not_found
       else
         let current_cost, current_node, pq = PQ.extract pq in
         let new_visited = current_node :: visited in
         if current_node = end_node then (current_cost, new_visited)
         else
+          let neighbours =
+            graph |> WeightedGraph.edges |> NodeMap.find current_node
+            |> NodeMap.bindings
+          in
           let new_pq =
             List.fold_left
               (fun pq (neighbor, weight) ->
                 if List.mem neighbor new_visited then pq
                 else PQ.insert neighbor (current_cost +. weight) pq)
               pq
-              (WeightedGraph.edges graph |> NodeMap.find current_node
-             |> NodeMap.bindings)
+              neighbours
           in
           loop new_pq new_visited
     in
@@ -124,7 +128,7 @@ end = struct
         if current_node = end_node then (current_cost, new_visited)
         else
           let neighbours =
-            WeightedGraph.edges graph |> NodeMap.find current_node
+            graph |> WeightedGraph.edges |> NodeMap.find current_node
             |> NodeMap.bindings
           in
           let new_pq = ref pq in

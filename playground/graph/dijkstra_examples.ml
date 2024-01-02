@@ -40,7 +40,7 @@ with PQ.Queue_is_empty -> Printf.printf "Cannot extract from an empty queue\n"
 
 (*--------------------------DIJKSTRA--------------------------*)
 
-(* let () = Printf.printf "-----------------DIJKSTRA-----------------\n"
+let () = Printf.printf "-----------------DIJKSTRA-----------------\n"
 
 (*The shortest path will be node0 --> node2 --> node3*)
 let small_graph =
@@ -68,12 +68,11 @@ let task_pool = T.setup_pool ~num_domains:5 ()
 
 let cost, visited =
   Task.run task_pool (fun () ->
-      Dijkstra.parallel small_graph node0 node3 task_pool)
-;;
+      Dijkstra.parallel small_graph node0 node3 task_pool);;
 
 Task.teardown_pool task_pool
 
 let () =
   List.iter (fun node -> Printf.printf "%s\n" (Node.to_string node)) visited
 
-let () = Printf.printf "Cost: %f\n" cost *)
+let () = Printf.printf "Cost: %f\n" cost
