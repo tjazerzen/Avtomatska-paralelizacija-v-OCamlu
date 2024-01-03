@@ -129,6 +129,8 @@ module MakeDijkstraPerformanceAnalysis (Dijkstra : Dijkstra) : sig
 
   val par_calc_time_num_domains_to_csv :
     WeightedGraph.t -> Node.t -> max_domains:int -> unit
+
+  val par_calc_time_combinations_to_csv : (int * int) list -> int -> unit
 end = struct
   let par_time graph start_node num_threads =
     let task_pool = T.setup_pool ~num_domains:(num_threads - 1) () in
@@ -160,6 +162,25 @@ end = struct
     in
     output_string out_channel "num_domains,time\n";
     par_calc_time_num_domains_to_csv_aux 1;
+    close_out out_channel
+
+  let par_calc_time_combinations_to_csv (combinations : (int * int) list)
+      (num_domains : int) : unit =
+    let out_channel =
+      open_out "computation_time_analysis/dijkstra_par_combinations.csv"
+    in
+    let calculate_and_write (num_nodes, num_edges) =
+      let graph =
+        WeightedGraph.create_new_graph ~num_nodes ~num_edges ~directed:false
+      in
+      let start_node = Option.get (WeightedGraph.find_node_by_id 1 graph) in
+      let par_time = par_time graph start_node num_domains in
+      let seq_time = seq_time graph start_node in
+      Printf.fprintf out_channel "%d,%d,%.3f,%.3f\n" num_nodes num_edges
+        par_time seq_time
+    in
+    output_string out_channel "num_nodes,num_edges,par_time,seq_time\n";
+    List.iter calculate_and_write combinations;
     close_out out_channel
 end
 

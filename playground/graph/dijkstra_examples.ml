@@ -123,3 +123,11 @@ let () =
     large_graph_start_node ~max_domains:8
 
 let () = Printf.printf "\n-----------------PAR COMB TO CSV-----------------\n"
+
+let combinations =
+  GraphUtils.generate_graph_combinations ~min_vertex:600 ~max_vertex:1000
+    ~min_factor ~step:50
+
+let () =
+  DijkstraPerformanceAnalysis.par_calc_time_combinations_to_csv combinations
+    num_domains
