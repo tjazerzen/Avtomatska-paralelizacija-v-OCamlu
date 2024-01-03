@@ -140,6 +140,8 @@ end
 module MakeDijkstraPerformanceAnalysis (Dijkstra : Dijkstra) : sig
   val par_time : WeightedGraph.t -> Node.t -> Node.t -> int -> float
   val seq_time : WeightedGraph.t -> Node.t -> Node.t -> float
+  val par_calc_time_num_domains_to_csv :
+    WeightedGraph.t -> Node.t -> Node.t -> max_domains:int -> unit
 end = struct
   let par_time graph start_node end_node num_threads =
     let task_pool = T.setup_pool ~num_domains:(num_threads - 1) () in

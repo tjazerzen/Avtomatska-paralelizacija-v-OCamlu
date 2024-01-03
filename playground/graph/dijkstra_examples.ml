@@ -127,3 +127,9 @@ let seq_calc_time =
 ;;
 
 Printf.printf "Sequential time: %f\n" seq_calc_time
+
+let () = Printf.printf "\n-----------------NUM DOMAINS TO CSV-----------------\n"
+
+let () =
+  DijkstraPerformanceAnalysis.par_calc_time_num_domains_to_csv large_graph
+    large_graph_start_node large_graph_end_node ~max_domains:8
