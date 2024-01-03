@@ -750,6 +750,16 @@ zlasti v primeru posebnih vrst grafov, kjer bi bili paralelni algoritmi lahko hi
 
 \subsection{Paralelna implementacija Dijkstrovega algoritma} \label{section:dijkstra}
 
+Dijkstrov algoritem, bistven za iskanje najkrajših poti v uteženih grafih, se v svoji paralelni implementaciji sooča s
+specifičnimi izzivi, ki presegajo tradicionalni sekvenčni pristop. Temeljna razlika v paralelni različici algoritma,
+kot je implementirana v tem delu, leži v paralelnem posodabljanju prioritete vrste z sosedi iz trenutnega vozlišča.
+Ta pristop izkorišča več procesorskih jeder za hkratno preverjanje in posodabljanje sosednjih vozlišč, kar omogoča
+potencialno skrajšanje časa izračuna pri obsežnih grafih.
+
+V naslednjem poglavju bomo najprej raziskali funkcijsko implementacijo prioritetne vrste, ki je potrebna za izvajanje
+paralelnega Dijkstrovega algoritma. Nato bomo predstavili sekvenčno in paralelno implementacijo Dijkstrovega algoritma. 
+Na koncu bomo predstavili analizo časovne učinkovitosti paralelnega Dijkstrovega algoritma.
+
 TODO.
 
 
