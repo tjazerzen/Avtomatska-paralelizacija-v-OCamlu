@@ -295,7 +295,7 @@ end = struct
         let node1 = List.nth nodes (Random.int num_nodes) in
         let node2 = List.nth nodes (Random.int num_nodes) in
         if Node.compare_ids node1 node2 <> 0 then
-          let graph = add_edge node1 node2 (Random.float 1.0) graph in
+          let graph = add_edge node1 node2 (Random.float 10.0) graph in
           add_edges graph (num_edges - 1)
         else add_edges graph num_edges
     in

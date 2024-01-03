@@ -55,25 +55,58 @@ let small_graph =
   |> WeightedGraph.add_edge node2 node3 1.9
   |> WeightedGraph.add_edge node0 node3 3.9
 
+let () = Node.reset_ids ()
 let () = Printf.printf "Sequential Dijkstra...\n"
-let cost, visited = Dijkstra.sequential small_graph node0 node3
-
-let () =
-  List.iter (fun node -> Printf.printf "%s\n" (Node.to_string node)) visited
-
+let cost = Dijkstra.sequential small_graph node0 node3
 let () = Printf.printf "Cost: %f\n" cost
 let () = Printf.printf "Parallel Dijkstra...\n"
 let () = print_endline ""
-let task_pool = T.setup_pool ~num_domains:5 ()
+let task_pool = T.setup_pool ~num_domains:6 ()
 
-let cost, visited =
+let cost =
   Task.run task_pool (fun () ->
       Dijkstra.parallel small_graph node0 node3 task_pool)
 ;;
 
 Task.teardown_pool task_pool
 
-let () =
-  List.iter (fun node -> Printf.printf "%s\n" (Node.to_string node)) visited
-
 let () = Printf.printf "Cost: %f\n" cost
+
+let () =
+  Printf.printf "-----------------DIJKSTRA (on larger graph)-----------------\n"
+
+let num_domains = 8
+let min_factor = 0.1
+let large_graph_start_node_id = 2
+let large_graph_end_node_id = 1000
+let large_graph_vertex_count = 1200
+
+let large_graph_edge_count =
+  float_of_int (large_graph_vertex_count * (large_graph_vertex_count - 1) / 2)
+  *. min_factor
+  |> int_of_float
+
+let large_graph =
+  WeightedGraph.create_new_graph ~num_nodes:large_graph_vertex_count
+    ~num_edges:large_graph_edge_count ~directed:false
+
+let large_graph_start_node =
+  Option.get
+    (WeightedGraph.find_node_by_id large_graph_start_node_id large_graph)
+
+let large_graph_end_node =
+  Option.get (WeightedGraph.find_node_by_id large_graph_end_node_id large_graph)
+
+let info_dijkstra_print ~(is_sequential : bool) =
+  Printf.printf "Running %s Dijkstra on graph \n"
+    (if is_sequential then "SEQUENTIAL" else "PARALLEL")
+;;
+
+info_dijkstra_print ~is_sequential:true
+
+let cost =
+  Dijkstra.sequential large_graph large_graph_start_node large_graph_end_node
+;;
+
+print_endline "cost: ";;
+print_float cost
