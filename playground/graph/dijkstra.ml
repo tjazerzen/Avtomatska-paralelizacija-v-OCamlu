@@ -1,28 +1,16 @@
 open Graph
 module T = Domainslib.Task
 
-(** The module [PQ] provides a priority queue implementation used in Dijkstra's algorithm to keep track of the nodes to visit next. *)
 module PQ : sig
   type t
-  (** The type [t] represents a priority queue, which is used in Dijkstra's algorithm to keep track of the nodes to visit next. *)
 
   exception Queue_is_empty
-  (** [Queue_is_empty] is raised when attempting to remove an element from an empty priority queue. *)
 
   val empty : unit -> t
-  (** [empty ()] returns an empty priority queue. *)
-
   val is_empty : t -> bool
-  (** [val_is_empty pq] returns [true] if [pq] is empty, and [false] otherwise. *)
-
   val insert : Node.t -> float -> t -> t
-  (** [insert new_node new_priority pq] returns a new priority queue [pq'] with [new_node] inserted with priority [new_priority]. *)
-
   val remove_top : t -> t
-  (** [remove_top pq] returns a new priority queue [pq'] with the lowest priority element removed. Raises [Queue_is_empty] if [pq] is empty. *)
-
   val extract : t -> float * Node.t * t
-  (** [extract pq] returns a tuple of the priority, node, and priority queue of the lowest priority element in [pq]. Raises [Queue_is_empty] if [pq] is empty. *)
 end = struct
   type t = Empty | PQNode of float * Node.t * t * t
 
@@ -80,16 +68,16 @@ end = struct
 end
 
 module type Dijkstra = sig
-  val sequential : WeightedGraph.t -> Node.t -> Node.t -> float
-  val parallel : WeightedGraph.t -> Node.t -> Node.t -> T.pool -> float
+  val sequential : WeightedGraph.t -> Node.t -> unit
+  val parallel : WeightedGraph.t -> Node.t -> T.pool -> unit
 end
 
 module DijkstraAlgorithms : Dijkstra = struct
-  let loop (graph : WeightedGraph.t) (start_node : Node.t) (end_node : Node.t)
-      ?(task_pool : T.pool option) : float =
+  let loop (graph : WeightedGraph.t) (start_node : Node.t)
+      ~(task_pool_opt : T.pool option) : unit =
     let update_pq (pq : PQ.t) (neighbours : (Node.t * float) list)
         (current_cost : float) (new_visited : NodeSet.t)
-        ?(task_pool : T.pool option) =
+        ~(task_pool_opt : T.pool option) =
       let pq_ref = ref pq in
       let update_queue_for_neighbor (i : int)
           (neighbours_array : (Node.t * float) array) =
@@ -98,7 +86,7 @@ module DijkstraAlgorithms : Dijkstra = struct
           pq_ref := PQ.insert neighbor (current_cost +. weight) !pq_ref
       in
       let neighbours_array = Array.of_list neighbours in
-      match task_pool with
+      match task_pool_opt with
       | None ->
           for i = 0 to Array.length neighbours_array - 1 do
             update_queue_for_neighbor i neighbours_array
@@ -110,65 +98,63 @@ module DijkstraAlgorithms : Dijkstra = struct
             ~body:(fun i -> update_queue_for_neighbor i neighbours_array);
           !pq_ref
     in
-    let rec loop_inner (pq : PQ.t) (visited : NodeSet.t) : float =
-      if PQ.is_empty pq then raise Not_found
+    let rec loop_inner (pq : PQ.t) (visited : NodeSet.t) : unit =
+      if PQ.is_empty pq then ()
       else
         let current_cost, current_node, pq = PQ.extract pq in
         let new_visited = NodeSet.add current_node visited in
-        if current_node = end_node then current_cost
-        else
-          let neighbours =
-            graph |> WeightedGraph.edges |> NodeMap.find current_node
-            |> NodeMap.bindings
-          in
-          let new_pq =
-            update_pq pq neighbours current_cost new_visited ?task_pool
-          in
-          loop_inner new_pq new_visited
+        let neighbours =
+          graph |> WeightedGraph.edges |> NodeMap.find current_node
+          |> NodeMap.bindings
+        in
+        let new_pq =
+          update_pq pq neighbours current_cost new_visited ~task_pool_opt
+        in
+        loop_inner new_pq new_visited
     in
     let pq_start = PQ.empty () |> PQ.insert start_node 0.0 in
     loop_inner pq_start NodeSet.empty
 
-  let sequential (graph : WeightedGraph.t) start_node end_node =
-    loop graph start_node end_node ?task_pool:None
+  let sequential (graph : WeightedGraph.t) start_node =
+    loop graph start_node ~task_pool_opt:None
 
   let parallel (graph : WeightedGraph.t) (start_node : Node.t)
-      (end_node : Node.t) (task_pool : T.pool) =
-    loop graph start_node end_node ~task_pool
+      (task_pool : T.pool) =
+    loop graph start_node ~task_pool_opt:(Some task_pool)
 end
 
 module MakeDijkstraPerformanceAnalysis (Dijkstra : Dijkstra) : sig
-  val par_time : WeightedGraph.t -> Node.t -> Node.t -> int -> float
-  val seq_time : WeightedGraph.t -> Node.t -> Node.t -> float
+  val par_time : WeightedGraph.t -> Node.t -> int -> float
+  val seq_time : WeightedGraph.t -> Node.t -> float
+
   val par_calc_time_num_domains_to_csv :
-    WeightedGraph.t -> Node.t -> Node.t -> max_domains:int -> unit
+    WeightedGraph.t -> Node.t -> max_domains:int -> unit
 end = struct
-  let par_time graph start_node end_node num_threads =
+  let par_time graph start_node num_threads =
     let task_pool = T.setup_pool ~num_domains:(num_threads - 1) () in
     let start_time = Unix.gettimeofday () in
-    let _ =
-      T.run task_pool (fun () ->
-          Dijkstra.parallel graph start_node end_node task_pool)
+    let () =
+      T.run task_pool (fun () -> Dijkstra.parallel graph start_node task_pool)
     in
     let end_time = Unix.gettimeofday () in
     T.teardown_pool task_pool;
     end_time -. start_time
 
-  let seq_time graph start_node end_node =
+  let seq_time graph start_node =
     let start_time = Unix.gettimeofday () in
-    let _ = Dijkstra.sequential graph start_node end_node in
+    let _ = Dijkstra.sequential graph start_node in
     let end_time = Unix.gettimeofday () in
     end_time -. start_time
 
   let par_calc_time_num_domains_to_csv (graph : WeightedGraph.t)
-      (start_node : Node.t) (end_node : Node.t) ~(max_domains : int) : unit =
+      (start_node : Node.t) ~(max_domains : int) : unit =
     let out_channel =
       open_out "computation_time_analysis/dijkstra_par_domains.csv"
     in
     let rec par_calc_time_num_domains_to_csv_aux num_domains =
       if num_domains > max_domains then ()
       else
-        let time = par_time graph start_node end_node num_domains in
+        let time = par_time graph start_node num_domains in
         Printf.fprintf out_channel "%d,%.3f\n" num_domains time;
         par_calc_time_num_domains_to_csv_aux (num_domains + 1)
     in
