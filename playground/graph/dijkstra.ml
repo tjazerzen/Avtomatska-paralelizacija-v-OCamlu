@@ -1,9 +1,6 @@
 open Graph
 module T = Domainslib.Task
 
-type priority = float
-(** The type [priority] represents the priority of a node in Dijkstra's algorithm. *)
-
 (** The module [PQ] provides a priority queue implementation used in Dijkstra's algorithm to keep track of the nodes to visit next. *)
 module PQ : sig
   type t
@@ -18,24 +15,23 @@ module PQ : sig
   val is_empty : t -> bool
   (** [val_is_empty pq] returns [true] if [pq] is empty, and [false] otherwise. *)
 
-  val insert : Node.t -> priority -> t -> t
+  val insert : Node.t -> float -> t -> t
   (** [insert new_node new_priority pq] returns a new priority queue [pq'] with [new_node] inserted with priority [new_priority]. *)
 
   val remove_top : t -> t
   (** [remove_top pq] returns a new priority queue [pq'] with the lowest priority element removed. Raises [Queue_is_empty] if [pq] is empty. *)
 
-  val extract : t -> priority * Node.t * t
+  val extract : t -> float * Node.t * t
   (** [extract pq] returns a tuple of the priority, node, and priority queue of the lowest priority element in [pq]. Raises [Queue_is_empty] if [pq] is empty. *)
 end = struct
-  type priority = float
-  type t = Empty | PQNode of priority * Node.t * t * t
+  type t = Empty | PQNode of float * Node.t * t * t
 
   exception Queue_is_empty
 
   let empty () = Empty
   let is_empty (pq : t) = pq = Empty
 
-  let insert (new_node : Node.t) (new_priority : priority) (pq : t) : t =
+  let insert (new_node : Node.t) (new_priority : float) (pq : t) : t =
     let rec insert_aux new_node new_priority pq =
       match pq with
       | Empty -> PQNode (new_priority, new_node, Empty, Empty)
@@ -72,7 +68,7 @@ end = struct
     in
     remove_top_aux pq
 
-  let extract (pq : t) : priority * Node.t * t =
+  let extract (pq : t) : float * Node.t * t =
     let extract_aux pq =
       match pq with
       | Empty -> raise Queue_is_empty
@@ -83,21 +79,20 @@ end = struct
     (priority, extracted_node, updated_pq)
 end
 
-module Dijkstra : sig
-  val sequential : WeightedGraph.t -> Node.t -> Node.t -> priority
-  (** [sequential graph start_node end_node] is a sequential implementation of Dijkstra's algorithm for finding the shortest path between [start_node] and [end_node] in the weighted graph [graph]. It returns a tuple of the shortest distance and the list of nodes in the shortest path. *)
+module type Dijkstra = sig
+  val sequential : WeightedGraph.t -> Node.t -> Node.t -> float
+  val parallel : WeightedGraph.t -> Node.t -> Node.t -> T.pool -> float
+end
 
-  val parallel : WeightedGraph.t -> Node.t -> Node.t -> T.pool -> priority
-  (** [parallel graph start_node end_node] is a parallel implementation of Dijkstra's algorithm for finding the shortest path between [start_node] and [end_node] in the weighted graph [graph]. It returns a tuple of the shortest distance and the list of nodes in the shortest path. *)
-end = struct
+module DijkstraAlgorithms : Dijkstra = struct
   let loop (graph : WeightedGraph.t) (start_node : Node.t) (end_node : Node.t)
-      ?(task_pool : T.pool option) : priority =
-    let update_pq (pq : PQ.t) (neighbours : (Node.t * priority) list)
-        (current_cost : priority) (new_visited : NodeSet.t)
+      ?(task_pool : T.pool option) : float =
+    let update_pq (pq : PQ.t) (neighbours : (Node.t * float) list)
+        (current_cost : float) (new_visited : NodeSet.t)
         ?(task_pool : T.pool option) =
       let pq_ref = ref pq in
       let update_queue_for_neighbor (i : int)
-          (neighbours_array : (Node.t * priority) array) =
+          (neighbours_array : (Node.t * float) array) =
         let neighbor, weight = neighbours_array.(i) in
         if not (NodeSet.mem neighbor new_visited) then
           pq_ref := PQ.insert neighbor (current_cost +. weight) !pq_ref
@@ -115,7 +110,7 @@ end = struct
             ~body:(fun i -> update_queue_for_neighbor i neighbours_array);
           !pq_ref
     in
-    let rec loop_inner (pq : PQ.t) (visited : NodeSet.t) : priority =
+    let rec loop_inner (pq : PQ.t) (visited : NodeSet.t) : float =
       if PQ.is_empty pq then raise Not_found
       else
         let current_cost, current_node, pq = PQ.extract pq in
@@ -141,3 +136,44 @@ end = struct
       (end_node : Node.t) (task_pool : T.pool) =
     loop graph start_node end_node ~task_pool
 end
+
+module MakeDijkstraPerformanceAnalysis (Dijkstra : Dijkstra) : sig
+  val par_time : WeightedGraph.t -> Node.t -> Node.t -> int -> float
+  val seq_time : WeightedGraph.t -> Node.t -> Node.t -> float
+end = struct
+  let par_time graph start_node end_node num_threads =
+    let task_pool = T.setup_pool ~num_domains:(num_threads - 1) () in
+    let start_time = Unix.gettimeofday () in
+    let _ =
+      T.run task_pool (fun () ->
+          Dijkstra.parallel graph start_node end_node task_pool)
+    in
+    let end_time = Unix.gettimeofday () in
+    T.teardown_pool task_pool;
+    end_time -. start_time
+
+  let seq_time graph start_node end_node =
+    let start_time = Unix.gettimeofday () in
+    let _ = Dijkstra.sequential graph start_node end_node in
+    let end_time = Unix.gettimeofday () in
+    end_time -. start_time
+
+  let par_calc_time_num_domains_to_csv (graph : WeightedGraph.t)
+      (start_node : Node.t) (end_node : Node.t) ~(max_domains : int) : unit =
+    let out_channel =
+      open_out "computation_time_analysis/dijkstra_par_domains.csv"
+    in
+    let rec par_calc_time_num_domains_to_csv_aux num_domains =
+      if num_domains > max_domains then ()
+      else
+        let time = par_time graph start_node end_node num_domains in
+        Printf.fprintf out_channel "%d,%.3f\n" num_domains time;
+        par_calc_time_num_domains_to_csv_aux (num_domains + 1)
+    in
+    output_string out_channel "num_domains,time\n";
+    par_calc_time_num_domains_to_csv_aux 1;
+    close_out out_channel
+end
+
+module DijkstraPerformanceAnalysis =
+  MakeDijkstraPerformanceAnalysis (DijkstraAlgorithms)

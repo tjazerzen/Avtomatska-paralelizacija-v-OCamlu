@@ -57,7 +57,7 @@ let small_graph =
 
 let () = Node.reset_ids ()
 let () = Printf.printf "Sequential Dijkstra...\n"
-let cost = Dijkstra.sequential small_graph node0 node3
+let cost = DijkstraAlgorithms.sequential small_graph node0 node3
 let () = Printf.printf "Cost: %f\n" cost
 let () = Printf.printf "Parallel Dijkstra...\n"
 let () = print_endline ""
@@ -65,7 +65,7 @@ let task_pool = T.setup_pool ~num_domains:6 ()
 
 let cost =
   Task.run task_pool (fun () ->
-      Dijkstra.parallel small_graph node0 node3 task_pool)
+      DijkstraAlgorithms.parallel small_graph node0 node3 task_pool)
 ;;
 
 Task.teardown_pool task_pool
@@ -78,8 +78,8 @@ let () =
 let num_domains = 8
 let min_factor = 0.1
 let large_graph_start_node_id = 2
-let large_graph_end_node_id = 1000
-let large_graph_vertex_count = 1200
+let large_graph_vertex_count = 5000
+let large_graph_end_node_id = large_graph_vertex_count - 1
 
 let large_graph_edge_count =
   float_of_int (large_graph_vertex_count * (large_graph_vertex_count - 1) / 2)
@@ -105,8 +105,25 @@ let info_dijkstra_print ~(is_sequential : bool) =
 info_dijkstra_print ~is_sequential:true
 
 let cost =
-  Dijkstra.sequential large_graph large_graph_start_node large_graph_end_node
+  DijkstraAlgorithms.sequential large_graph large_graph_start_node
+    large_graph_end_node
 ;;
 
-print_endline "cost: ";;
+Printf.printf "Shortest path price: ";;
 print_float cost
+
+let () = Printf.printf "\n-----------------TIME CALCULATIONS-----------------\n"
+
+let par_calc_time =
+  DijkstraPerformanceAnalysis.par_time large_graph large_graph_start_node
+    large_graph_end_node num_domains
+;;
+
+Printf.printf "Parallel time: %f\n" par_calc_time
+
+let seq_calc_time =
+  DijkstraPerformanceAnalysis.seq_time large_graph large_graph_start_node
+    large_graph_end_node
+;;
+
+Printf.printf "Sequential time: %f\n" seq_calc_time
