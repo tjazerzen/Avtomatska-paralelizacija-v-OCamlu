@@ -84,44 +84,43 @@ end = struct
 end
 
 module Dijkstra : sig
-  val sequential : WeightedGraph.t -> Node.t -> Node.t -> priority * Node.t list
+  val sequential : WeightedGraph.t -> Node.t -> Node.t -> priority
   (** [sequential graph start_node end_node] is a sequential implementation of Dijkstra's algorithm for finding the shortest path between [start_node] and [end_node] in the weighted graph [graph]. It returns a tuple of the shortest distance and the list of nodes in the shortest path. *)
 
-  val parallel :
-    WeightedGraph.t -> Node.t -> Node.t -> T.pool -> priority * Node.t list
+  val parallel : WeightedGraph.t -> Node.t -> Node.t -> T.pool -> priority
   (** [parallel graph start_node end_node] is a parallel implementation of Dijkstra's algorithm for finding the shortest path between [start_node] and [end_node] in the weighted graph [graph]. It returns a tuple of the shortest distance and the list of nodes in the shortest path. *)
 end = struct
   let loop (graph : WeightedGraph.t) (start_node : Node.t) (end_node : Node.t)
-      ?(task_pool : T.pool option) =
-    let update_pq pq neighbours current_cost new_visited
+      ?(task_pool : T.pool option) : priority =
+    let update_pq (pq : PQ.t) (neighbours : (Node.t * priority) list)
+        (current_cost : priority) (new_visited : NodeSet.t)
         ?(task_pool : T.pool option) =
+      let pq_ref = ref pq in
+      let update_queue_for_neighbor (i : int)
+          (neighbours_array : (Node.t * priority) array) =
+        let neighbor, weight = neighbours_array.(i) in
+        if not (NodeSet.mem neighbor new_visited) then
+          pq_ref := PQ.insert neighbor (current_cost +. weight) !pq_ref
+      in
+      let neighbours_array = Array.of_list neighbours in
       match task_pool with
       | None ->
-          List.fold_left
-            (fun pq (neighbor, weight) ->
-              if List.mem neighbor new_visited then pq
-              else PQ.insert neighbor (current_cost +. weight) pq)
-            pq neighbours
+          for i = 0 to Array.length neighbours_array - 1 do
+            update_queue_for_neighbor i neighbours_array
+          done;
+          !pq_ref
       | Some task_pool ->
-          let mutex = Mutex.create () in
-          let pq_ref = ref pq in
           T.parallel_for task_pool ~start:0
-            ~finish:(List.length neighbours - 1)
-            ~body:(fun i ->
-              let neighbor, weight = List.nth neighbours i in
-              if List.mem neighbor new_visited then ()
-              else (
-                Mutex.lock mutex;
-                pq_ref := PQ.insert neighbor (current_cost +. weight) !pq_ref;
-                Mutex.unlock mutex));
+            ~finish:(Array.length neighbours_array - 1)
+            ~body:(fun i -> update_queue_for_neighbor i neighbours_array);
           !pq_ref
     in
-    let rec loop_inner pq visited =
+    let rec loop_inner (pq : PQ.t) (visited : NodeSet.t) : priority =
       if PQ.is_empty pq then raise Not_found
       else
         let current_cost, current_node, pq = PQ.extract pq in
-        let new_visited = current_node :: visited in
-        if current_node = end_node then (current_cost, new_visited)
+        let new_visited = NodeSet.add current_node visited in
+        if current_node = end_node then current_cost
         else
           let neighbours =
             graph |> WeightedGraph.edges |> NodeMap.find current_node
@@ -133,7 +132,7 @@ end = struct
           loop_inner new_pq new_visited
     in
     let pq_start = PQ.empty () |> PQ.insert start_node 0.0 in
-    loop_inner pq_start []
+    loop_inner pq_start NodeSet.empty
 
   let sequential (graph : WeightedGraph.t) start_node end_node =
     loop graph start_node end_node ?task_pool:None
