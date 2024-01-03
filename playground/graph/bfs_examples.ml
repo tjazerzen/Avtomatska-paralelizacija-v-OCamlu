@@ -115,38 +115,11 @@ let () =
    node and edge counts for a graph. The tuples are used to calculate the
    performance of sequential BFS on graphs with varying sizes. *)
 
-let minimizing_factor = 1.0 /. 16.0
+let min_factor = 1.0 /. 16.0
 
-let vertex_combinations =
-  [
-    500;
-    1000;
-    1500;
-    2000;
-    2500;
-    3000;
-    3500;
-    4000;
-    4500;
-    5000;
-    5500;
-    6000;
-    6500;
-    7000;
-    7500;
-    8000;
-    8500;
-    9000;
-    9500;
-    10000;
-  ]
-
-let edge_combinations =
-  vertex_combinations |> List.map float_of_int
-  |> List.map (fun v -> v *. (v -. 1.0) *. minimizing_factor /. 2.0)
-  |> List.map int_of_float
-
-let combinations = List.combine vertex_combinations edge_combinations
+let combinations =
+  GraphUtils.generate_graph_combinations ~min_vertex:500 ~max_vertex:10000
+    ~min_factor ~step:500
 
 let () =
   Printf.printf

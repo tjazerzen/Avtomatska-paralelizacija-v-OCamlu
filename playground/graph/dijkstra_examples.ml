@@ -40,9 +40,9 @@ with PQ.Queue_is_empty -> Printf.printf "Cannot extract from an empty queue\n"
 
 (*--------------------------DIJKSTRA--------------------------*)
 
-let () = Printf.printf "-----------------DIJKSTRA-----------------\n"
+let () =
+  Printf.printf "-----------------DIJKSTRA (on smaller graph)----------------\n"
 
-(*The shortest path will be node0 --> node2 --> node3*)
 let small_graph =
   WeightedGraph.empty ~directed:false
   |> WeightedGraph.add_node node0
@@ -56,30 +56,28 @@ let small_graph =
   |> WeightedGraph.add_edge node0 node3 3.9
 
 let () = Node.reset_ids ()
-let () = Printf.printf "Sequential Dijkstra...\n"
-let cost = DijkstraAlgorithms.sequential small_graph node0 node3
-let () = Printf.printf "Cost: %f\n" cost
-let () = Printf.printf "Parallel Dijkstra...\n"
-let () = print_endline ""
+
+let () =
+  Printf.printf "Sequential Dijkstra...\n";
+  DijkstraAlgorithms.sequential small_graph node0;
+  Printf.printf "Parallel Dijkstra...\n\n"
+
 let task_pool = T.setup_pool ~num_domains:6 ()
 
-let cost =
+let () =
   Task.run task_pool (fun () ->
-      DijkstraAlgorithms.parallel small_graph node0 node3 task_pool)
+      DijkstraAlgorithms.parallel small_graph node0 task_pool)
 ;;
 
 Task.teardown_pool task_pool
 
-let () = Printf.printf "Cost: %f\n" cost
-
 let () =
   Printf.printf "-----------------DIJKSTRA (on larger graph)-----------------\n"
 
-let num_domains = 8
-let min_factor = 0.1
+let num_domains = 3
+let min_factor = 0.3
 let large_graph_start_node_id = 2
-let large_graph_vertex_count = 5000
-let large_graph_end_node_id = large_graph_vertex_count - 1
+let large_graph_vertex_count = 800
 
 let large_graph_edge_count =
   float_of_int (large_graph_vertex_count * (large_graph_vertex_count - 1) / 2)
@@ -94,9 +92,6 @@ let large_graph_start_node =
   Option.get
     (WeightedGraph.find_node_by_id large_graph_start_node_id large_graph)
 
-let large_graph_end_node =
-  Option.get (WeightedGraph.find_node_by_id large_graph_end_node_id large_graph)
-
 let info_dijkstra_print ~(is_sequential : bool) =
   Printf.printf "Running %s Dijkstra on graph \n"
     (if is_sequential then "SEQUENTIAL" else "PARALLEL")
@@ -104,32 +99,27 @@ let info_dijkstra_print ~(is_sequential : bool) =
 
 info_dijkstra_print ~is_sequential:true
 
-let cost =
-  DijkstraAlgorithms.sequential large_graph large_graph_start_node
-    large_graph_end_node
-;;
-
-Printf.printf "Shortest path price: ";;
-print_float cost
-
+let () = DijkstraAlgorithms.sequential large_graph large_graph_start_node
 let () = Printf.printf "\n-----------------TIME CALCULATIONS-----------------\n"
 
 let par_calc_time =
   DijkstraPerformanceAnalysis.par_time large_graph large_graph_start_node
-    large_graph_end_node num_domains
+    num_domains
 ;;
 
 Printf.printf "Parallel time: %f\n" par_calc_time
 
 let seq_calc_time =
   DijkstraPerformanceAnalysis.seq_time large_graph large_graph_start_node
-    large_graph_end_node
 ;;
 
 Printf.printf "Sequential time: %f\n" seq_calc_time
 
-let () = Printf.printf "\n-----------------NUM DOMAINS TO CSV-----------------\n"
+let () =
+  Printf.printf "\n-----------------NUM DOMAINS TO CSV-----------------\n"
 
 let () =
   DijkstraPerformanceAnalysis.par_calc_time_num_domains_to_csv large_graph
-    large_graph_start_node large_graph_end_node ~max_domains:8
+    large_graph_start_node ~max_domains:8
+
+let () = Printf.printf "\n-----------------PAR COMB TO CSV-----------------\n"

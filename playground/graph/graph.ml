@@ -165,37 +165,16 @@ module WeightedGraph : sig
   type t
 
   val empty : directed:bool -> t
-  (** [empty ~directed] returns an empty graph with the specified directionality. *)
-
   val add_node : Node.t -> t -> t
-  (** [add_node node graph] returns a new graph with [node] added to it. *)
-
   val remove_node : Node.t -> t -> t
-  (** [remove_node node graph] returns a new graph with [node] removed from it. *)
-
   val add_edge : Node.t -> Node.t -> float -> t -> t
-  (** [add_edge node1 node2 weight graph] returns a new graph with an edge between [node1] and [node2] added to it, with the specified [weight]. *)
-
   val remove_edge : Node.t -> Node.t -> t -> t
-  (** [remove_edge node1 node2 graph] returns a new graph with the edge between [node1] and [node2] removed from it. *)
-
   val nodes : t -> Node.t list
-  (** [nodes graph] returns a list of nodes in the graph. *)
-
   val to_string : t -> string
-  (** [to_string graph] returns a string representation of the graph [graph], including a list of its nodes and edges. *)
-
   val neighbours : Node.t -> t -> Node.t list
-  (** [neighbours node graph] returns a list of nodes that are adjacent to [node] in the graph [graph]. *)
-
   val find_node_by_id : int -> t -> Node.t option
-  (** [find_node_by_id id graph] returns the node in [graph] with the specified [id], if it exists. Otherwise, returns [None]. *)
-
   val create_new_graph : num_nodes:int -> num_edges:int -> directed:bool -> t
-  (** [create_new_graph ~num_nodes ~num_edges ~directed] returns a new graph with [num_nodes] nodes and [num_edges] edges, with the specified directionality. *)
-
   val edges : t -> float NodeMap.t NodeMap.t
-  (** [edges graph] returns a map of maps representing the edges in the graph [graph]. The outer map maps each node in the graph to a map of its neighbours, where the inner map maps each neighbour to the weight of the edge connecting it to the node. *)
 end = struct
   type elt = int
   type t = { edges : float NodeMap.t NodeMap.t; directed : bool }
@@ -301,4 +280,30 @@ end = struct
     in
     let () = Node.reset_ids () in
     add_edges graph num_edges
+end
+
+module GraphUtils : sig
+  val generate_graph_combinations :
+    min_vertex:int ->
+    max_vertex:int ->
+    min_factor:float ->
+    step:int ->
+    (int * int) list
+end = struct
+  let generate_graph_combinations ~min_vertex ~max_vertex ~min_factor ~step =
+    let rec generate_graph_combinations_helper current_vertex max_vertex
+        min_factor step acc =
+      if current_vertex > max_vertex then acc
+      else
+        let edge_count =
+          current_vertex *. (current_vertex -. 1.0) *. min_factor /. 2.0
+          |> int_of_float
+        in
+        generate_graph_combinations_helper
+          (current_vertex +. float_of_int step)
+          max_vertex min_factor step
+          ((int_of_float current_vertex, edge_count) :: acc)
+    in
+    generate_graph_combinations_helper (float_of_int min_vertex)
+      (float_of_int max_vertex) min_factor step []
 end
