@@ -9,7 +9,6 @@ module PQ : sig
   val empty : unit -> t
   val is_empty : t -> bool
   val insert : Node.t -> float -> t -> t
-  val remove_top : t -> t
   val extract : t -> float * Node.t * t
 end = struct
   type t = Empty | PQNode of float * Node.t * t * t
