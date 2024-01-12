@@ -44,21 +44,22 @@
 
 % - angleško-slovenski slovar strokovnih izrazov
 \slovar{
-\geslo{high performance computing}{Visokozmožnostno računanje}
-\geslo{domains}{domene}
-\geslo{parallel tasks}{vzporedne naloge}
-\geslo{task collections}{zbirke opravil}
-\geslo{parallel computation patterns}{vzorci vzporednega računanja}
-\geslo{synchronization primitives}{sinhronizacijski mehanizmi}
-\geslo{load balancing}{Izravnavanje obremenitve}
-\geslo{high-level}{visokonivojski}
-\geslo{code wrapper}{programski ovoj}
-\geslo{adjaceny list}{seznam sosednosti}
-\geslo{shared memory}{skupni pomnilnik}
-\geslo{distributed memory}{porazdeljeni pomnilnik}
-\geslo{thread race}{dirka podatkov} % TODO: Je to dober prevod?
-\geslo{vzajemna izključitev}{mutex}
-\geslo{overhead}{dodatna računska obremenitev}
+\geslo{TODO}{TODO}
+% \geslo{high performance computing}{Visokozmožnostno računanje}
+% \geslo{domains}{domene}
+% \geslo{parallel tasks}{vzporedne naloge}
+% \geslo{task collections}{zbirke opravil}
+% \geslo{parallel computation patterns}{vzorci vzporednega računanja}
+% \geslo{synchronization primitives}{sinhronizacijski mehanizmi}
+% \geslo{load balancing}{Izravnavanje obremenitve}
+% \geslo{high-level}{visokonivojski}
+% \geslo{code wrapper}{programski ovoj}
+% \geslo{adjaceny list}{seznam sosednosti}
+% \geslo{shared memory}{skupni pomnilnik}
+% \geslo{distributed memory}{porazdeljeni pomnilnik}
+% \geslo{thread race}{dirka podatkov} % TODO: Je to dober prevod?
+% \geslo{vzajemna izključitev}{mutex}
+% \geslo{overhead}{dodatna računska obremenitev}
 }
 
 % - ime datoteke z viri (vključno s končnico .bib), če uporabljate BibTeX
@@ -754,7 +755,7 @@ Dijkstrov algoritem, bistven za iskanje najkrajših poti v uteženih grafih, se 
 specifičnimi izzivi, ki presegajo tradicionalni sekvenčni pristop. Temeljna razlika v paralelni različici algoritma,
 kot je implementirana v tem delu, leži v paralelnem posodabljanju prioritete vrste z sosedi iz trenutnega vozlišča.
 Ta pristop izkorišča več procesorskih jeder za hkratno preverjanje in posodabljanje sosednjih vozlišč, kar omogoča
-potencialno skrajšanje časa izračuna pri obsežnih grafih.
+potencialno skrajšanje časa izračuna pri obsežnih grafih. 
 
 V naslednjem poglavju bomo najprej raziskali funkcijsko implementacijo prioritetne vrste, ki je potrebna za izvajanje
 paralelnega Dijkstrovega algoritma. Nato bomo predstavili sekvenčno in paralelno implementacijo Dijkstrovega algoritma. 
@@ -828,6 +829,144 @@ end
 V najslabšem primeru je časovna zahtevnost $O(n)$. To se bo namreč zgodilo natanko tedaj, ko bomo ob vsakem vstavljanju
 vstavili element z največjo prioriteto ter ga nam bo uspelo vstaviti pod list z največjo globino v drevesu (tedaj
 rečemo, da je drevo izrojeno). To pa se bo zgodilo redko, saj ob vsakem rekurzivnem klicu premešamo poddrevesa.
-Posledično bo verjetnost, da se bo zgodil najslabši primer, zelo majhna. V povprečju je časovna zahtevnost $O(\log n)$.
+Posledično bo verjetnost, da se bo zgodil najslabši primer, zelo majhna.
+
+\subsubsection{Implementacija Dijkstrovega algoritma}
+
+Osnovna zasnova algoritma tako v vzporedni kot v sekvenčni sledi isti logiki. Razlika je le v tem, da se v paralelni
+implementaciji naslednja vozlišča pregleduje vzporedno, medtem ko se v sekvenčni implementaciji pregledujejo zaporedno.
+
+\textbf{Osnovna logika: } Algoritem začne z izbiro začetnega vozlišča in inicializacijo vrste s prednostjo, kjer so
+vozlišča urejena glede na njihovo razdaljo od začetnega vozlišča. Na vsakem koraku algoritem izvleče vozlišče z najmanjšo
+razdaljo od začetnega vozlišča in ga pregleda. Nato se za vsakega soseda tega vozlišča izračuna nova razdalja od začetnega
+vozlišča. Ključno vlogo pri zagotavljanju učinkovitosti algoritma igra vrsta s prednostjo, ki omogoča hitro izbiranje
+naslednjega vozlišča za obdelavo glede na njegovo razdaljo. Razlika med implementacijama algoritmov se skriva v tem,
+kako se izvaja pregledovanje sosedov:
+
+\begin{itemize}
+  \item \textbf{Sekvenčna implementacija: } V sekvenčni verziji se vsako posodabljanje razdalj izvaja zaporedno.
+    Za vsako izvlečeno vozlišče algoritem preveri vse njegove sosede in posodobi njihove razdalje, če je to potrebno.
+    Ta pristop je preprost in učinkovit za manjše ali manj kompleksne grafe.
+  \item \textbf{Paralelna implementacija: } Paralelna verzija pri trenutnem vozlišču deli pregledovanje sosedov med
+    več procesorskih niti, kjer vsaka nit vzporedno posodablja razdalje sosednjih vozlišč. Za učinkovito vzporedno
+    izvajanje tudi tu uporabljam funkcijo \textit{T.parallel\_for} iz knjižnice Domainslib.
+\end{itemize}
+
+zaradi bolj natančnih rezultatov testiranja, je bila implementirana verzija Dijkstre, ki se od začetnega vozlišča
+razširi do vseh vozlišč v grafu, saj bi pri Dijkstri, ki potuje od začetnega do končnega vozlišča lahko po naključju
+hitro prišli do konca grafa, kar bi lahko povzročilo napačne rezultate. Implementacija je priložena v \ref{lst:dijkstra}.
+
+\begin{lstlisting}[label=lst:dijkstra]
+
+module DijkstraAlgorithms : Dijkstra = struct
+  let loop (graph : WeightedGraph.t) (start_node : Node.t)
+      ~(task_pool_opt : T.pool option) : unit =
+    let update_pq pq neighbours
+        (current_cost : float) (new_visited : NodeSet.t)
+        ~(task_pool_opt : T.pool option) =
+      let pq_ref = ref pq in
+      let update_queue_for_neighbor (i : int)
+          (neighbours_array : (Node.t * float) array) =
+        let neighbor, weight = neighbours_array.(i) in
+        if not (NodeSet.mem neighbor new_visited) then
+          pq_ref := PQ.insert neighbor 
+            (current_cost +. weight) !pq_ref
+      in
+      let neighbours_array = Array.of_list neighbours in
+      match task_pool_opt with
+      | None ->
+          for i = 0 to Array.length neighbours_array - 1 do
+            update_queue_for_neighbor i neighbours_array
+          done;
+          !pq_ref
+      | Some task_pool ->
+          T.parallel_for task_pool ~start:0
+            ~finish:(Array.length neighbours_array - 1)
+            ~body:(fun i -> 
+              update_queue_for_neighbor i neighbours_array);
+          !pq_ref
+    in
+    let rec loop_inner 
+        (pq : PQ.t) (visited : NodeSet.t) : unit =
+      if PQ.is_empty pq then ()
+      else
+        let cost, node, pq = PQ.extract pq in
+        let new_visited = NodeSet.add node visited in
+        let neighbours =
+          graph |> WeightedGraph.edges |> NodeMap.find node
+          |> NodeMap.bindings
+        in
+        let new_pq = update_pq 
+          pq neighbours cost new_visited ~task_pool_opt
+        in
+        loop_inner new_pq new_visited
+    in
+    let pq_start = 
+      PQ.empty () |> PQ.insert start_node 0.0 in
+    loop_inner pq_start NodeSet.empty
+
+  let sequential graph start_node =
+    loop graph start_node ~task_pool_opt:None
+
+  let parallel graph start_node task_pool =
+    loop graph start_node ~task_pool_opt:(Some task_pool)
+end
+\end{lstlisting}
+
+V Dijkstrovem algoritmu bistveno prispeva k učinkovitosti uporaba nespremenljive vrste s prednostjo, ki omogoča
+hitrejše izbiranje naslednjega vozlišča za raziskovanje. To je še posebej pomembno v obsežnih grafih z velikim številom
+vozlišč, kjer lahko takšna optimizacija znatno zmanjša skupni čas izračuna. Ključna prednost nespremenljive vrste s
+prednostjo v paralelnem kontekstu je v tem, da odpravlja potrebo po sinhronizaciji med večimi procesorskimi nitmi,
+s čimer se izognemo težavam, kot je 'dirka podatkov'. To ne samo izboljša varnost in zanesljivost paralelnega izvajanja
+algoritma, temveč tudi ohranja visoko učinkovitost paralelne obdelave, kar je ključno za optimizacijo časa izračuna v
+kompleksnejših grafovskih strukturah.
+
+\subsubsection{Analiza časa izračuna Dijkstrovega algoritma}
+
+Tokrat je bil za analizo izbran minimizacijski faktor 0.3, kar pomeni, da je število povezav v grafu 30\% od števila vseh
+možnih povezav. V analizi sem najprej primerjal čas izračuna Dijkstrovega algoritma v odvisnosti od števila domen,
+nato pa sem še primerjal čas izračuna sekvenčne in paralelne izvedbe algoritma. Rezultati pri drugih minimizacijskih
+faktorjih so bili podobni.
+
+Analiza je razkrila, da optimalno število domen za izvajanje paralelnega algoritma ni nujno najvišje možno.
+Pri treh domenah se je pokazal najkrajši čas izračuna, kar nakazuje na prelomno točko, kjer dodatne domene prinašajo
+več komunikacijskih in usklajevalnih stroškov kot koristi.
+Podoben rezultat je bil opažen tudi pri drugih faktorjih minimizacije ter ob različnih poganjanjih.
+Ta pojav bi lahko razložili z domnevo, da pri večjem številu domen komunikacijski in usklajevalni stroški med domenami
+postanejo previsoki, kar lahko pripelje do zmanjšane učinkovitosti. Zato je mogoče, da je optimalno število domen za
+izvajanje algoritma manjše, kar se odraža v najkrajšem času izračuna pri treh domenah. Ta ugotovitev nakazuje na pomembnost
+uravnoteženja med paralelizacijo in stroški, ki nastanejo zaradi komunikacije in usklajevanja med procesorskimi nitmi.
+Dodatno lahko vidimo, da je čas paralelnega izračuna pri eni domeni malo večji kot čas sekvenčnega izračuna. To je posledica
+komunikacijskih in usklajevalnih stroškov, ki nastanejo pri paralelnem izračunu.
+Rezultati so prikazani na sliki \ref{fig:dijkstra_calculation_time_by_num_domains}.
+
+\begin{figure}[h!]
+  \centering
+  \caption{Čas izračuna paralelnega Dijkstrovega algoritma v odvisnosti od števila domen}
+  \includegraphics[width=15cm]{slike/dijkstra_v_odvisnosti_od_stevila_domen.jpg}
+  \label{fig:dijkstra_calculation_time_by_num_domains}
+\end{figure}
+
+Nato smo analizirali še, kako se čas izračuna sekvenčne in paralelne verzije Dijkstrovega algoritma spreminja z rastjo
+velikosti grafa. Rezultati, prikazani na sliki \ref{fig:dijkstra_calculation_time_by_graph_size}, kažejo, da čas izračuna
+obeh verzij algoritma narašča hitreje kot linearno s številom vozlišč in povezav v grafu, kar je skladno s pričakovanji
+za Dijkstrov algoritem. Vidimo, da je paralelni algoritem hitrejši od sekvenčnega. Na primer, pri grafu z 1000 vozlišči
+in 150000 je čas izračuna sekvenčnega algoritma približno 3-krat večji kot pri paralelnem algoritmu. Vidimo tudi, da je
+na večjih grafih razlika med časom izračuna sekvenčne in paralelne verzije algoritma večja.  
+
+\begin{figure}[h!]
+  \centering
+  \caption{Primerjava časov izračuna sekvenčne in paralelne implementacije Dijkstrovega algoritma v odvisnosti od velikosti grafa}
+  \includegraphics[width=15cm]{slike/dijkstra_v_odvisnosti_od_velikosti_grafa.jpg}
+  \label{fig:dijkstra_calculation_time_by_graph_size}
+\end{figure}
+
+Naša implementacija je pokazala, da paralelizacija Dijkstrovega algoritma lahko izboljša učinkovitost obdelave velikih
+in kompleksnih grafov. Ključnega pomena je najti ravnotežje med številom uporabljenih procesorskih domen in
+komunikacijskimi ter usklajevalnimi stroški, ki nastanejo pri paralelnem izvajanju. Optimalno število domen se spreminja
+glede na lastnosti grafa, kot so velikost in gostota povezav. Naša analiza podpira ugotovitve Crauserja in
+sodelavcev (\cite{crauser1998parallelizing}), ki so prav tako uspeli implementirati paralelno verzijo Dijkstrovega algoritma.
+Ta študija odpira nove možnosti za nadaljnje raziskovanje učinkovitosti paralelizacije v grafovskih algoritmih in
+poudarja potrebo po prilagodljivem pristopu za dosego optimalnih rezultatov.
 
 \end{document}
