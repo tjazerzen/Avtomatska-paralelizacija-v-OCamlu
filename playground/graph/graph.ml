@@ -171,7 +171,7 @@ module WeightedGraph : sig
   val remove_edge : Node.t -> Node.t -> t -> t
   val nodes : t -> Node.t list
   val to_string : t -> string
-  val neighbours : Node.t -> t -> Node.t list
+  val neighbours : Node.t -> t -> (Node.t * float) list
   val find_node_by_id : int -> t -> Node.t option
   val create_new_graph : num_nodes:int -> num_edges:int -> directed:bool -> t
   val edges : t -> float NodeMap.t NodeMap.t
@@ -254,9 +254,8 @@ end = struct
     in
     Printf.sprintf "{ nodes: [%s]; edges: [%s] }" nodes_str edges_str
 
-  let neighbours (node : Node.t) (graph : t) : Node.t list =
-    try NodeMap.find node graph.edges |> NodeMap.bindings |> List.map fst
-    with Not_found -> []
+  let neighbours (node : Node.t) (graph : t) : (Node.t * float) list =
+    try NodeMap.find node graph.edges |> NodeMap.bindings with Not_found -> []
 
   let find_node_by_id (id : int) (graph : t) : Node.t option =
     nodes graph |> List.find_opt (fun node -> Node.id node = id)

@@ -1,6 +1,7 @@
 (executable
-  (name dijkstra_examples)
+  (name floyd_examples)
   (libraries base stdio domainslib)
-  (modules dijkstra graph dijkstra_examples graph_examples)
+  (modules floyd graph floyd_examples)
   (promote (until-clean))
+  (flags :standard -w "-32-33")
   )
