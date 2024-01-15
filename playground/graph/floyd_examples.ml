@@ -13,19 +13,19 @@ let matrix_to_string (matrix : float array array) =
   done;
   !str
 
-let small_graph_vertex_count = 4
-let small_graph_edge_count = 3
+let small_graph_vertex_count = 7
+let small_graph_edge_count = 15
 let num_domains = 8
 
 let small_graph =
   WeightedGraph.create_new_graph ~num_nodes:small_graph_vertex_count
-    ~num_edges:small_graph_edge_count ~directed:true
+    ~num_edges:small_graph_edge_count ~directed:false
 
 (* let () = print_endline (WeightedGraph.to_string small_graph) *)
 
 let matrix = FloydWarshallAlgorithms.floyd_warshall_seq small_graph
 
-(* let () = print_endline ("Sequential: \n" ^ matrix_to_string matrix) *)
+let () = print_endline ("Sequential: \n" ^ matrix_to_string matrix)
 let task_pool = T.setup_pool ~num_domains ()
 
 let matrix_par =
