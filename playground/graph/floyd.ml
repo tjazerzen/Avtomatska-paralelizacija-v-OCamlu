@@ -16,12 +16,11 @@ module FloydWarshallAlgorithms : FloydWarshall = struct
            WeightedGraph.neighbours node_from graph
            |> List.iter (fun (node_to, edge_weight) ->
                   matrix.(Node.id node_from).(Node.id node_to) <- edge_weight));
+    matrix |> Array.iteri (fun i row -> row.(i) <- 0.0);
     matrix
 
   let update_distance matrix i j k =
-    if j == k then ()
-    else if i == j then matrix.(i).(j) <- 0.0
-    else matrix.(i).(j) <- min matrix.(i).(j) (matrix.(i).(k) +. matrix.(k).(j))
+    matrix.(i).(j) <- min matrix.(i).(j) (matrix.(i).(k) +. matrix.(k).(j))
 
   let floyd_warshall_seq (graph : WeightedGraph.t) =
     let matrix = init_matrix graph in
