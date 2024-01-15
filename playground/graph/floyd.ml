@@ -39,16 +39,10 @@ module FloydWarshallAlgorithms : FloydWarshall = struct
     let matrix = init_matrix graph in
     let n = Array.length matrix in
     for k = 0 to n - 1 do
-      let matrix_to_update = Array.map Array.copy matrix in
       T.parallel_for pool ~start:0 ~finish:(n - 1) ~body:(fun i ->
-        T.parallel_for pool ~start:0 ~finish:(n - 1) ~body:(fun j ->
-          matrix_to_update.(i).(j) <-
-            (if i != j then
-                min matrix.(i).(j) (matrix.(i).(k) +. matrix.(k).(j))
-              else 0.0);
-          );
-        );
-      Array.iteri (fun i row -> Array.blit row 0 matrix.(i) 0 n) matrix_to_update
+          T.parallel_for pool ~start:0 ~finish:(n - 1) ~body:(fun j ->
+            update_distance matrix i j k
+            ));
     done;
     matrix
 end
