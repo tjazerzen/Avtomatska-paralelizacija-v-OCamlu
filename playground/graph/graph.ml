@@ -265,7 +265,7 @@ end = struct
     if num_edges > num_nodes * (num_nodes - 1) / 2 then
       print_endline
         ("Number of nodes: " ^ string_of_int num_nodes ^ "\nNumber of edges: "
-        ^ string_of_int num_edges ^ "\nGraph is more than full");
+       ^ string_of_int num_edges ^ "\nGraph is more than full");
     let graph = empty ~directed in
     let nodes = List.init num_nodes (fun i -> Node.create i) in
     let graph =
@@ -278,9 +278,7 @@ end = struct
         let node2 = List.nth nodes (Random.int num_nodes) in
         let edges_exist =
           try
-            let _ =
-              NodeMap.find node1 graph.edges |> NodeMap.find node2
-            in
+            let _ = NodeMap.find node1 graph.edges |> NodeMap.find node2 in
             true
           with Not_found -> false
         in
