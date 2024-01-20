@@ -969,4 +969,94 @@ sodelavcev (\cite{crauser1998parallelizing}), ki so prav tako uspeli implementir
 Ta študija odpira nove možnosti za nadaljnje raziskovanje učinkovitosti paralelizacije v grafovskih algoritmih in
 poudarja potrebo po prilagodljivem pristopu za dosego optimalnih rezultatov.
 
+\subsection{Paralelni Floyd-Warshall algoritem}
+
+Floyd-Warshallov algoritem predstavlja klasičen pristop za iskanje najkrajših poti med vsemi pari vozlišč v grafu.
+Ta algoritem, ki je bil neodvisno razvit s strani Roberta Floyda in Stephena Warshalla, deluje na principu dinamičnega
+programiranja in je zmožen obravnavati grafe z negativnimi težami robov, ob predpostavki, da ne vsebujejo negativnih ciklov.
+Algoritem sistematično preučuje vse možne poti med vsakim parom vozlišč in posodablja najkrajšo znano pot, če najde krajšo alternativo.
+To doseže z iterativnim pregledovanjem vseh vozlišč in posodabljanjem razdalj med pari vozlišč glede na razdaljo prek vmesnega vozlišča.
+Čeprav je njegova časovna zahtevnost $O(n^3)$, kjer n predstavlja število vozlišč v grafu, je še vedno zelo cenjen v situacijah, kjer
+je treba pogosto izračunati najkrajše poti med pari vozlišč, na primer v omrežnih analizah in pri načrtovanju logističnih poti.
+
+\subsubsection{Sekvenčna implementacija Floyd-Warshallovega algoritma}
+
+Originalni Floyd-Warshallov algoritem je zasnovan na trikratno gnezdeni zanki \texttt{for}, ki sistematično iterira skozi vse pare vozlišč v grafu.
+Vsaka iteracija algoritma posodobi matriko razdalj za vsak par vozlišč, če se najde krajša pot preko predpisanega vmesnega vozlišča.
+
+Implementacija algoritma je preprosta. V \ref{lst:floyd_warshall_seq} je priložena implementacija sekvenčne verzije algoritma, skupaj s pomožno metodo
+\texttt{init\_matrix}, ki grafu priredi matriko razdalj. Metoda \texttt{floyd\_warshall\_seq} pa za vsak par vozlišč (i, j)
+posodobi razdaljo, če obstaja krajša pot prek vmesnega vozlišča k.
+
+\begin{lstlisting}[label=lst:floyd_warshall_seq]
+module FloydWarshallAlgorithms : FloydWarshall = struct
+
+  let init_matrix graph =
+    let nodes = WeightedGraph.nodes graph in
+    let n = List.length nodes in
+    let matrix = Array.make_matrix n n infinity in
+    nodes
+    |> List.iter (fun node_from ->
+           WeightedGraph.neighbours node_from graph
+           |> List.iter (fun (node_to, edge_weight) ->
+                  matrix.(Node.id node_from).(Node.id node_to) <- edge_weight));
+    matrix |> Array.iteri (fun i row -> row.(i) <- 0.0);
+    matrix
+  
+  let update_distance matrix i j k =
+    matrix.(i).(j) <- 
+      min matrix.(i).(j) (matrix.(i).(k) +. matrix.(k).(j))
+
+  let floyd_warshall_seq graph =
+    let matrix = init_matrix graph in
+    let n = Array.length matrix in
+    for k = 0 to n - 1 do
+      for i = 0 to n - 1 do
+        for j = 0 to n - 1 do
+          update_distance matrix i j k
+        done
+      done
+    done;
+    matrix
+
+end
+\end{lstlisting}
+
+
+\subsubsection{Paralelna implementacija Floyd-Warshallovega algoritma}
+
+V kontekstu paralelizacije nekatere izmed teh zank lahko izvajamo vzporedno, kar lahko zmanjša čas izračuna.
+
+Zunanja zanka \texttt{for} ne omogoča paralelizacije, saj je posodabljanje najkrajših razdalj odvisno od rezultatov
+prejšnjih iteracij. V vsaki iteraciji \texttt{k}, se vozlišče \texttt{k} uporablja kot vmesna točka za posodobitev
+razdalj med vsemi pari vozlišč. Zato je treba zunanjo zanko \texttt{for} izvajati zaporedno.
+Obratno pa se drugi dve zanki \texttt{for i} ter \texttt{for j} lahko izvajata vzporedno, saj je posodabljanje razdalj med pari vozlišč
+neodvisno od posodabljanja drugih parov vozlišč.
+
+Empirično smo poskusili paralelizirati tako zanko \texttt{for i} kot tudi \texttt{for j}, vendar se je izkazalo, da paralelizacija najbolj
+notranje zanke \texttt{for j} tvori preveč paralelnih nalog, kar povzroči preveliko komunikacijsko breme in posledično
+zmanjšanje učinkovitosti. Najboljše rezultate smo dosegli z vzporedno izvedbo zanke \texttt{for i}.
+Implementacija paralelnega algoritma se ne razlikuje precej od sekvenčne verzije. Priložena je v \ref{lst:floyd_warshall_par}.
+
+\begin{lstlisting}[label=lst:floyd_warshall_par]
+module FloydWarshallAlgorithms : FloydWarshall = struct
+  ...
+
+  let floyd_warshall_par graph pool =
+    let matrix = init_matrix graph in
+    let n = Array.length matrix in
+    for k = 0 to n - 1 do
+      T.parallel_for pool ~start:0 ~finish:(n - 1) ~body:(fun i ->
+          for j = 0 to n - 1 do
+            update_distance matrix i j k
+          done)
+    done;
+    matrix
+
+end
+\end{lstlisting}
+
+
+
+
 \end{document}

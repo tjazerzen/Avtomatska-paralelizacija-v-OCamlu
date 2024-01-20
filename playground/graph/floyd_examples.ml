@@ -73,7 +73,7 @@ let () = Printf.printf "\n-----------------PAR COMB TO CSV-----------------\n"
 let combinations =
   GraphUtils.generate_graph_combinations ~min_vertex:400 ~max_vertex:750
     ~min_factor ~step:50
-  
 
 let () =
-  FloydWarshallAnalysis.par_calc_time_combinations_to_csv combinations num_domains
+  FloydWarshallAnalysis.par_calc_time_combinations_to_csv combinations
+    num_domains
