@@ -9,7 +9,6 @@ V okviru diplomske naloge bom raziskoval paralelizacijo grafovskih algoritmov v 
     - `opam` inicializirati
     - Ustvariti `switch`, ki je verzije `>= 5.0.0`
 - `opam install dune`
-- `opam install parany`
 - `cd ./playground/graph`
 - `dune build`. Primeri raznih dune datotek so zapisani na `./playground/graph/dune_file_contents.ml`. V glavnem priporočam poganjanje datotek `*_examples.ml`, kjer je `*` ime algoritma, ki ga želite pognati (npr. `bfs`, `dijkstra`, ...).
 - Ta binary poženete z `./*_examples.exe` iz direktorija `./playground/graph/`.
@@ -23,11 +22,8 @@ Struktura kode (znotraj folderja `/playground`):
 
 - **Graph**: Znotraj folderja Graph je shranjena grafovska predstavitev ter njihovi algoritmi
     - `graph.ml`: Predstavitev uteženega in neuteženega grafa. Graf je implementiran preko modulov `Node`, `UnweightedGraph` ter `WeightedGraph`.
-    - `graph_examples.ml`: Primeri uporabe grafov.
     - `fib.ml`: Implemetacija naivnega paralelnega računanja Fibonaccijevih števil.
-    - `fib_examples.ml`: Dejansko računanje Fibonaccijevih števil
     - `bfs.ml`: Implementacija paralelnega in sekvenčnega algoritma BFS.
-    - `bfs_examples.ml`: Uporaba algoritma BFS.
-    - `dijkstra.ml` - WIP: Implementacija paralelnega in sekvenčnega algoritma Dijkstre.
-    - `dijkstra_examples.ml` - WIP: Uporaba algoritma Dijkstre.
+    - `dijkstra.ml`: Implementacija paralelnega in sekvenčnega algoritma Dijkstre.
+    - `floyd.ml`: Implementacija paralelnega ter sekvenčnega Floyd-Warshallovega algoritma
     - `computation_time_analysis/computation_time_analysis.ipynb`: Primerjava časov izvajanja paralelnih in sekvenčnih algoritmov.
