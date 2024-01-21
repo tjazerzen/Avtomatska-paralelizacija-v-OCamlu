@@ -1,7 +1,12 @@
 (executable
-  (name floyd_examples)
-  (libraries base stdio domainslib)
-  (modules floyd graph floyd_examples)
-  (promote (until-clean))
-  (flags :standard -w "-32-33")
-  )
+ (name fib_examples)
+ (promote (until-clean))
+ (libraries domainslib unix fib)
+ (modules fib_examples)
+ )
+
+(library
+ (name fib)
+ (modules fib)
+ (libraries domainslib unix)
+)

@@ -67,8 +67,8 @@ end = struct
     T.run pool (fun () ->
         let _ = F.fib_par pool sequential_threshold n in
         ());
-    T.teardown_pool pool;
     let stop = Unix.gettimeofday () in
+    T.teardown_pool pool;
     stop -. start
 
   let par_calculation_time_num_domains_to_csv ~max_domains ~sequential_threshold

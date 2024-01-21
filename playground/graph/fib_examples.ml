@@ -1,7 +1,7 @@
 (* Initialize parameters *)
 let current_fib_number = 43 in
 let current_num_domains = 8 in
-let max_num_domains = 25 in
+let max_num_domains = 8 in
 let min_fib_number = 38 in
 let max_fib_number = 45 in
 let sequential_threshold_upper = 38 in
