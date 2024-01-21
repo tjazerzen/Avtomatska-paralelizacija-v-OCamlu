@@ -184,7 +184,7 @@ pišemo z komponiranjem in apliciranjem matematičnih funkcij.
 \emph{Deklarativni programski jezik} je vrsta programskega jezika, kjer razvijalec opiše kaj naj program stori, 
 namesto kako naj to stori. Programi so tipično strukturirani kot nizi deklaracij, ki določajo razmerja in omejitve
 med različnimi entitetami znotraj problema. 
-Nasprotno, \textbf{imperativni programski jezik} je vrsta programskega jezika, kjer programer navede zaporedje ukazov,
+Nasprotno, \emph{imperativni programski jezik} je vrsta programskega jezika, kjer programer navede zaporedje ukazov,
 ki naj jih računalnik izvrši za rešitev problema.
 
 Vzporednost na nivoju procesorja je moč doseči na dva načina: 
@@ -372,7 +372,7 @@ end
 
 \end{lstlisting}
 
-S podobnimi metodami definiram tudi modul \texttt{WeightedGraph}, le da je njegov zapisni
+S podobnimi metodami definiramo tudi modul \texttt{WeightedGraph}, le da je njegov zapisni
 tip enak
 \begin{lstlisting}
 module WeightedGraph : sig
@@ -443,8 +443,8 @@ knjižnice Domainslib na GitHub-u na spletnem naslovu \url{https://github.com/oc
 Čeprav ne gre za grafovski algoritem, je vseeno poučno, da najprej predstavimo osnovne koncepte
 paralelizacije na kar se da preprostem primeru. Izbral sem si primer paralelnega računanja Fibonaccijevih števil
 (na način, ki terja časovno zahtevnost $O(2^n)$, kot je razvidno iz slike \ref{fig:fib-graph}).
-Osnovno idejo problema sem povzel po \cite{parallel_fib_computation} in \cite{multicore_ocaml_article} ter jo prilagodil
-za lastne potrebe.
+Osnovna ideja algoritma je bila povzeta po \cite{parallel_fib_computation} in \cite{multicore_ocaml_article},
+nato pa je bila še prilagojena za potrebe te diplomske naloge. 
 
 Preprosto funkcijo za računanje Fibonaccijevega števila, lahko zapišemo na zelo preprost način:
 
@@ -535,14 +535,14 @@ Kot je že bilo opisano, knjižnica Domainslib omogoča paralelno obdelavo. Klju
 \subsubsection{Analiza časa računanja Fibonaccijevih števil}
 
 Pred analizo časa izračuna Fibonaccijevih števil je pomembno omeniti, da so bili vsi izračuni opravljeni na
-osemjedrnem MacBooku Air M1. Ta podatek zagotavlja kontekst rezultatom, saj se lahko čas izračuna razlikuje
+osemjedrnem MacBooku M2 Pro. Ta podatek zagotavlja kontekst rezultatom, saj se lahko čas izračuna razlikuje
 glede na zmogljivosti in specifikacije uporabljenega računalnika. Tako je treba pri interpretaciji rezultatov
 upoštevati, da se lahko izračuni na drugih sistemih obnašajo drugače.
 
 Najprej je bila analizirana dinamika časa izračuna Fibonaccijevih števil v odvisnosti od števila domen. 
-Rezultati, prikazani na Sliki \ref{fig:fib_par_v_odvisnosti_od_domen}, kažejo, da večanje števila domen zmanjša čas
-izračuna, vendar ne linearno. Opazna je postopna stabilizacija časa izračuna pri približno 14 domenah. 
-Ta pojav je mogoče pripisati značilnostim računalniškega sistema in specifikam uporabljenega algoritma.
+Rezultati, prikazani na sliki \ref{fig:fib_par_v_odvisnosti_od_domen}, kažejo, da večanje števila domen zmanjša čas
+izračuna. Ker na enem procesorskem jedru teče zgolj ena domena, je maksimalno število domen, ki jih je smiselno uporabiti,
+enako številu procesorskih jeder. V našem primeru je torej maksimalno število domen enako 8.
 
 \begin{figure}[h!]
   \centering
@@ -700,7 +700,7 @@ Notranji algebraični učinki pri paralelnem izvajanju se nanašajo na procese, 
 skupnih podatkovnih struktur in za koordinacijo nadaljevanja obdelave po zaključku posameznih vzporednih nalog.
 \textit{T.run} deluje kot nadzorni okvir, ki zagotavlja sinhronizacijo in koordinacijo teh procesov.
 To pomeni, da \textit{T.run} omogoča neodvisno izvajanje posameznih niti, hkrati pa skrbi za ustrezno upravljanje
-skupnega stanja in usklajevanje dela med niti.
+skupnega stanja in usklajevanje dela med nitmi.
 
 Za praktičen primer uporabe paralelnega BFS in merjenje časa izvajanja lahko uporabimo naslednji pristop, kot je prikazano v spodnjem izseku kode:
 
@@ -762,7 +762,7 @@ s sinhronizacijo in obremenitvijo v paralelnih izvedbah BFS algoritma na večjed
 Ta spoznanja odpirajo potrebo po nadaljnjih raziskavah in optimizaciji, s ciljem izboljšati učinkovitost paralelnih implementacij,
 zlasti v primeru posebnih vrst grafov, kjer bi bili paralelni algoritmi lahko hitrejši od sekvenčnih.
 
-\subsection{Paralelna implementacija Dijkstrovega algoritma} \label{section:dijkstra}
+\subsection{Paralelni Dijkstrov algoritem} \label{section:dijkstra}
 
 Dijkstrov algoritem, bistven za iskanje najkrajših poti v uteženih grafih, se v svoji paralelni implementaciji sooča s
 specifičnimi izzivi, ki presegajo tradicionalni sekvenčni pristop. Temeljna razlika v paralelni različici algoritma,
@@ -978,7 +978,7 @@ Naša implementacija je pokazala, da paralelizacija Dijkstrovega algoritma lahko
 in kompleksnih grafov. Ključnega pomena je najti ravnotežje med številom uporabljenih procesorskih domen in
 komunikacijskimi ter usklajevalnimi stroški, ki nastanejo pri paralelnem izvajanju. Optimalno število domen se spreminja
 glede na lastnosti grafa, kot so velikost in gostota povezav. Naša analiza podpira ugotovitve Crauserja in
-sodelavcev (\cite{crauser1998parallelizing}), ki so prav tako uspeli implementirati paralelno verzijo Dijkstrovega algoritma.
+sodelavcev \cite{crauser1998parallelizing}, ki so prav tako uspeli implementirati paralelno verzijo Dijkstrovega algoritma.
 Ta študija odpira nove možnosti za nadaljnje raziskovanje učinkovitosti paralelizacije v grafovskih algoritmih in
 poudarja potrebo po prilagodljivem pristopu za dosego optimalnih rezultatov.
 
