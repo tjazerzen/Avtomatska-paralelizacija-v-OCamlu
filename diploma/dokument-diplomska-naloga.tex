@@ -1046,7 +1046,10 @@ module FloydWarshallAlgorithms : FloydWarshall = struct
     let matrix = init_matrix graph in
     let n = Array.length matrix in
     for k = 0 to n - 1 do
-      T.parallel_for pool ~start:0 ~finish:(n - 1) ~body:(fun i ->
+      T.parallel_for pool 
+        ~start:0 
+        ~finish:(n - 1) 
+        ~body:(fun i ->
           for j = 0 to n - 1 do
             update_distance matrix i j k
           done)
