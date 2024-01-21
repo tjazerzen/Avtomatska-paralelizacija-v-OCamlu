@@ -1107,6 +1107,13 @@ Zanimivo je, da optimizacija, kjer paraleliziramo obe notranji zanki (\texttt{fo
 Nasprotno, ta pristop je povzročil povečanje časovnega bremena zaradi komunikacijskih stroškov, kar je privedlo do slabših rezultatov
 kot pri sekvenčni izvedbi.
 
+\subsubsection{Zaključek in Alternativni Pristopi za Floyd-Warshallov Algoritem}
+
+Čeprav se je v naši analizi paralelna implementacija Floyd-Warshallovega algoritma izkazala za učinkovitejšo od sekvenčne, obstajajo tudi
+alternativne metode, kot je 2D block mapping algoritem \cite{parallel_floyd_warshall}, ki obetajo nadaljnje optimizacije. Ta pristop, ki deli matriko na manjše bloke za
+vzporedno obdelavo, lahko potencialno zmanjša komunikacijske stroške in izboljša ravnovesje obremenitve med procesorskimi jedri. Takšne
+inovativne strategije odpirajo nove možnosti za izboljšanje paralelnih algoritmov v teoriji grafov, kar obeta zanimive smeri za prihodnje raziskave.
+
 
 
 \end{document}
