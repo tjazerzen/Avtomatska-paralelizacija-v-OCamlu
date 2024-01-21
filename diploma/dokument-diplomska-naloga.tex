@@ -1114,6 +1114,28 @@ alternativne metode, kot je 2D block mapping algoritem \cite{parallel_floyd_wars
 vzporedno obdelavo, lahko potencialno zmanjša komunikacijske stroške in izboljša ravnovesje obremenitve med procesorskimi jedri. Takšne
 inovativne strategije odpirajo nove možnosti za izboljšanje paralelnih algoritmov v teoriji grafov, kar obeta zanimive smeri za prihodnje raziskave.
 
+\section{Zaključek}
+
+V diplomski nalogi smo se osredotočili na problematiko paralelizacije grafovskih algoritmov v funkcijskih programskih jezikih.
+Osrednji del naloge je predstavljala implementacija in analiza paralelnih verzij klasičnih grafovskih algoritmov, kot so iskanje v širino (BFS),
+Dijkstrov algoritem in Floyd-Warshallov algoritem, v programskem jeziku OCaml z uporabo knjižnice Domainslib. Pomemben del raziskave je
+bil posvečen tudi predstavitvi grafa v funkcijskih jezikih, kjer smo razvili nespremenljive podatkovne strukture za učinkovito upravljanje z grafi.
+
+V procesu raziskovanja smo izvedli temeljito analizo časovne učinkovitosti posameznih algoritmov, pri čemer smo primerjali paralelne in sekvenčne izvedbe.
+Pri Dijkstrovem ter Floyd-Warshallovem algoritmu so rezultati pokazali izboljšanje učinkovitosti paralelnih verzij, medtem ko je pri paralelnem BFS algoritmu
+izboljšave zaradi paralelizacije ni bilo. Odkrili smo tudi, da je optimalno število domen za izvajanje paralelnih algoritmov odvisno od narave problema
+in strukture grafa.
+
+Za nadaljnje raziskave smo izpostavili potencial uporabe alternativnih pristopov, kot je 2D block mapping, ki obljubljajo nadaljnje
+optimizacije paralelnih algoritmov. Ta diplomska naloga tako prispeva k boljšemu razumevanju in izboljšanju paralelne obdelave grafovskih
+algoritmov v funkcijskih jezikih, kar odpira nove možnosti za njihovo uporabo v kompleksnih računalniških problemih.
+Hkrati pa moramo upoštevati, da so bile naše ugotovitve dosežene v specifičnih eksperimentalnih okoliščinah, kar pomeni, da bi v drugačnih
+kontekstih lahko dosegli drugačne rezultate. To poudarja potrebo po nadaljnjem testiranju in prilagajanju algoritmov za specifične uporabe.
+
+Zaključujemo, da je paralelizacija grafovskih algoritmov v funkcijskih jezikih obetavno področje, ki nudi številne možnosti za raziskovanje in
+praktično uporabo, še posebej v obsežnih računalniških sistemih in aplikacijah, ki zahtevajo visoko računsko zmogljivost.
+Pokazali smo, da je paralelizacija grafovskih algoritmov v funkcijskih jezikih lahko tudi dobra alternativa paralelizaciji grafovskih algoritmov
+v imperativnih programskih jezikih.
 
 
 \end{document}
