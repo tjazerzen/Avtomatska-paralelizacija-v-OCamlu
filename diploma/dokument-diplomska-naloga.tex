@@ -1072,6 +1072,40 @@ module FloydWarshallAlgorithms : FloydWarshall = struct
 end
 \end{lstlisting}
 
+\subsubsection{Analiza časa izračuna Floyd-Warshallovega algoritma}
+
+Analiza časa izračuna Floyd-Warshallovega algoritma se osredotoča na primerjavo med paralelno in sekvenčno izvedbo, hkrati pa razkriva
+dinamiko vpliva števila domen na čas izračuna paralelnega algoritma. Iz pridobljenih rezultatov je razvidno, da paralelna implementacija
+konsistentno prekaša sekvenčno.
+
+Pri analizi vpliva števila domen na čas izračuna paralelnega algoritma smo opazili zmanjšanje časa izračuna z dodajanjem domen do točke
+optimalnega števila, ki je bilo pri 6 domenah. To zmanjšanje časa je verjetno posledica bolj učinkovite porazdelitve izračunov med procesorska jedra,
+ki omogoča hitrejšo obdelavo posameznih delov matrike razdalj. Vendar pa po preseganju števila 6 domen opazimo ponovno povečanje časa izračuna.
+Ta pojav lahko pripišemo povečanim komunikacijskim in usklajevalnim stroškom, ki nastanejo pri upravljanju večjega števila vzporednih niti.
+Ti stroški postopoma zmanjšujejo koristi dodatnih domen, kar vodi v suboptimalno učinkovitost.
+Na grafu z 1000 vozlišči smo pognali paralelni algoritem z domenami od 1 do 8. Rezultati so prikazani na sliki \ref{fig:floyd_v_odvisnosti_od_stevila_domen}.
+
+
+\begin{figure}[h!]
+  \centering
+  \caption{Čas izračuna paralelnega Floyd-Warshallovega algoritma v odvisnosti od števila domen}
+  \includegraphics[width=15cm]{slike/floyd_v_odvisnosti_od_stevila_domen.jpg}
+  \label{fig:floyd_v_odvisnosti_od_stevila_domen}
+\end{figure}
+
+Kar zadeva primerjavo med sekvenčno in paralelno verzijo algoritma, je bilo ugotovljeno, da je sekvenčna verzija približno 4-krat počasnejša
+od optimizirane paralelne verzije na grafih z različnimi velikostmi. Rezultati so prikazani na sliki \ref{fig:floyd_v_odvisnosti_od_velikosti_grafa}.
+
+\begin{figure}[h!]
+  \centering
+  \caption{Primerjava časov izračuna sekvenčne in paralelne implementacije Floyd-Warshallovega algoritma v odvisnosti od števila vozlišč}
+  \includegraphics[width=15cm]{slike/floyd_v_odvisnosti_od_velikosti_grafa.jpg}
+  \label{fig:floyd_v_odvisnosti_od_velikosti_grafa}
+\end{figure}
+
+Zanimivo je, da optimizacija, kjer paraleliziramo obe notranji zanki (\texttt{for i} in \texttt{for j}), ni prinesla pričakovanih izboljšav.
+Nasprotno, ta pristop je povzročil povečanje časovnega bremena zaradi komunikacijskih stroškov, kar je privedlo do slabših rezultatov
+kot pri sekvenčni izvedbi.
 
 
 
