@@ -15,14 +15,15 @@ let matrix_to_string (matrix : float array array) =
 
 let small_graph_vertex_count = 5
 let small_graph_edge_count = 7
-let num_domains = 5
+let opt_num_domains = 6
+let max_num_domains = 8
 let min_factor = 0.3
 
 let small_graph =
   WeightedGraph.create_new_graph ~num_nodes:small_graph_vertex_count
     ~num_edges:small_graph_edge_count ~directed:false
 
-let large_graph_vertex_count = 750
+let large_graph_vertex_count = 1000
 
 let large_graph_edge_count =
   float_of_int (large_graph_vertex_count * (large_graph_vertex_count - 1) / 2)
@@ -38,7 +39,7 @@ let () =
 
 let matrix_seq = FloydWarshallAlgorithms.floyd_warshall_seq small_graph
 let () = print_endline ("Sequential: \n" ^ matrix_to_string matrix_seq)
-let task_pool = T.setup_pool ~num_domains ()
+let task_pool = T.setup_pool ~num_domains:max_num_domains ()
 
 let matrix_par =
   Task.run task_pool (fun () ->
@@ -57,7 +58,8 @@ let () =
   print_endline ("Sequential calculation time: " ^ string_of_float time_calc_seq)
 
 let time_calc_par =
-  FloydWarshallTimeCalculations.time_floyd_warshall_par large_graph num_domains
+  FloydWarshallTimeCalculations.time_floyd_warshall_par large_graph
+    opt_num_domains
 
 let () =
   print_endline ("Parallel calculation time: " ^ string_of_float time_calc_par)
@@ -66,14 +68,15 @@ let () =
   Printf.printf "\n-----------------NUM DOMAINS TO CSV-----------------\n"
 
 let () =
-  FloydWarshallAnalysis.par_calc_time_num_domains_to_csv large_graph num_domains
+  FloydWarshallAnalysis.par_calc_time_num_domains_to_csv large_graph
+    max_num_domains
 
 let () = Printf.printf "\n-----------------PAR COMB TO CSV-----------------\n"
 
 let combinations =
-  GraphUtils.generate_graph_combinations ~min_vertex:400 ~max_vertex:750
+  GraphUtils.generate_graph_combinations ~min_vertex:500 ~max_vertex:1000
     ~min_factor ~step:50
 
 let () =
   FloydWarshallAnalysis.par_calc_time_combinations_to_csv combinations
-    num_domains
+    opt_num_domains
