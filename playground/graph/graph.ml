@@ -1,19 +1,17 @@
 module Node : sig
-  type elt = int
   type t
 
-  val create : elt -> t
-  val value : t -> elt
+  val create : int -> t
+  val value : t -> int
 
   (* compare x y returns 0 if x is equal to y, a negative integer if x is less than y, and a positive integer if x is greater than y *)
   val compare_ids : t -> t -> int
   val compare : t -> t -> int
   val to_string : t -> string
-  val id : t -> elt
+  val id : t -> int
   val reset_ids : unit -> unit
 end = struct
-  type elt = int
-  type t = { id : int; value : elt }
+  type t = { id : int; value : int }
 
   let counter = ref 0
 
@@ -37,7 +35,6 @@ module NodeSet = Set.Make (Node)
 module NodeMap = Map.Make (Node)
 
 module UnweightedGraph : sig
-  type elt = int (* node values *)
   type t (* graphs *)
 
   val empty : directed:bool -> t
@@ -52,7 +49,6 @@ module UnweightedGraph : sig
   val find_node_by_id : int -> t -> Node.t option
   val create_new_graph : num_nodes:int -> num_edges:int -> directed:bool -> t
 end = struct
-  type elt = int (*Each node's values will be integers*)
 
   type t = {
     edges : NodeSet.t NodeMap.t;
@@ -161,7 +157,6 @@ end = struct
 end
 
 module WeightedGraph : sig
-  type elt = int
   type t
 
   val empty : directed:bool -> t
@@ -176,7 +171,6 @@ module WeightedGraph : sig
   val create_new_graph : num_nodes:int -> num_edges:int -> directed:bool -> t
   val edges : t -> float NodeMap.t NodeMap.t
 end = struct
-  type elt = int
   type t = { edges : float NodeMap.t NodeMap.t; directed : bool }
 
   let empty ~directed = { edges = NodeMap.empty; directed }

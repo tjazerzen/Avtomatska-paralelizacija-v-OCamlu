@@ -17,7 +17,7 @@
 \title{Parallelisation of Graph Algorithms in Functional Programming Languages}
 
 % - ime mentorja/mentorice s polnim nazivom:
-\mentor{izr.~prof.~dr.~Matija Pretnar}
+\mentor{doc.~dr.~Matija Pretnar}
 
 % - leto diplome
 \letnica{2024} 
@@ -31,9 +31,8 @@
 Diplomska naloga obravnava paralelizacijo grafovskih algoritmov v funkcijskih programskih jezikih, s poudarkom na OCamlu in uporabi knjižnice Domainslib.
 Delo se osredotoča na razvoj in analizo paralelnih različic klasičnih algoritmov, kot so iskanje v širino (BFS), Dijkstrov algoritem in Floyd-Warshallov algoritem.
 Glavni cilj je bil primerjati učinkovitost paralelnih in sekvenčnih implementacij teh algoritmov v kontekstu funkcijskega programiranja.
-
 Analiza je pokazala, da paralelna implementacija lahko izboljša učinkovitost, še posebej pri obsežnih grafih, čeprav je izbor optimalnega števila procesorskih domen ključnega
-pomena za maksimalno zmogljivost. Rezultati kažejo na obetavne možnosti paralelizacije v funkcijskih jezikih, posebej v aplikacijah, ki zahtevajo visoko računsko zmogljivost.  
+pomena za maksimalno zmogljivost.
 }
 
 % - povzetek v angleščini
@@ -43,7 +42,6 @@ The work concentrates on developing and analyzing parallel versions of classical
 The primary goal was to compare the effectiveness of parallel and sequential implementations of these algorithms in the context of functional programming.
 
 The analysis showed that parallel implementation can improve efficiency, especially in extensive graphs, although the choice of the optimal number of processor domains is crucial for maximum performance.
-The results indicate promising possibilities for parallelization in functional languages, particularly in applications that require high computational power.
 }
 
 % - klasifikacijske oznake, ločene z vejicami
@@ -51,10 +49,10 @@ The results indicate promising possibilities for parallelization in functional l
 \klasifikacija{68R10, 68W10, 68N18, 68N19, 05C85}
 
 % - ključne besede, ki nastopajo v delu, ločene s \sep
-\kljucnebesede{paralelizacija\sep grafovski algoritmi\sep funkcijski programski jeziki\sep OCaml\sep iskanje v širino (BFS)\sep Dijkstrov algoritem\sep Floyd-Warshallov algoritem\sep Domainslib\sep nespremenljive podatkovne strukture\sep večjedrno računanje\sep optimizacija algoritmov\sep dinamično programiranje\sep vrsta s prednostjo\sep računska učinkovitost\sep višjenivojske abstrakcije}
+\kljucnebesede{paralelizacija\sep grafovski algoritmi\sep funkcijski programski jeziki\sep OCaml\sep iskanje v širino (BFS)\sep Dijkstrov algoritem\sep Floyd-Warshallov algoritem\sep večjedrno računanje}
 
 % - angleški prevod ključnih besed
-\keywords{parallelisation\sep graph algorithms\sep functional programming languages\sep OCaml\sep breadth-first search (BFS)\sep Dijkstra's algorithm\sep Floyd-Warshall algorithm\sep Domainslib\sep immutable data structures\sep multi-core computing\sep algorithm optimization\sep dynamic programming\sep priority queue\sep computational efficiency\sep high-level abstractions}
+\keywords{parallelisation\sep graph algorithms\sep functional programming languages\sep OCaml\sep breadth-first search (BFS)\sep Dijkstra's algorithm\sep Floyd-Warshall algorithm\sep multi-core computing}
 
 % - angleško-slovenski slovar strokovnih izrazov
 \slovar{
@@ -160,75 +158,54 @@ The results indicate promising possibilities for parallelization in functional l
 
 \section{Uvod}
 
-Grafovski algoritmi so ključni pri modeliranju širokega nabora vsakdanjih problemov: 
+Grafovski algoritmi so ključni pri modeliranju širokega nabora vsakdanjih problemov.
 Igrajo pomembno vlogo pri modeliranju družbenih ter računalniških omrežjih, z njimi pa se prav tako razrešujejo 
-problemi na področjih računalniške komunikacije ter podatkovne analitike. Splošno, z grafi  modeliramo kakršne 
+problemi na področjih računalniške komunikacije in podatkovne analitike. Splošno, z grafi  modeliramo kakršne 
 koli odnose med danimi entitetami, vse od računanja razdalj med mesti, pa do računanje vodnega pretoka 
 od enega kraja do drugega.
 
-Kot kompleksnost grafov narašča, se povečujejo tudi zahteve za računsko moč pri njihovem obdelovanju. 
-Čeprav so grafovski algoritmi v osnovi izračunljivi, lahko obdelava velikih ali zapletenih grafov postane izjemno
-zahtevna, tako v smislu časa izvajanja kot porabe pomnilnika. Načinov za reševanje tega problema je več, pogosto pa
+Z večanjem kompleknosti grafov naraščajo tudi zahteve za računsko moč pri njihovem obdelovanju.
+Načinov za reševanje tega problema je več, pogosto pa
 je eden izmed možnih načinov pospešitve programa paralelizacija, s čimer, kot bomo videli, bolje izkoristimo celotno
 računsko kapaciteto računalnika. Posledično je paralelizacija tovrstnih algoritmov v zadnjih letih postala tako
 zanimiva raziskovalna kot tudi aplikativna tema v računalništvu.
-
-Funkcijski programski jeziki zagotavljajo matematične abstrakcije na višjem nivoju, kot so jih to sposobni navadni
-imperativni programski jeziki, kot so na primer \textit{Python}, \textit{C++} in \textit{Java}. 
-Ena izmed prednosti funkcijskih programskih jezikov je, da omogočajo deklarativno programiranje, 
-kar jih naredi bolj paralelizabilne.
-
-\emph{Funkcijsko programiranje} je računalniški koncept, znotraj katerega programe
-pišemo z komponiranjem in apliciranjem matematičnih funkcij. 
-
-\emph{Deklarativni programski jezik} je vrsta programskega jezika, kjer razvijalec opiše kaj naj program stori, 
-namesto kako naj to stori. Programi so tipično strukturirani kot nizi deklaracij, ki določajo razmerja in omejitve
-med različnimi entitetami znotraj problema. 
-Nasprotno, \emph{imperativni programski jezik} je vrsta programskega jezika, kjer programer navede zaporedje ukazov,
-ki naj jih računalnik izvrši za rešitev problema.
 
 Vzporednost na nivoju procesorja je moč doseči na dva načina: 
 Tako, da je pomnilnik vsem računalniškim jedrom skupen, ali pa da je pomnilnik \textit{porazdeljen}. 
 V tej diplomski nalogi se bom osredotočal zgolj na sisteme s skupnim pomnilnikom ter porazdeljeno procesorsko močjo, 
 saj je tovrstne programe tipično manj zahtevno implementirati, kot pa tiste, ki delujejo na porazdeljenem pomnilniku.
 
-Vzporednost na nivoju procesorja je moč doseči na dva načina: 
-Tako, da je pomnilnik vsem računalniškim jedrom skupen, ali pa da je pomnilnik \textit{porazdeljen}. 
-V tej diplomski nalogi se bom osredotočal zgolj na sisteme s skupnim pomnilnikom ter porazdeljeno procesorsko močjo.
-V splošnem je programe na porazdeljenem pomnilniku težje implementirati, saj moramo še dodatno skrbeti za sinhronizacijo
-med procesi.
-
 Vse več funkcijskih programskih jezikov, kot so na primer Scala, F\# ter Haskell ima implementirane knjižnice
 in ogrodja za paralelizacijo grafovskih algoritmov:
 \begin{itemize}
     \item knjižnica \textit{fgl} v Haskellu \cite{haskell_fgl} zagotavlja vzporedne algoritme za najkrajšo pot 
-    ter iskanje krepko povezanih komponent.
-    \item \textit{GraphX} v Scali \cite{graphx} ponuja implementacijo paralelnega Googlovega PageRank algoritma.
+    ter iskanje krepko povezanih komponent,
+    \item \textit{GraphX} v Scali \cite{graphx} ponuja implementacijo paralelnega Googlovega PageRank algoritma,
+    \item \textit{Ocaml 500} v OCamlu \cite{ocaml_multicore_500} ponuja implementacijo paralelnega iskanja v širino ter paralelnega Dijkstrovega algoritma na redkih grafih.
 \end{itemize}
 
-Z izdajo različice 5.0.0 leta 2022 je tudi OCaml dobil podporo za paralelno računanje. Zato sem to priložnost 
-izkoristil, da svoje računalniške programe pišem v tem funkcijskem jeziku. 
-V svoji diplomski nalogi se bom tako spustil v tovrstne knjižnice v funkcijskih jezikih, ki že obstajajo, 
-pregledal novejše raziskave kar se tiče grafovskih algoritmov v imperativnih jezikih, 
-tovrstne ideje poskušal razumeti v kontekstu funkcijskih jezikov ter vse skupaj povezal v preprosto knjižnico v OCamlu.
+Z izdajo različice 5.0.0 v letu 2022 je programski jezik OCaml pridobil podporo za paralelno računanje.
+V tej diplomski nalogi se bo raziskala implementacija paralelnih grafovskih algoritmov v OCamlu, s
+poudarkom na uporabi knjižnice Domainslib. Implementirane bodo paralelne različice klasičnih algoritmov, kot so
+iskanje v širino (BFS), Dijkstrov algoritem in Floyd-Warshallov algoritem.
 
-Ker je OCaml šele nedavno dobil podporo za paralelizacijo, je literature na to temo omejeno.
-Med obstoječimi viri je knjižnica OCaml Multicore \cite{ocaml_multicore_500}, ki se osredotoča na paralelizacijo redkih grafov.
-To je narekovalo potrebo po uporabi OCamlove dokumentacije o paralelizaciji \cite{ocaml_paralelisation_documentation} ter
-raziskovanju knjižnic, razvitih v drugih funkcijskih jezikih. Za osnovo pri razvoju grafa je bila uporabljena knjižnica,
-razvita v Swiftu \cite{functional_swift_graph}, medtem ko so bile za implementacijo grafovskih algoritmov in strukturiranje
-knjižnice uporabljene tehnike iz knjižnice Haskell \cite{haskell_fgl}.
+Zaradi relativno nedavne uvedbe podpore za paralelizacijo v OCamlu, specifično v različici 5.0.0, je literature na to temo še
+vedno omejeno. Ta omejitev je spodbudila k uporabi OCamlove dokumentacije o paralelizaciji \cite{ocaml_paralelisation_documentation}
+in raziskovanju metod in knjižnic, razvitih za druge funkcijske jezike. Konkretno, za razvoj struktur grafov je bila uporabljena knjižnica,
+razvita v Swiftu \cite{functional_swift_graph}, medtem ko so za implementacijo grafovskih algoritmov in oblikovanje knjižnice uporabljene
+tehnike iz Haskellove knjižnice fgl \cite{haskell_fgl}. Med obstoječimi viri v OCamlu je bila kot osrednji vir uporabljena knjižnica
+OCaml 500 \cite{ocaml_multicore_500}, ki je bila ključna za razumevanje in izvajanje paralelne obdelave.
 
 \subsection{Kaj lahko od paralelnega programa pričakujemo?}
 
-V praksi od paralelnega programa pričakujemo predvsem višjo hitrost izvajanja v primerjavi s sekvenčnim programom,
-kjer se naloge izvajajo zaporedno. Teoretično gledano, zakon Amdahl \cite{amdahl1967} določa omejitve pospešitve,
-ki jih lahko dosežemo z paralelizacijo. Čeprav teoretično program s $n$ procesorji lahko doseže do $n$-kratno hitrost,
-je treba upoštevati dodatne računske obremenitve, ki nastanejo pri vzpostavitvi paralelnega izvajanja, vključno s
-sinhronizacijo procesov, upravljanjem virov in koordinacijo med procesorskimi enotami. Tako lahko v nekaterih primerih,
-zlasti pri izvajanju na enem samem jedru, paralelni program postane počasnejši od svojega sekvenčnega ekvivalenta.
-Te ugotovitve ilustrira slika \ref{fig:cilj-casovne-zahtevnosti-paralelizacije}, pri čemer je pomembno tudi razmisliti o
-optimalnem razporejanju nalog in upravljanju virov za maksimalno izkoristek paralelizacije.
+V praksi se od paralelnega programa običajno pričakuje višja hitrost izvajanja v primerjavi s sekvenčnim programom,
+kjer se naloge izvajajo zaporedno. Teoretično lahko pričakujemo, da program, ki deluje na $n$ procesorjih,
+doseže do $n$-krat večjo hitrost, vendar je ključno upoštevati dodatne računske obremenitve, ki nastanejo pri vzpostavitvi
+paralelnega izvajanja. Te obremenitve vključujejo sinhronizacijo procesov, upravljanje virov in koordinacijo med procesorskimi enotami.
+Zaradi teh dejavnikov lahko paralelni program v nekaterih primerih, še posebej pri izvajanju na enem samem jedru,
+postane počasnejši od sekvenčnega ekvivalenta. Ta pojav poudarja pomembnost razmisleka o optimalnem razporejanju
+nalog in upravljanju virov, da se maksimizira izkoristek paralelizacije. Slika \ref{fig:cilj-casovne-zahtevnosti-paralelizacije} prikazuje
+naša pričakovanja od paralelnega programa.
 
 \begin{figure}[h!]
   \centering
@@ -248,15 +225,15 @@ so funkcijski programski jeziki bolj primerni za paralelizacijo iz več razlogov
 
 \begin{itemize} \label{itemize:prednosti_funkcijskega_programiranja}
   \item \textbf{Nespremenljivost in odsotnost stranskih učinkov:} 
-    Elementarne podatkovne strukture v funkcijskih programskih jezikih običajno nespremenljive, kar za sabo prinese številne
-    prednosti, kot so na primer lažje razumevanje in odpravljanje napak, učinkovitost, modularnost 
-    ter druge. Vse te lastnosti pa so še posebej pomembne v paralelnem kontekstu, kjer so naloge pogosto razdeljene med
-    različne niti ali stroje. Če nam je zagotovljeno, da naša funkcija ne spreminja nobenega skupnega stanja, se
+    Elementarne podatkovne strukture v funkcijskih programskih jezikih so običajno nespremenljive, kar za sabo prinese številne
+    prednosti, kot so na primer lažje razumevanje, enostavnejše odpravljanje napak ter boljša modularnost.
+    Vse te lastnosti pa so še posebej pomembne v paralelnem kontekstu, kjer so naloge pogosto razdeljene med
+    različne niti. Če nam je zagotovljeno, da naša funkcija ne spreminja nobenega skupnega stanja, se
     različni procesi lahko izvajajo vzporedno, ne da bi se pri tem bilo treba ukvarjati s tem, da bi več procesov
     naenkrat posegalo po istem prostoru v pomnilniku, ali z drugimi sinhronizacijskimi težavami.
     Iz praktičnih izkušenj je razvidno, da uporaba spremenljivih podatkovnih struktur v OCamlu, kot sta na primer
     \texttt{Array} in \texttt{reference}, lahko povzroči težave pri pisanju paralelnih programov, saj to zahteva
-    dodatno upravljanje sinhronizacije in stanja med procesi.
+    dodatno usklajevanje stanja med procesi.
 
   \item \textbf{Lažje razumevanje in odpravljanje napak:} 
     Odsotnost stranskih učinkov prav tako olajša razumevanje kode in odpravljanje napak., kar je še posebej
@@ -268,25 +245,25 @@ so funkcijski programski jeziki bolj primerni za paralelizacijo iz več razlogov
     kjer je naloge pogosto treba razbiti na manjše, neodvisne enote, ki se lahko izvajajo vzporedno.
 
   \item \textbf{Deklarativna narava funkcijskih jezikov:} 
-    Funkcijsko programiranje je oblika deklarativnega programiranja, kar pomeni, da opisujete, kaj želimo doseči, 
+    Funkcijsko programiranje je oblika deklarativnega programiranja, kar pomeni, da opišemo, kaj želimo doseči, 
     ne da bi natančno opisali, kako to doseči. Ta visoka stopnja abstrakcije lahko olajša pisanje paralelne kode, 
     saj se lahko osredotočite na problem, ne da bi se zapletli v podrobnosti paralelnega izvajanja.
 \end{itemize}
 
-Ko potrebujem implementacijo določene podatkovne strukture v imperativnem programskem jeziku, kot je na primer
-\textit{Python}, je pogosto dovolj, da v splošnem učbeniku najdem njeno implementacijo ter to prepišem.
+Ko potrebujemo implementacijo določene podatkovne strukture v imperativnem programskem jeziku, kot je na primer
+\textit{Python}, je pogosto dovolj, da v splošnem učbeniku najdemo njeno implementacijo ter jo prepišemo.
 Razvijalci, ki pa svojo kodo pišejo v funkcijskih programskih jezikih, pa zaradi manjše
 razširjenosti funkcijskih programskih jezikov pogosto te sreče nimajo.
 Dodatno smo zaradi stroge omejitve odsotnosti stranskih učinkov v funkcijskih jezikih primorani, da se izogibamo
 programskim konstruktom, ki pomnilnik spreminjajo, na primer zanka. To pa je v primeru implementacije grafovskih
 algoritmov, kjer se moramo npr. sprehoditi po sosedih trenutnega vozlišča, pogosto precej težavno.
 
-Pogosto se zgodi, da podatkovna struktura v imperativnih jezikih nima svojega ekvivalenta v funkcijskih jezikih.
-Pri implementaciji različnih podatkovnih struktur, kot je na primer vrsta s prednostjo v poglavju
-\ref{section:dijkstra}, mi je bila v veliko pomoč knjiga \cite{okasaki1996}.
+Obstajajo primeri, ko podatkovna struktura, uporabljena v imperativnih jezikih, nima neposrednega ekvivalenta v funkcijskih jezikih.
+Pri implementaciji različnih podatkovnih struktur, kot je na primer vrsta s prednostjo, obravnavana v poglavju \ref{section:dijkstra},
+se je kot izjemno koristna izkazala knjiga \cite{okasaki1996}.
 
-V nadaljevanju dokumenta se bom najprej posvetil vprašanju, kako graf v funkcijskih jezikih sploh predstavimo, 
-nato pa se bom lotil algoritmov ter podatkovnih struktur na grafih.
+V nadaljevanju dokumenta se najprej posvetimo vprašanju, kako graf v funkcijskih jezikih sploh predstavimo, 
+nato pa se lotimo algoritmov ter podatkovnih struktur na grafih.
 
 \section{Predstavitev grafa v funkcijskih jezikih}
 
@@ -294,39 +271,34 @@ nato pa se bom lotil algoritmov ter podatkovnih struktur na grafih.
 Kot smo utemeljili v razdelku \ref{itemize:prednosti_funkcijskega_programiranja}, se grafa lotimo z nespremenljivimi
 podatkovnimi strukturami.
 
-Definiral sem tri module: \texttt{Node} ter \texttt{UnweightedGraph} ter \texttt{WeightedGraph}, ki predstavljajo
-vozlišče ter graf. V OCamlu modul predstavlja zbirko združenih podatkovnih tipov, funkcij ter drugih modulov v enoto.
-Vsak modul ima svojo signaturo, ki predstavlja javni del modula, ter implementacijo, ki predstavlja privatni del modula.
-Signatura modula je vmesnik, ki ga uporabnik vidi, implementacija pa je dejanska implementacija funkcij in tipov,
-deklariranih v signaturi. To omogoča skrivanje podrobnosti implementacije, ki jih uporabnik ne potrebuje. Abstraktni tipi, kot sta
-\texttt{t} in \texttt{elt} v signaturi modula \texttt{Node}, so tisti, katerih implementacijo skrijemo pred uporabnikom.
-Na primer, modul \texttt{Node} vključuje funkcije kot so \texttt{create}, \texttt{value} in \texttt{compare}, ter abstraktni
-podatkovni tip \texttt{t}, ki predstavlja vozlišče. Na podoben način sem definiral tudi modula \texttt{UnweightedGraph}
-ter \texttt{WeightedGraph}, ki predstavljata neutežen ter utežen graf.
-Celotna implementacija modulov je na voljo na \href{https://github.com/tjazerzen/parallelisation-of-graph-algorithms-in-functional-programming-languages/blob/master/playground/graph/graph.ml}{tem naslovu},
-tu pa predstavim glavno idejo zasnove modulov.
+Definirali smo tri module: \texttt{Node}, \texttt{UnweightedGraph} ter \texttt{WeightedGraph}, ki predstavljajo
+vozlišča, utežene in neutežene grafe. V OCamlu modul predstavlja zbirko združenih podatkovnih tipov, funkcij ter drugih modulov v enoto.
+Vsak modul je opredeljen z lastno signaturo, ki predstavlja vmesnik, dostopen uporabniku, medtem ko so podrobnosti
+implementacije funkcij in tipov skrite znotraj modula. 
+Primer tega je abstraktni podatkovni tip \texttt{t} v modulu \texttt{Node}, ki ostaja neviden uporabniku.
+Modul \texttt{Node} na primer vključuje funkcije, kot so \texttt{create}, \texttt{value} in \texttt{compare},
+skupaj z omenjenim abstraktnim tipom \texttt{t}, ki služi kot reprezentacija vozlišča.
+Podobno sta zasnovana tudi modula \texttt{UnweightedGraph} in \texttt{WeightedGraph}.
 
-\texttt{Node} je modul, ki predstavlja vozlišče grafa. 
-Vsako vozlišče ima svoj identifikator (\texttt{id}) ter celoštevilsko vrednost (\texttt{value}). Pri tem poskrbim, da uporabnik ne 
+Modul \texttt{Node} predstavlja vozlišče grafa. 
+Vsako vozlišče ima svoj identifikator (\texttt{id}) ter celoštevilsko vrednost (\texttt{value}). Pri tem poskrbimo, da uporabnik ne 
 operira direktno z identifikatorjem vozlišča, temveč preko funkcij, ki so na voljo v tem modulu.
 S tem izničimo možnost, da bi na primer uporabnik ustvaril dve vozlišči z istim ID-jem. 
-Kot na primer vidimo iz funkcijskega zapisa \texttt{val create : elt -> t}, je za ustvarjanje vozlišča potrebna
+Kot na primer vidimo iz funkcijskega zapisa \texttt{val create : int -> t}, je za ustvarjanje vozlišča potrebna
 zgolj vrednost vozlišča, s katero bomo to vozlišče ustvarili, njegov identifikator pa se bo samodejno povečal.
 Podobna logika velja za ostale metode znotraj vseh modulov: Metode sprejmejo ključne argumente, ki jih potrebujejo
 za svoje delovanje, vrne pa vrednost abstraktnega tipa v danemu modulu.
 
 \begin{lstlisting}
 module Node : sig
-  type elt = int
   type t
   val compare_ids : t -> t -> int
-  val create : elt -> t
-  val value : t -> elt
+  val create : int -> t
+  val value : t -> int
   val compare : t -> t -> int
   val to_string : t -> string
 end = struct
-  type elt = int
-  type t = { id : int; value : elt }
+  type t = { id : int; value : int }
 
   let compare_ids node1 node2 = 
     Stdlib.compare node1.id node2.id
@@ -348,8 +320,7 @@ ter druge.
 \begin{lstlisting}
 
 module UnweightedGraph : sig
-  type elt = int (* node values *)
-  type t (* graphs *)
+  type t
 
   val empty : directed:bool -> t
   val add_node : Node.t -> t -> t
@@ -362,7 +333,6 @@ module UnweightedGraph : sig
   val neighbours : Node.t -> t -> Node.t list
   val create_new_graph : num_nodes:int -> num_edges:int -> directed:bool -> t
 end = struct
-  type elt = int
   type t = {
     edges : NodeSet.t NodeMap.t;
     directed : bool;
@@ -376,11 +346,9 @@ S podobnimi metodami definiramo tudi modul \texttt{WeightedGraph}, le da je njeg
 tip enak
 \begin{lstlisting}
 module WeightedGraph : sig
-  type elt = int
   type t
   ...
 end = struct
-  type elt = int
   type t = {
     edges : float NodeMap.t NodeMap.t; 
     directed : bool
