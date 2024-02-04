@@ -161,21 +161,20 @@ The analysis showed that parallel implementation can improve efficiency, especia
 Grafovski algoritmi so ključni pri modeliranju širokega nabora vsakdanjih problemov.
 Igrajo pomembno vlogo pri modeliranju družbenih ter računalniških omrežjih, z njimi pa se prav tako razrešujejo 
 problemi na področjih računalniške komunikacije in podatkovne analitike. Splošno, z grafi  modeliramo kakršne 
-koli odnose med danimi entitetami, vse od računanja razdalj med mesti, pa do računanje vodnega pretoka 
+koli odnose med danimi entitetami, vse od računanja razdalj med mesti, pa do računanje vodnega pretoka
 od enega kraja do drugega.
 
-Z večanjem kompleknosti grafov naraščajo tudi zahteve za računsko moč pri njihovem obdelovanju.
-Načinov za reševanje tega problema je več, pogosto pa
-je eden izmed možnih načinov pospešitve programa paralelizacija, s čimer, kot bomo videli, bolje izkoristimo celotno
-računsko kapaciteto računalnika. Posledično je paralelizacija tovrstnih algoritmov v zadnjih letih postala tako
-zanimiva raziskovalna kot tudi aplikativna tema v računalništvu.
+Z večanjem kompleksnosti grafov naraščajo tudi zahteve za računsko moč pri njihovem obdelovanju.
+Načinov za reševanje tega problema je več, pogosto pa je eden izmed možnih načinov pospešitve programa paralelizacija,
+s čimer bolje izkoristimo celotno računsko kapaciteto računalnika. Posledično je paralelizacija tovrstnih algoritmov
+v zadnjih letih postala tako zanimiva raziskovalna kot tudi aplikativna tema v računalništvu.
 
 Vzporednost na nivoju procesorja je moč doseči na dva načina: 
-Tako, da je pomnilnik vsem računalniškim jedrom skupen, ali pa da je pomnilnik \textit{porazdeljen}. 
-V tej diplomski nalogi se bom osredotočal zgolj na sisteme s skupnim pomnilnikom ter porazdeljeno procesorsko močjo, 
+Tako, da je pomnilnik vsem računalniškim jedrom \textit{skupen}, ali pa da je pomnilnik \textit{porazdeljen}. 
+V tej diplomski nalogi se bomo posvetili zgolj sistemom s skupnim pomnilnikom ter porazdeljeno procesorsko močjo, 
 saj je tovrstne programe tipično manj zahtevno implementirati, kot pa tiste, ki delujejo na porazdeljenem pomnilniku.
 
-Vse več funkcijskih programskih jezikov, kot so na primer Scala, F\# ter Haskell ima implementirane knjižnice
+Vse več funkcijskih programskih jezikov, kot so na primer Scala, Haskell in OCaml ima implementirane knjižnice
 in ogrodja za paralelizacijo grafovskih algoritmov:
 \begin{itemize}
     \item knjižnica \textit{fgl} v Haskellu \cite{haskell_fgl} zagotavlja vzporedne algoritme za najkrajšo pot 
@@ -184,13 +183,13 @@ in ogrodja za paralelizacijo grafovskih algoritmov:
     \item \textit{Ocaml 500} v OCamlu \cite{ocaml_multicore_500} ponuja implementacijo paralelnega iskanja v širino ter paralelnega Dijkstrovega algoritma na redkih grafih.
 \end{itemize}
 
-Z izdajo različice 5.0.0 v letu 2022 je programski jezik OCaml pridobil podporo za paralelno računanje.
-V tej diplomski nalogi se bo raziskala implementacija paralelnih grafovskih algoritmov v OCamlu, s
+Z izdajo različice 5.0.0 je leta 2022 programski jezik OCaml pridobil podporo za paralelno računanje.
+V tej diplomski nalogi bomo raziskali implementacijo paralelnih grafovskih algoritmov v OCamlu, s
 poudarkom na uporabi knjižnice Domainslib. Implementirane bodo paralelne različice klasičnih algoritmov, kot so
 iskanje v širino (BFS), Dijkstrov algoritem in Floyd-Warshallov algoritem.
 
-Zaradi relativno nedavne uvedbe podpore za paralelizacijo v OCamlu, specifično v različici 5.0.0, je literature na to temo še
-vedno omejeno. Ta omejitev je spodbudila k uporabi OCamlove dokumentacije o paralelizaciji \cite{ocaml_paralelisation_documentation}
+Zaradi relativno nedavne uvedbe podpore za paralelizacijo v OCamlu, je literature na temo paralelnega programiranja v OCamlu
+omejeno. Ta omejitev je spodbudila k uporabi OCamlove dokumentacije o paralelizaciji \cite{ocaml_paralelisation_documentation}
 in raziskovanju metod in knjižnic, razvitih za druge funkcijske jezike. Konkretno, za razvoj struktur grafov je bila uporabljena knjižnica,
 razvita v Swiftu \cite{functional_swift_graph}, medtem ko so za implementacijo grafovskih algoritmov in oblikovanje knjižnice uporabljene
 tehnike iz Haskellove knjižnice fgl \cite{haskell_fgl}. Med obstoječimi viri v OCamlu je bila kot osrednji vir uporabljena knjižnica
