@@ -45,12 +45,7 @@ module MakeFibonacciPerformanceAnalysis (F : Fib) : sig
       calculating the [n]-th Fibonacci number for a range of domain numbers up to [max_domains] in a CSV file. *)
 
   val par_calculation_time_fib_number_to_csv :
-    num_domains:int ->
-    sequential_threshold_lower:int ->
-    sequential_threshold_upper:int ->
-    min_n:int ->
-    max_n:int ->
-    unit
+    num_domains:int -> min_n:int -> max_n:int -> unit
   (** [par_calculation_time_fib_number_to_csv ~num_domains ~sequential_threshold_lower ~sequential_threshold_upper ~min_n ~max_n]
       records the computation time of calculating the Fibonacci numbers from [min_n] to [max_n] for two different sequential
       computation thresholds specified by [sequential_threshold_lower] and [sequential_threshold_upper] in a CSV file. *)
@@ -89,29 +84,19 @@ end = struct
     par_calculation_time_num_domains_to_csv_aux 1 n;
     close_out out_channel
 
-  let par_calculation_time_fib_number_to_csv ~num_domains
-      ~sequential_threshold_lower ~sequential_threshold_upper ~min_n ~max_n =
+  let par_calculation_time_fib_number_to_csv ~num_domains ~min_n ~max_n =
     let out_channel = open_out "computation_time_analysis/fib_par_n.csv" in
     let rec par_calculation_time_fib_number_to_csv_aux n =
       if n > max_n then ()
       else
-        let parallel_calculation_time_upper_threshold =
-          par_fib_calculation_time ~num_domains
-            ~sequential_threshold:sequential_threshold_upper n
+        let par_time =
+          par_fib_calculation_time ~num_domains ~sequential_threshold:38 n
         in
-        let parallel_calculation_time_lower_threshold =
-          par_fib_calculation_time ~num_domains
-            ~sequential_threshold:sequential_threshold_lower n
-        in
-        let non_parallel_calculation_time = fib_calculation_time n in
-        Printf.fprintf out_channel "%d,%.3f,%.3f,%.3f\n" n
-          parallel_calculation_time_lower_threshold
-          parallel_calculation_time_upper_threshold
-          non_parallel_calculation_time;
+        let seq_time = fib_calculation_time n in
+        Printf.fprintf out_channel "%d,%.3f,%.3f\n" n par_time seq_time;
         par_calculation_time_fib_number_to_csv_aux (n + 1)
     in
-    output_string out_channel
-      "fib_number,parallel_time_lower_threshold,parallel_time_upper_threshold,non_parallel_time\n";
+    output_string out_channel "fib_number,par_time,seq_time\n";
     par_calculation_time_fib_number_to_csv_aux min_n;
     close_out out_channel
 end
