@@ -264,6 +264,149 @@ se je kot zelo koristna izkazala knjiga \cite{okasaki1996}.
 V nadaljevanju dokumenta se najprej posvetimo vprašanju, kako graf v funkcijskih jezikih sploh predstavimo, 
 nato pa se lotimo algoritmov ter podatkovnih struktur na grafih.
 
+
+\section{Paralelizacija s knjižnjico Domainslib}
+
+
+\subsection{Primer: Paralelno računanje Fibonaccijevih števil}
+
+Čeprav ne gre za grafovski algoritem, je vseeno poučno, da najprej predstavimo osnovne koncepte
+paralelizacije na kar se da preprostem primeru. Paralelizirali bomo računanje Fibonaccijevih števil.
+(na način, ki terja eksponentno časovno zahtevnost, kot je razvidno iz slike \ref{fig:fib-graph}).
+Osnovna ideja algoritma je bila povzeta po \cite{parallel_fib_computation} in \cite{multicore_ocaml_article},
+nato pa je bila implementacija še prilagojena za potrebe te diplomske naloge. 
+
+\subsubsection{Sekvenčno računanje Fibonaccijevih števil}
+
+Preprosto funkcijo za računanje Fibonaccijevega števila, lahko zapišemo na sledeč način:
+
+\begin{lstlisting}
+  let rec fib n =
+    if n < 2 then 1
+    else fib (n-1) + fib (n-2)
+\end{lstlisting}
+
+\begin{figure}[htb]
+  \centering
+  \begin{tikzpicture}[node distance=2cm]
+
+    % level 0
+    \node (n0) at (0,0) {$fib(n)$};
+
+    % level 1
+    \node (n1) at (-2,-2) {$fib(n-1)$};
+    \node (n2) at (2,-2) {$fib(n-2)$};
+
+    % level 2
+    \node (n3) at (-4,-4) {$fib(n-2)$};
+    \node (n4) at (-1.5,-4) {$fib(n-3)$};
+    \node (n5) at (1.5,-4) {$fib(n-3)$};
+    \node (n6) at (4,-4) {$fib(n-4)$};
+
+    % level 3
+    \node (n7) at (-5.5,-6) {$fib(n-3)$};
+    \node (n8) at (-3.5,-6) {$fib(n-4)$};
+    \node (n9) at (-1.5,-6) {$fib(n-4)$};
+    \node (n10) at (0,-6) {...};
+
+    \draw [->] (n0) -- (n1);
+    \draw [->] (n0) -- (n2);
+    \draw [->] (n1) -- (n3);
+    \draw [->] (n1) -- (n4);
+    \draw [->] (n2) -- (n5);
+    \draw [->] (n2) -- (n6);
+    \draw [->] (n3) -- (n7);
+    \draw [->] (n3) -- (n8);
+    \draw [->] (n4) -- (n9);
+    \draw [->] (n4) -- (n10);
+
+  \end{tikzpicture}
+  \caption{Ker na vsakem koraku rekurzivno kličemo problema velikosti $n-1$ in $n-2$, se naša rekurzija razveja
+  kot skoraj polno dvojiško drevo. Zato je časovna zahtevnost našega algoritma eksponentna (natančna zgornja meja je 
+  $O((\frac{1 + \sqrt{5}}{2})^n)$).}
+  \label{fig:fib-graph}
+\end{figure}
+
+
+\subsubsection{Paralelno računanje Fibonaccijevih števil}
+
+Raziskava paralelizacije funkcije za izračun Fibonaccijevih števil razkriva, da je možno paralelno računanje izrazov
+$fib(n-1)$ in $fib(n-2)$, kar se nadaljuje do baze rekurzije. Ta pristop, ilustriran na sliki \ref{fig:fib-graph}, pa
+pokaže, da takšna paralelizacija vodi v hitro rast števila paralelnih nalog, saj zgornja meja za število paralelnih
+procesov doseže $O((\frac{1 + \sqrt{5}}{2})^n)$.
+
+V okviru optimizacije je bilo razvito naslednje načelo: paralelizacija naj se uporabi za dele kode z največjimi
+računskimi zahtevami, medtem ko se manj zahtevni segmenti izvajajo sekvenčno. Prag, pri katerem se preide na paralelno
+izračunavanje, je bil postavljen pri Fibonaccijevih številih večjih od $38$, medtem ko se manjša števila računajo sekvenčno.
+
+\begin{lstlisting}
+module T = Domainslib.Task
+
+let rec fib n = 
+  if n < 2 then 1 else fib (n - 1) + fib (n - 2)
+
+let rec fib_par pool n =
+  if n <= 38 then fib n
+  else
+    let a = T.async pool (fun _ -> fib_par pool (n - 1)) in
+    let b = T.async pool (fun _ -> fib_par pool (n - 2)) in
+    T.await pool a + T.await pool b
+\end{lstlisting}
+
+V okviru te diplomske naloge nam bo paralelizacijo olajšala knjižnica Domainslib, ki omogoča paralelno obdelavo.
+Ključne točke njene uporabe v zgornjem primeru so:
+\begin{itemize}
+  \item Uporaba \texttt{module T = Domainslib.Task} za okrajšavo Domainslib.Task, kar poenostavi kodiranje.
+  \item Funkcija \texttt{fib\_par} sprejme bazen nalog \texttt{pool}, ki je odgovoren za inicializacijo množice domen,
+        namenjenih paralelnemu izvajanju. \emph{Domene} (ang. domains) so niti, ki nam zagotavljajo sočasnost v OCaml-u.
+        Nov bazen nalog ustvarimo z ukazom ~\texttt{T.setup\_pool}, razderemo pa ga z ~\texttt{T.teardown\_pool}.
+  \item V primeru paralelne izvedbe ustvarimo dve asinhroni nalogi za izračun $fib(n-1)$ in $fib(n-2)$.
+        Dodatno je izračune treba počakati z ~\texttt{T.await}, preden se njuni rezultati seštejejo.
+\end{itemize}
+
+\subsubsection{Analiza časa računanja Fibonaccijevih števil}
+
+Pred analizo časa izračuna Fibonaccijevih števil je pomembno omeniti, da so bili vsi izračuni opravljeni na
+osemjedrnem računalniku. Ker ena domena lahko teče zgolj na enem procesorskem jedru, je maksimalno število
+domen, ki jih je smiselno uporabiti, enako številu procesorskih jeder.
+
+Najprej je bila analizirana dinamika časa izračuna Fibonaccijevih števil v odvisnosti od števila domen. 
+Rezultati, prikazani na sliki \ref{fig:fib_par_v_odvisnosti_od_domen}, kažejo, da večanje števila domen zmanjša čas
+izračuna. Ugotovili smo, da je optimalno število domen enako 8.
+
+\begin{figure}[h!]
+  \centering
+  \caption{Čas izračuna 43. Fibonaccijevega števila v odvisnosti od števila domen}
+  \includegraphics[width=13cm]{slike/fib_par_v_odvisnosti_od_domen.jpg}
+  \label{fig:fib_par_v_odvisnosti_od_domen}
+\end{figure}
+
+Nadaljnja analiza je bila usmerjena na primerjavo časov izračuna med paralelnim in neparalelnim izvajanjem programa. 
+Empirično je bilo ugotovljeno, da neparalelni izračun začne zaostajati pri Fibonaccijevih številih večjih od 38. 
+V nasprotju s tem se pri paralelnem izvajanju čas izračuna povečuje manj intenzivno, kot je razvidno iz Slike 
+\ref{fig:fib_par_v_odvisnosti_od_n}. Ta razlika potrjuje učinkovitost paralelizacije pri obdelavi večjih nalog.
+
+\begin{figure}[h!]
+  \centering
+  \caption{Čas izračuna Fibonaccijevih števil v odvisnosti od zahtevanega Fibonaccijevega števila: Paralelno in neparalelno}
+  \includegraphics[width=15cm]{slike/fib_par_v_odvisnosti_od_n.jpg}
+  \label{fig:fib_par_v_odvisnosti_od_n}
+\end{figure}
+
+Zanimivo je tudi opaziti, kako se čas izračuna spreminja pri različnih pragih sekvenčnosti. 
+V obravnavanem primeru sta bila uporabljena dva različna praga sekvenčnosti (35 in 38), kar je omogočilo dodatne
+vpoglede v učinkovitost in prilagodljivost vzporednega pristopa.
+
+
+
+
+
+
+
+
+
+
+
 \section{Predstavitev grafa v funkcijskih jezikih}
 
 Če želimo implementirati kakršen koli grafovski algoritem, je prvi korak, da graf sploh predstavimo v našem programu.
@@ -397,135 +540,6 @@ Na splošno knjižnica Domainslib ponastavlja postopek pisanja vzporednih in so�
 Zagotavlja nam visokonivojski (ang. high-level) vmesnik za upravljanje z nalogami, usklajevanje sinhronizacije in
 izkoriščanje vzporednosti, kar olajša izkoriščanje celotnega potenciala večjedrnih procesorjev ter doseganje boljše
 zmogljivosti.
-
-\subsection{Uvodni primer: Računanje Fibonaccijevih števil}
-
-Čeprav ne gre za grafovski algoritem, je vseeno poučno, da najprej predstavimo osnovne koncepte
-paralelizacije na kar se da preprostem primeru. Izbral sem si primer paralelnega računanja Fibonaccijevih števil
-(na način, ki terja eksponentno časovno zahtevnost, kot je razvidno iz slike \ref{fig:fib-graph}).
-Osnovna ideja algoritma je bila povzeta po \cite{parallel_fib_computation} in \cite{multicore_ocaml_article},
-nato pa je bila implementacija še prilagojena za potrebe te diplomske naloge. 
-
-Preprosto funkcijo za računanje Fibonaccijevega števila, lahko zapišemo na sledeč način:
-
-\subsubsection{Sekvenčno računanje Fibonaccijevih števil}
-
-\begin{lstlisting}
-  let rec fib n =
-    if n < 2 then 1
-    else fib (n-1) + fib (n-2)
-\end{lstlisting}
-
-\begin{figure}[htb]
-  \centering
-  \begin{tikzpicture}[node distance=2cm]
-
-    % level 0
-    \node (n0) at (0,0) {$n$};
-
-    % level 1
-    \node (n1) at (-2,-2) {$n-1$};
-    \node (n2) at (2,-2) {$n-2$};
-
-    % level 2
-    \node (n3) at (-4,-4) {$n-2$};
-    \node (n4) at (-1.5,-4) {$n-3$};
-    \node (n5) at (1.5,-4) {$n-3$};
-    \node (n6) at (4,-4) {$n-4$};
-
-    % level 3
-    \node (n7) at (-5.5,-6) {$n-3$};
-    \node (n8) at (-3,-6) {$n-4$};
-    \node (n9) at (-1,-6) {$n-4$};
-    \node (n10) at (0,-6) {...};
-
-    \draw [->] (n0) -- (n1);
-    \draw [->] (n0) -- (n2);
-    \draw [->] (n1) -- (n3);
-    \draw [->] (n1) -- (n4);
-    \draw [->] (n2) -- (n5);
-    \draw [->] (n2) -- (n6);
-    \draw [->] (n3) -- (n7);
-    \draw [->] (n3) -- (n8);
-    \draw [->] (n4) -- (n9);
-    \draw [->] (n4) -- (n10);
-
-  \end{tikzpicture}
-  \caption{Ker na vsakem koraku rekurzivno kličemo problema velikosti $n-1$ in $n-2$, se naša rekurzija razveja
-  kot skoraj polno dvojiško drevo. Zato je časovna zahtevnost našega algoritma eksponentna (natančna zgornja meja je 
-  $O((\frac{1 + \sqrt{5}}{2})^n)$).}
-  \label{fig:fib-graph}
-\end{figure}
-
-
-\subsubsection{Paralelno računanje Fibonaccijevih števil}
-
-Raziskava paralelizacije funkcije za izračun Fibonaccijevih števil razkriva, da je možno paralelno računanje izrazov
-$fib(n-1)$ in $fib(n-2)$, kar se nadaljuje do baze rekurzije. Ta pristop, ilustriran na sliki \ref{fig:fib-graph}, pa
-pokaže, da takšna paralelizacija vodi v hitro rast števila paralelnih nalog, saj zgornja meja za število paralelnih
-procesov doseže $O((\frac{1 + \sqrt{5}}{2})^n)$.
-
-V okviru optimizacije je bilo razvito naslednje načelo: paralelizacija naj se uporabi za dele kode z največjimi
-računskimi zahtevami, medtem ko se manj zahtevni segmenti izvajajo sekvenčno. Prag, pri katerem se preide na paralelno
-izračunavanje, je bil postavljen pri Fibonaccijevih številih večjih od $38$, medtem ko se manjša števila računajo sekvenčno.
-
-\begin{lstlisting}
-module T = Domainslib.Task
-
-let rec fib n = 
-  if n < 2 then 1 else fib (n - 1) + fib (n - 2)
-
-let rec fib_par pool n =
-  if n <= 38 then fib n
-  else
-    let a = T.async pool (fun _ -> fib_par pool (n - 1)) in
-    let b = T.async pool (fun _ -> fib_par pool (n - 2)) in
-    T.await pool a + T.await pool b
-\end{lstlisting}
-
-Kot je že bilo opisano, knjižnica Domainslib omogoča paralelno obdelavo. Ključne točke njene uporabe v tem kontekstu so:
-\begin{itemize}
-  \item Uporaba \texttt{module T = Domainslib.Task} za okrajšavo Domainslib.Task, kar poenostavi kodiranje.
-  \item Funkcija \texttt{fib\_par} sprejme \texttt{pool}, ki je odgovoren za inicializacijo množice domen,
-        namenjenih paralelnemu izvajanju. 
-  \item Če je število manjše ali enako 38, funkcija izračuna Fibonaccijevo število na klasičen način. 
-        Za večja števila pa se ustvarita dve asinhroni nalogi za $n-1$ in $n-2$, ki se izvajata vzporedno.
-\end{itemize}
-
-\subsubsection{Analiza časa računanja Fibonaccijevih števil}
-
-Pred analizo časa izračuna Fibonaccijevih števil je pomembno omeniti, da so bili vsi izračuni opravljeni na
-osemjedrnem MacBooku M2 Pro. Ta podatek zagotavlja kontekst rezultatom, saj se lahko čas izračuna razlikuje
-glede na zmogljivosti in specifikacije uporabljenega računalnika. Tako je treba pri interpretaciji rezultatov
-upoštevati, da se lahko izračuni na drugih sistemih obnašajo drugače.
-
-Najprej je bila analizirana dinamika časa izračuna Fibonaccijevih števil v odvisnosti od števila domen. 
-Rezultati, prikazani na sliki \ref{fig:fib_par_v_odvisnosti_od_domen}, kažejo, da večanje števila domen zmanjša čas
-izračuna. Ker na enem procesorskem jedru teče zgolj ena domena, je maksimalno število domen, ki jih je smiselno uporabiti,
-enako številu procesorskih jeder. V našem primeru je torej maksimalno število domen enako 8.
-
-\begin{figure}[h!]
-  \centering
-  \caption{Čas izračuna 43. Fibonaccijevega števila v odvisnosti od števila domen}
-  \includegraphics[width=13cm]{slike/fib_par_v_odvisnosti_od_domen.jpg}
-  \label{fig:fib_par_v_odvisnosti_od_domen}
-\end{figure}
-
-Nadaljnja analiza je bila usmerjena na primerjavo časov izračuna med paralelnim in neparalelnim izvajanjem programa. 
-Empirično je bilo ugotovljeno, da neparalelni izračun začne zaostajati pri Fibonaccijevih številih večjih od 38. 
-V nasprotju s tem se pri paralelnem izvajanju čas izračuna povečuje manj intenzivno, kot je razvidno iz Slike 
-\ref{fig:fib_par_v_odvisnosti_od_n}. Ta razlika potrjuje učinkovitost paralelizacije pri obdelavi večjih nalog.
-
-\begin{figure}[h!]
-  \centering
-  \caption{Čas izračuna Fibonaccijevih števil v odvisnosti od zahtevanega Fibonaccijevega števila: Paralelno in neparalelno}
-  \includegraphics[width=15cm]{slike/fib_par_v_odvisnosti_od_n.jpg}
-  \label{fig:fib_par_v_odvisnosti_od_n}
-\end{figure}
-
-Zanimivo je tudi opaziti, kako se čas izračuna spreminja pri različnih pragih sekvenčnosti. 
-V obravnavanem primeru sta bila uporabljena dva različna praga sekvenčnosti (35 in 38), kar je omogočilo dodatne
-vpoglede v učinkovitost in prilagodljivost vzporednega pristopa.
 
 \subsection{Paralelno iskanje v širino (PBFS)}
 
