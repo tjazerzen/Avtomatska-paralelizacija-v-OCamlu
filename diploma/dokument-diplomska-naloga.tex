@@ -260,14 +260,14 @@ algoritmov, kjer se moramo npr. sprehoditi po sosedih trenutnega vozlišča, pog
 
 Obstajajo primeri, ko podatkovna struktura, uporabljena v imperativnih jezikih, nima neposrednega ekvivalenta v funkcijskih jezikih.
 Pri implementaciji različnih podatkovnih struktur, kot je na primer vrsta s prednostjo, obravnavana v poglavju \ref{section:dijkstra},
-se je kot izjemno koristna izkazala knjiga \cite{okasaki1996}.
+se je kot zelo koristna izkazala knjiga \cite{okasaki1996}.
 
 V nadaljevanju dokumenta se najprej posvetimo vprašanju, kako graf v funkcijskih jezikih sploh predstavimo, 
 nato pa se lotimo algoritmov ter podatkovnih struktur na grafih.
 
 \section{Predstavitev grafa v funkcijskih jezikih}
 
-Če hočemo implementirati kakršen koli grafovski algoritem, je prvi korak, da graf sploh predstavimo v našem programu.
+Če želimo implementirati kakršen koli grafovski algoritem, je prvi korak, da graf sploh predstavimo v našem programu.
 Kot smo utemeljili v razdelku \ref{itemize:prednosti_funkcijskega_programiranja}, se grafa lotimo z nespremenljivimi
 podatkovnimi strukturami.
 
@@ -310,10 +310,10 @@ module NodeMap = Map.Make (Node)
 
 \end{lstlisting}
 
-\texttt{UnweightedGraph} je modul, ki predstavlja neutežen graf. 
-Tu sem uporabil OCamlov modul Map (\url{https://ocaml.org/docs/map}) s vozlišči kot ključi ter množicami sosednjih vozlišč
+Modul \texttt{UnweightedGraph} predstavlja neutežen graf.
+Tu smo uporabili OCamlov modul Map (\url{https://ocaml.org/docs/map}) z vozlišči kot ključi ter množicami sosednjih vozlišč
 kot vrednostmi. Tako lahko na primer dostopamo do sosedov vozlišča $v$ z uporabo funkcije \texttt{NodeMap.find v graph.edges}.
-Poleg tega sem dodal metode, ki bi si jih za graf tipično želeli: Dodajanje ter odvzem
+Poleg tega smo dodali metode, ki bi si jih za graf tipično želeli: Dodajanje ter odvzem
 vozlišč in povezav, pridobivanje seznama vseh vozlišč ter povezav, pridobivanje seznama sosedov danega vozlišča
 ter druge.
 
@@ -331,7 +331,6 @@ module UnweightedGraph : sig
   val edges : t -> (Node.t * Node.t) list
   val to_string : t -> string
   val neighbours : Node.t -> t -> Node.t list
-  val create_new_graph : num_nodes:int -> num_edges:int -> directed:bool -> t
 end = struct
   type t = {
     edges : NodeSet.t NodeMap.t;
@@ -341,9 +340,7 @@ end = struct
 end
 
 \end{lstlisting}
-
-S podobnimi metodami definiramo tudi modul \texttt{WeightedGraph}, le da je njegov zapisni
-tip enak
+S podobnimi metodami definiramo tudi modul \texttt{WeightedGraph}, le da je njegov zapisni tip enak
 \begin{lstlisting}
 module WeightedGraph : sig
   type t
@@ -359,7 +356,7 @@ end
 
 Modul \texttt{WeightedGraph} se torej od modula \texttt{UnweightedGraph} razlikuje zgolj v tem, da je preslikava, ki
 predstavlja povezave, sedaj preslikava, ki vsakemu vozlišču priredi preslikavo, ki njegovim sosedom priredi težo povezave.
-Tako kot pri neuteženem grafu, tudi tukaj poskrbim za vse metode, ki bi si jih tipično za graf želeli.
+Tako kot pri neuteženem grafu, tudi tukaj poskrbimo za vse metode, ki bi si jih za graf tipično želeli.
 
 \section{Paralelizacija}
 
@@ -370,7 +367,7 @@ ki nam omogoča paralelizacijo na nivoju procesorja. Ponuja nam različne abstra
 in sočasnih programov. Zgrajena je na t. i. domenah (ang. domains). Gre za lahke niti, vgrajene v OCaml.
 S prihodom OCamlove različice 5.0.0 je \texttt{Domainslib} postal tudi del standardne knjižnice OCaml.
 
-Tukaj povzamem glavne koncepte Domainsliba, ki jih bom uporabil v svoji diplomski nalogi:
+Tukaj povzamemo glavne koncepte Domainsliba, ki bodo uporabljene v tej diplomski nalogi:
 
 \begin{itemize} \label{itemize:domainslib}
   \item \emph{Domene} (ang. domains) so niti, ki nam zagotavljajo sočasnost v OCaml-u. 
@@ -398,23 +395,19 @@ Tukaj povzamem glavne koncepte Domainsliba, ki jih bom uporabil v svoji diplomsk
 \end{itemize}
 
 Na splošno knjižnica Domainslib ponastavlja postopek pisanja vzporednih in sočasnih programov v OCamlu. 
-Zagotavlja nam visokonivojski (ang. high-level) vmesnik za upravljanje nalog, usklajevanje sinhronizacije in
+Zagotavlja nam visokonivojski (ang. high-level) vmesnik za upravljanje z nalogami, usklajevanje sinhronizacije in
 izkoriščanje vzporednosti, kar olajša izkoriščanje celotnega potenciala večjedrnih procesorjev ter doseganje boljše
 zmogljivosti.
-
-Za več informacij in uradno implementacijo knjižnice Domainslib lahko obiščete uraden repozitorij
-knjižnice Domainslib na GitHub-u na spletnem naslovu \url{https://github.com/ocaml-multicore/domainslib}.
-
 
 \subsection{Uvodni primer: Računanje Fibonaccijevih števil}
 
 Čeprav ne gre za grafovski algoritem, je vseeno poučno, da najprej predstavimo osnovne koncepte
 paralelizacije na kar se da preprostem primeru. Izbral sem si primer paralelnega računanja Fibonaccijevih števil
-(na način, ki terja časovno zahtevnost $O(2^n)$, kot je razvidno iz slike \ref{fig:fib-graph}).
+(na način, ki terja eksponentno časovno zahtevnost, kot je razvidno iz slike \ref{fig:fib-graph}).
 Osnovna ideja algoritma je bila povzeta po \cite{parallel_fib_computation} in \cite{multicore_ocaml_article},
-nato pa je bila še prilagojena za potrebe te diplomske naloge. 
+nato pa je bila implementacija še prilagojena za potrebe te diplomske naloge. 
 
-Preprosto funkcijo za računanje Fibonaccijevega števila, lahko zapišemo na zelo preprost način:
+Preprosto funkcijo za računanje Fibonaccijevega števila, lahko zapišemo na sledeč način:
 
 \subsubsection{Sekvenčno računanje Fibonaccijevih števil}
 
@@ -539,17 +532,17 @@ vpoglede v učinkovitost in prilagodljivost vzporednega pristopa.
 
 Breadth-first search (BFS) je algoritem, ki rešuje širok nabor problemov, vključno z raziskovanjem struktur
 grafov, iskanjem najkrajših poti v neuteženih grafih, preverjanjem povezanosti med vozlišči ter analizo dvodelnosti grafov.
-Dodatno BFS služi kot osnova za naprednejše grafovske algoritme, kot je na primer Dijkstrin algoritem.
+Dodatno BFS služi kot osnova za naprednejše grafovske algoritme, kot je na primer Dijkstrov algoritem.
 
 Sekvenčna izvedba BFS algoritma temelji na metodologiji upravljanja vrste vozlišč, ki čakajo na raziskavo.
 Algoritem izbere in raziskuje vozlišče na čelu vrste, nato pa v vrsto postopoma dodaja njegove neobiskane sosede.
 Ta proces se nadaljuje, dokler ni več vozlišč za raziskovanje, kar signalizira zaključek algoritma.
 Paralelna različica BFS algoritma predstavlja večji izziv, saj zahteva naprednejšo koordinacijo in upravljanje več
-niti izvedbe. Navdih za implementacijo paralelnega BFS sem črpal iz \cite{spaa2010}.
+niti izvedbe. Navdih za implementacijo paralelnega BFS smo črpali iz \cite{spaa2010}.
 
 \subsubsection{Sekvenčni BFS}
 
-V kontekstu funkcijskih programskih jezikov, kjer je rekurzija temeljni gradnik, sem k implementaciji BFS algoritma
+V kontekstu funkcijskih programskih jezikov, kjer je rekurzija temeljni gradnik, smo k implementaciji BFS algoritma
 pristopil rekurzivno. 
 
 Algoritem izvaja iskanje po nivojih, pri čemer sistematično dodaja vsa dosegljiva vozlišča iz trenutnega nivoja v naslednji nivo.
@@ -661,14 +654,9 @@ end
 Paralelna izvedba BFS algoritma ključno vključuje uporabo metode \textit{T.run} iz knjižnice Domainslib. Ta metoda je
 nujna za obvladovanje notranjih algebraičnih učinkov, ki nastanejo zaradi sinhronizacije nalog med različnimi procesorskimi nitmi.
 Ko v paralelni izvedbi uporabimo funkcijo \textit{parallel\_for}, \textit{T.run} zagotavlja, da so vse vzporedno
-izvajane naloge pravilno usklajene. Tako omogoča učinkovito delovanje paralelnega BFS algoritma, saj skrbi za
-brezkonfliktno koordinacijo vzporednih procesov.
-
+izvajane naloge pravilno usklajene. Tako poskrbimo za varno izvajanje paralelnih nalog.
 Notranji algebraični učinki pri paralelnem izvajanju se nanašajo na procese, ki so potrebni za usklajevanje dostopa do
 skupnih podatkovnih struktur in za koordinacijo nadaljevanja obdelave po zaključku posameznih vzporednih nalog.
-\textit{T.run} deluje kot nadzorni okvir, ki zagotavlja sinhronizacijo in koordinacijo teh procesov.
-To pomeni, da \textit{T.run} omogoča neodvisno izvajanje posameznih niti, hkrati pa skrbi za ustrezno upravljanje
-skupnega stanja in usklajevanje dela med nitmi.
 
 Za praktičen primer uporabe paralelnega BFS in merjenje časa izvajanja lahko uporabimo naslednji pristop, kot je prikazano v spodnjem izseku kode:
 
@@ -712,7 +700,7 @@ ne kažejo jasne korelacije med časom izračuna in številom uporabljenih domen
 Poleg tega je bila izvedena primerjava časov izračuna sekvenčne in paralelne izvedbe algoritma na grafih z različnimi velikostmi.
 Rezultati so prikazani na \ref{fig:bfs_calculation_time_by_graph_size} in kažejo, da čas izračuna tako za sekvenčni kot za paralelni
 pristop linearno narašča s številom vozlišč in povezav v grafu. Vendar pa med časom izračuna sekvenčnega in paralelnega algoritma
-niso bile opažene bistvene razlike. Pri analizi je bilo ohranjeno konstantno razmerje med številom povezav v grafu in vsemi
+ni bilo opaženih bistvenih razlik. Pri analizi je bilo ohranjeno konstantno razmerje med številom povezav v grafu in vsemi
 možnimi povezavami, imenovano faktor minimizacije. Podobni rezultati so bili opaženi tudi pri drugih faktorjih minimizacije.
 
 \begin{figure}[h!]
@@ -898,27 +886,22 @@ V Dijkstrovem algoritmu bistveno prispeva k učinkovitosti uporaba nespremenljiv
 hitrejše izbiranje naslednjega vozlišča za raziskovanje. To je še posebej pomembno v obsežnih grafih z velikim številom
 vozlišč, kjer lahko takšna optimizacija znatno zmanjša skupni čas izračuna. Ključna prednost nespremenljive vrste s
 prednostjo v paralelnem kontekstu je v tem, da odpravlja potrebo po sinhronizaciji med večimi procesorskimi nitmi,
-s čimer se izognemo težavam, kot je 'dirka podatkov'. To ne samo izboljša varnost in zanesljivost paralelnega izvajanja
+s čimer se izognemo težavam, kot je ``dirka podatkov''. To ne samo izboljša varnost in zanesljivost paralelnega izvajanja
 algoritma, temveč tudi ohranja visoko učinkovitost paralelne obdelave, kar je ključno za optimizacijo časa izračuna v
 kompleksnejših grafovskih strukturah.
 
 \subsubsection{Analiza časa izračuna Dijkstrovega algoritma}
 
 Tokrat je bil za analizo izbran minimizacijski faktor 0.3, kar pomeni, da je število povezav v grafu 30\% od števila vseh
-možnih povezav. V analizi sem najprej primerjal čas izračuna Dijkstrovega algoritma v odvisnosti od števila domen,
-nato pa sem še primerjal čas izračuna sekvenčne in paralelne izvedbe algoritma. Rezultati pri drugih minimizacijskih
+možnih povezav. V analizi smo najprej primerjali čas izračuna Dijkstrovega algoritma v odvisnosti od števila domen,
+nato pa še primerjal čas izračuna sekvenčne in paralelne izvedbe algoritma. Rezultati pri drugih minimizacijskih
 faktorjih so bili podobni.
 
-Analiza je razkrila, da optimalno število domen za izvajanje paralelnega algoritma ni nujno najvišje možno.
-Pri treh domenah se je pokazal najkrajši čas izračuna, kar nakazuje na prelomno točko, kjer dodatne domene prinašajo
-več komunikacijskih in usklajevalnih stroškov kot koristi.
-Podoben rezultat je bil opažen tudi pri drugih faktorjih minimizacije ter ob različnih poganjanjih.
+Analiza je razkrila, da optimalno število domen za izvajanje paralelnega algoritma ni nujno najvišje možno - najkrajši
+čas izračuna smo dobili pri treh domenah. Podoben rezultat je bil opažen tudi pri drugih minimizacijskih faktorjih.
 Ta pojav bi lahko razložili z domnevo, da pri večjem številu domen komunikacijski in usklajevalni stroški med domenami
 postanejo previsoki, kar lahko pripelje do zmanjšane učinkovitosti. Zato je mogoče, da je optimalno število domen za
-izvajanje algoritma manjše, kar se odraža v najkrajšem času izračuna pri treh domenah. Ta ugotovitev nakazuje na pomembnost
-uravnoteženja med paralelizacijo in stroški, ki nastanejo zaradi komunikacije in usklajevanja med procesorskimi nitmi.
-Dodatno lahko vidimo, da je čas paralelnega izračuna pri eni domeni malo večji kot čas sekvenčnega izračuna. To je posledica
-komunikacijskih in usklajevalnih stroškov, ki nastanejo pri paralelnem izračunu.
+izvajanje algoritma manjše, kar se odraža v najkrajšem času izračuna pri treh domenah. 
 Rezultati so prikazani na sliki \ref{fig:dijkstra_calculation_time_by_num_domains}.
 
 \begin{figure}[h!]
@@ -946,7 +929,7 @@ Naša implementacija je pokazala, da paralelizacija Dijkstrovega algoritma lahko
 in kompleksnih grafov. Ključnega pomena je najti ravnotežje med številom uporabljenih procesorskih domen in
 komunikacijskimi ter usklajevalnimi stroški, ki nastanejo pri paralelnem izvajanju. Optimalno število domen se spreminja
 glede na lastnosti grafa, kot so velikost in gostota povezav. Naša analiza podpira ugotovitve Crauserja in
-sodelavcev \cite{crauser1998parallelizing}, ki so prav tako uspeli implementirati paralelno verzijo Dijkstrovega algoritma.
+sodelavcev \cite{crauser1998parallelizing}, ki so prav tako uspeli implementirati učinkovito paralelno verzijo Dijkstrovega algoritma.
 Ta študija odpira nove možnosti za nadaljnje raziskovanje učinkovitosti paralelizacije v grafovskih algoritmih in
 poudarja potrebo po prilagodljivem pristopu za dosego optimalnih rezultatov.
 
@@ -966,8 +949,8 @@ Originalni Floyd-Warshallov algoritem je zasnovan na trikratno gnezdeni zanki \t
 Vsaka iteracija algoritma posodobi matriko razdalj za vsak par vozlišč, če se najde krajša pot preko predpisanega vmesnega vozlišča.
 
 Implementacija algoritma je preprosta. V \ref{lst:floyd_warshall_seq} je priložena implementacija sekvenčne verzije algoritma, skupaj s pomožno metodo
-\texttt{init\_matrix}, ki grafu priredi matriko razdalj. Metoda \texttt{floyd\_warshall\_seq} pa za vsak par vozlišč (i, j)
-posodobi razdaljo, če obstaja krajša pot prek vmesnega vozlišča k.
+\texttt{init\_matrix}, ki grafu priredi matriko razdalj. Metoda \texttt{floyd\_warshall\_seq} pa za vsak par vozlišč $(i, j)$
+posodobi razdaljo, če obstaja krajša pot prek vmesnega vozlišča $k$.
 
 \begin{lstlisting}[label=lst:floyd_warshall_seq]
 module FloydWarshallAlgorithms : FloydWarshall = struct
@@ -1008,7 +991,7 @@ end
 
 V kontekstu paralelizacije nekatere izmed teh zank lahko izvajamo vzporedno, kar lahko zmanjša čas izračuna.
 
-Zunanja zanka \texttt{for} ne omogoča paralelizacije, saj je posodabljanje najkrajših razdalj odvisno od rezultatov
+Zunanja zanka \texttt{for k} ne omogoča paralelizacije, saj je posodabljanje najkrajših razdalj odvisno od rezultatov
 prejšnjih iteracij. V vsaki iteraciji \texttt{k}, se vozlišče \texttt{k} uporablja kot vmesna točka za posodobitev
 razdalj med vsemi pari vozlišč. Zato je treba zunanjo zanko \texttt{for} izvajati zaporedno.
 Obratno pa se drugi dve zanki \texttt{for i} ter \texttt{for j} lahko izvajata vzporedno, saj je posodabljanje razdalj med pari vozlišč
@@ -1047,8 +1030,8 @@ dinamiko vpliva števila domen na čas izračuna paralelnega algoritma. Iz prido
 konsistentno prekaša sekvenčno.
 
 Pri analizi vpliva števila domen na čas izračuna paralelnega algoritma smo opazili zmanjšanje časa izračuna z dodajanjem domen do točke
-optimalnega števila, ki je bilo pri 6 domenah. To zmanjšanje časa je verjetno posledica bolj učinkovite porazdelitve izračunov med procesorska jedra,
-ki omogoča hitrejšo obdelavo posameznih delov matrike razdalj. Vendar pa po preseganju števila 6 domen opazimo ponovno povečanje časa izračuna.
+optimalnega števila, ki je bilo pri šestih domenah. To zmanjšanje časa je verjetno posledica bolj učinkovite porazdelitve izračunov med procesorska jedra,
+ki omogoča hitrejšo obdelavo posameznih delov matrike razdalj. Vendar pa po preseganju števila šestih domen opazimo ponovno povečanje časa izračuna.
 Ta pojav lahko pripišemo povečanim komunikacijskim in usklajevalnim stroškom, ki nastanejo pri upravljanju večjega števila vzporednih niti.
 Ti stroški postopoma zmanjšujejo koristi dodatnih domen, kar vodi v suboptimalno učinkovitost.
 Na grafu z 1000 vozlišči smo pognali paralelni algoritem z domenami od 1 do 8. Rezultati so prikazani na sliki \ref{fig:floyd_v_odvisnosti_od_stevila_domen}.
@@ -1078,9 +1061,10 @@ kot pri sekvenčni izvedbi.
 \subsubsection{Zaključek in Alternativni Pristopi za Floyd-Warshallov Algoritem}
 
 Čeprav se je v naši analizi paralelna implementacija Floyd-Warshallovega algoritma izkazala za učinkovitejšo od sekvenčne, obstajajo tudi
-alternativne metode, kot je 2D block mapping algoritem \cite{parallel_floyd_warshall}, ki obetajo nadaljnje optimizacije. Ta pristop, ki deli matriko na manjše bloke za
-vzporedno obdelavo, lahko potencialno zmanjša komunikacijske stroške in izboljša ravnovesje obremenitve med procesorskimi jedri. Takšne
-inovativne strategije odpirajo nove možnosti za izboljšanje paralelnih algoritmov v teoriji grafov, kar obeta zanimive smeri za prihodnje raziskave.
+alternativne metode, kot je 2D block mapping algoritem \cite{parallel_floyd_warshall}, ki obetajo nadaljnje optimizacije. Ta pristop, ki deli
+matriko na manjše bloke za vzporedno obdelavo, lahko potencialno zmanjša komunikacijske stroške in izboljša ravnovesje obremenitve med
+procesorskimi jedri. Takšne inovativne strategije odpirajo nove možnosti za izboljšanje paralelnih algoritmov v teoriji grafov,
+kar obeta zanimive smeri za prihodnje raziskave.
 
 \section{Zaključek}
 
