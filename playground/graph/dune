@@ -1,5 +1,6 @@
 (executable
- (name graph_examples)
- (libraries unix)
- (promote
-  (until-clean)))
+  (name dijkstra)
+  (libraries base stdio domainslib)
+  (modules dijkstra graph)
+  (flags :standard -w "-32")
+)

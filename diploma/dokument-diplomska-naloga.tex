@@ -652,22 +652,19 @@ zlasti v primeru posebnih vrst grafov, kjer bi bili paralelni algoritmi lahko hi
 
 \subsection{Paralelni Dijkstrov algoritem} \label{section:dijkstra}
 
-Dijkstrov algoritem, bistven za iskanje najkrajših poti v uteženih grafih, se v svoji paralelni implementaciji sooča s
-specifičnimi izzivi, ki presegajo tradicionalni sekvenčni pristop. Temeljna razlika v paralelni različici algoritma,
-kot je implementirana v tem delu, leži v paralelnem posodabljanju prioritete vrste z sosedi iz trenutnega vozlišča.
-Ta pristop izkorišča več procesorskih jeder za hkratno preverjanje in posodabljanje sosednjih vozlišč, kar omogoča
-potencialno skrajšanje časa izračuna pri obsežnih grafih. 
+Paralelna implementacija Dijkstrovega algoritma za iskanje najkrajših poti v uteženih grafih vključuje hkratno posodabljanje
+prioritetne vrste z vsemi neobiskanimi sosedi trenutnega vozlišča.
 
-V naslednjem poglavju bomo najprej raziskali funkcijsko implementacijo prioritetne vrste, ki je potrebna za izvajanje
+V naslednjem razdelku bomo najprej raziskali funkcijsko implementacijo prioritetne vrste, ki je potrebna za izvajanje
 paralelnega Dijkstrovega algoritma. Nato bomo predstavili sekvenčno in paralelno implementacijo Dijkstrovega algoritma. 
 Na koncu bomo predstavili analizo časovne učinkovitosti paralelnega Dijkstrovega algoritma.
 
 \subsubsection{Implementacija vrste s prednostjo}
 
 Vrsta s prednostjo igra osrednjo vlogo v Dijkstrovem algoritmu, saj omogoča učinkovit izbor naslednjega vozlišča za raziskovanje. 
-Pri tem je pomembno, da je zaradi skupnega pomnilnika vrsta s prednostjo nespremenljiva, saj je v obratnem primeru treba
-še skrbeti, da ne pride do konfliktov pri dostopu ter spreminjanju skupnega pomnilnika (ang. thread race). 
-Definirali smo modul PQ, kjer je vsak element v kopici je vozlišče s prioritetno vrednostjo ter levim in desnim poddrevesom
+Pri tem je pomembno, da je zaradi skupnega pomnilnika vrsta s prednostjo nespremenljiva, saj je sicer treba
+dodatno skrbeti, da ne pride do konfliktov pri dostopu ter spreminjanju skupnega pomnilnika (ang. thread race). 
+Definirali smo modul PQ, kjer vsak element v kopici predstavlja vozlišče s prioritetno vrednostjo ter levim in desnim poddrevesom
 (označeno s tipom \texttt{t} v \ref{lst:pq_sig}). Implementacija vrste s prednostjo je povzeta po \cite{okasaki1996}.
 
 \begin{lstlisting}[label=lst:pq_sig]
@@ -730,7 +727,7 @@ end
 V najslabšem primeru je časovna zahtevnost $O(n)$. To se bo namreč zgodilo natanko tedaj, ko bomo ob vsakem vstavljanju
 vstavili element z največjo prioriteto ter ga nam bo uspelo vstaviti pod list z največjo globino v drevesu (tedaj
 rečemo, da je drevo izrojeno). To pa se bo zgodilo redko, saj ob vsakem rekurzivnem klicu premešamo poddrevesa.
-Posledično bo verjetnost, da se bo zgodil najslabši primer, zelo majhna.
+Posledično se bo verjetnost, da se bo zgodil najslabši primer, manjšala eksponentno z globino drevesa \cite{okasaki1996}.
 
 \subsubsection{Implementacija paralelnega ter sekvenčnega Dijkstrovega algoritma}
 
@@ -747,18 +744,16 @@ kako se izvaja pregledovanje sosedov:
 \begin{itemize}
   \item \textbf{Sekvenčna implementacija: } V sekvenčni verziji se vsako posodabljanje razdalj izvaja zaporedno.
     Za vsako izvlečeno vozlišče algoritem preveri vse njegove sosede in posodobi njihove razdalje, če je to potrebno.
-    Ta pristop je preprost in učinkovit za manjše ali manj kompleksne grafe.
   \item \textbf{Paralelna implementacija: } Paralelna verzija pri trenutnem vozlišču deli pregledovanje sosedov med
     več procesorskih niti, kjer vsaka nit vzporedno posodablja razdalje sosednjih vozlišč. Za učinkovito vzporedno
-    izvajanje tudi tu uporabljam funkcijo \texttt{T.parallel\_for} iz knjižnice Domainslib.
+    izvajanje tudi tu uporabljamo funkcijo \texttt{T.parallel\_for} iz knjižnice Domainslib.
 \end{itemize}
 
-zaradi bolj natančnih rezultatov testiranja, je bila implementirana verzija Dijkstre, ki se od začetnega vozlišča
+zaradi natančnejših rezultatov testiranja, je bila implementirana verzija Dijkstrovega algoritma, ki se od začetnega vozlišča
 razširi do vseh vozlišč v grafu, saj bi pri Dijkstri, ki potuje od začetnega do končnega vozlišča lahko po naključju
-hitro prišli do konca grafa, kar bi lahko povzročilo napačne rezultate. Implementacija je priložena v \ref{lst:dijkstra}.
+hitro prišli do konca grafa, kar bi lahko povzročilo napačne rezultate.
 
-\begin{lstlisting}[label=lst:dijkstra]
-
+\begin{lstlisting}
 module DijkstraAlgorithms : Dijkstra = struct
   let loop (graph : WeightedGraph.t) (start_node : Node.t)
       ~(task_pool_opt : T.pool option) : unit =
@@ -869,10 +864,10 @@ poudarja potrebo po prilagodljivem pristopu za dosego optimalnih rezultatov.
 
 Floyd-Warshallov algoritem predstavlja klasičen pristop za iskanje najkrajših poti med vsemi pari vozlišč v grafu.
 Ta algoritem, ki je bil neodvisno razvit s strani Roberta Floyda in Stephena Warshalla, deluje na principu dinamičnega
-programiranja in je zmožen obravnavati grafe z negativnimi težami robov, ob predpostavki, da ne vsebujejo negativnih ciklov.
+programiranja in je zmožen obravnavati grafe z negativnimi utežmi povezav, ob predpostavki, da ne vsebujejo negativnih ciklov.
 Algoritem sistematično preučuje vse možne poti med vsakim parom vozlišč in posodablja najkrajšo znano pot, če najde krajšo alternativo.
 To doseže z iterativnim pregledovanjem vseh vozlišč in posodabljanjem razdalj med pari vozlišč glede na razdaljo prek vmesnega vozlišča.
-Čeprav je njegova časovna zahtevnost $O(n^3)$, kjer n predstavlja število vozlišč v grafu, je še vedno zelo cenjen v situacijah, kjer
+Čeprav je njegova časovna zahtevnost $O(n^3)$, kjer $n$ predstavlja število vozlišč v grafu, je še vedno zelo cenjen v situacijah, kjer
 je treba pogosto izračunati najkrajše poti med pari vozlišč, na primer v omrežnih analizah in pri načrtovanju logističnih poti.
 
 \subsubsection{Sekvenčna implementacija Floyd-Warshallovega algoritma}
