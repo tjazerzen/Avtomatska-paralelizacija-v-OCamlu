@@ -45,6 +45,9 @@ _opam/
 
 # Additionally, I've added .pdf file to the list of ignored files
 *.pdf
+# Except those that are on path ./diploma/slike/parallel_bfs/*.pdf
+!./diploma/slike/*.pdf
+
 
 # Exectuable files
 *.exe
