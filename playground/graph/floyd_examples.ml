@@ -16,7 +16,7 @@ let matrix_to_string (matrix : float array array) =
 let small_graph_vertex_count = 5
 let small_graph_edge_count = 7
 let opt_num_domains = 6
-let max_num_domains = 8
+let max_num_domains = 12
 let min_factor = 0.3
 
 let small_graph =
@@ -39,7 +39,7 @@ let () =
 
 let matrix_seq = FloydWarshallAlgorithms.floyd_warshall_seq small_graph
 let () = print_endline ("Sequential: \n" ^ matrix_to_string matrix_seq)
-let task_pool = T.setup_pool ~num_domains:max_num_domains ()
+let task_pool = T.setup_pool ~num_domains:opt_num_domains ()
 
 let matrix_par =
   Task.run task_pool (fun () ->

@@ -61,7 +61,7 @@ module MakeFloydWarshallTimeCalculations (F : FloydWarshall) :
     stop -. start
 
   let time_floyd_warshall_par (graph : WeightedGraph.t) (num_domains : int) =
-    let task_pool = T.setup_pool ~num_domains:(num_domains-1) () in
+    let task_pool = T.setup_pool ~num_domains:(num_domains - 1) () in
     let start = Unix.gettimeofday () in
     let _ = T.run task_pool (fun () -> F.floyd_warshall_par graph task_pool) in
     let calc_time = Unix.gettimeofday () -. start in

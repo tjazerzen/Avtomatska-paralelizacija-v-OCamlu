@@ -108,7 +108,7 @@ let () =
 
 let () =
   BfsPerformanceAnalysis.bfs_par_calculation_time_num_domains_to_csv large_graph
-    large_graph_start_node ~max_domains:8
+    large_graph_start_node ~max_domains:12
 
 (*Printing sequential BFS performance to csv...*)
 (* This code block defines a list of tuples representing combinations of

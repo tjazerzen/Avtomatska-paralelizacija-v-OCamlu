@@ -120,7 +120,7 @@ let () =
 
 let () =
   DijkstraPerformanceAnalysis.par_calc_time_num_domains_to_csv large_graph
-    large_graph_start_node ~max_domains:8
+    large_graph_start_node ~max_domains:12
 
 let () = Printf.printf "\n-----------------PAR COMB TO CSV-----------------\n"
 

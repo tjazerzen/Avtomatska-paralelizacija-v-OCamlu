@@ -1,19 +1,16 @@
 module Node : sig
-  type elt = int
   type t
 
-  val create : elt -> t
-  val value : t -> elt
+  val create : int -> t
+  val value : t -> int
 
   (* compare x y returns 0 if x is equal to y, a negative integer if x is less than y, and a positive integer if x is greater than y *)
-  val compare_ids : t -> t -> int
   val compare : t -> t -> int
   val to_string : t -> string
-  val id : t -> elt
+  val id : t -> int
   val reset_ids : unit -> unit
 end = struct
-  type elt = int
-  type t = { id : int; value : elt }
+  type t = { id : int; value : int }
 
   let counter = ref 0
 
@@ -23,8 +20,7 @@ end = struct
     { id; value }
 
   let value node = node.value
-  let compare_ids node1 node2 = Stdlib.compare node1.id node2.id
-  let compare node1 node2 = Stdlib.compare node1.value node2.value
+  let compare node1 node2 = Stdlib.compare node1.id node2.id
 
   let to_string node =
     Printf.sprintf "Node(id: %d, value: %d)" node.id node.value
@@ -37,7 +33,6 @@ module NodeSet = Set.Make (Node)
 module NodeMap = Map.Make (Node)
 
 module UnweightedGraph : sig
-  type elt = int (* node values *)
   type t (* graphs *)
 
   val empty : directed:bool -> t
@@ -52,8 +47,6 @@ module UnweightedGraph : sig
   val find_node_by_id : int -> t -> Node.t option
   val create_new_graph : num_nodes:int -> num_edges:int -> directed:bool -> t
 end = struct
-  type elt = int (*Each node's values will be integers*)
-
   type t = {
     edges : NodeSet.t NodeMap.t;
         (*edges are represented with a Map whoose keys are of type Node.t and values are NodeSet.t*)
@@ -151,7 +144,7 @@ end = struct
       else
         let node1 = List.nth nodes (Random.int num_nodes) in
         let node2 = List.nth nodes (Random.int num_nodes) in
-        if Node.compare_ids node1 node2 <> 0 then
+        if Node.compare node1 node2 <> 0 then
           let graph = add_edge node1 node2 graph in
           add_edges graph (num_edges - 1)
         else add_edges graph num_edges
@@ -161,7 +154,6 @@ end = struct
 end
 
 module WeightedGraph : sig
-  type elt = int
   type t
 
   val empty : directed:bool -> t
@@ -176,7 +168,6 @@ module WeightedGraph : sig
   val create_new_graph : num_nodes:int -> num_edges:int -> directed:bool -> t
   val edges : t -> float NodeMap.t NodeMap.t
 end = struct
-  type elt = int
   type t = { edges : float NodeMap.t NodeMap.t; directed : bool }
 
   let empty ~directed = { edges = NodeMap.empty; directed }
@@ -282,7 +273,7 @@ end = struct
             true
           with Not_found -> false
         in
-        if Node.compare_ids node1 node2 <> 0 && not edges_exist then
+        if Node.compare node1 node2 <> 0 && not edges_exist then
           let graph = add_edge node1 node2 (Random.float 10.0) graph in
           add_edges graph (num_edges - 1)
         else add_edges graph num_edges
