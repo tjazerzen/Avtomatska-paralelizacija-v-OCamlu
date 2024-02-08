@@ -613,11 +613,14 @@ izvajane naloge pravilno usklajene. Tako poskrbimo za varno izvajanje paralelnih
 \subsubsection{Analiza časa izračuna algoritma BFS}
 
 Analiza časovne učinkovitosti paralelnega algoritma za iskanje v širino v primerjavi s sekvenčnim pristopom je
-razkrila, da med obema pristopoma ni bistvenih razlik v hitrosti izračuna.
+razkrila, da je paralelizacija algoritma prinesla rahlo poslabšanje časa izračuna.
 Ta ugotovitev je bila dosežena z izvedbo testov na različno velikih grafih.
 
 Testiranje paralelnega BFS algoritma na grafih z različnimi velikostmi, vključno z grafom z 6000 vozlišči in 1000000 povezavami,
-je pokazalo, da spremembe v številu uporabljenih domen niso imele statistično značilnega vpliva na čas izračuna.
+je pokazalo, da spremembe v številu uporabljenih domen niso imele bistvenega vpliva na čas izračuna.
+Ob uporabi šestih domen je bilo opaženo minimalno skrajšanje časa izračuna, ki pa je v primerjavi z uporabo različnega števila domen predstavljalo
+le marginalno izboljšavo, izmerjeno v nekaj odstotkih. Poleg tega smo ugotovili, da je čas izračuna paralelnega algoritma v primerjavi s sekvenčnim
+pristopom nekoliko daljši. Vseeno pa je bila razlika v času izračuna med paralelnim in sekvenčnim pristopom zanemarljiva.
 To nakazuje, da paralelizacija algoritma v tem primeru ni prinesla opaznih izboljšav v učinkovitosti, kar velja za vse konfiguracije in oblike grafov.
 Rezultati testov za graf z 6000 vozlišči in 1000000 povezavami so prikazani na sliki \ref{fig:bfs_calculation_time_by_num_domains}.
 
@@ -825,7 +828,7 @@ nato pa še primerjali čas izračuna sekvenčne in paralelne izvedbe algoritma.
 faktorjih so bili podobni.
 
 Analiza je razkrila, da optimalno število domen za izvajanje paralelnega algoritma ni nujno najvišje možno - najkrajši
-čas izračuna smo dobili pri treh domenah. Podoben rezultat je bil opažen tudi pri drugih minimizacijskih faktorjih.
+čas izračuna smo dobili pri treh domenah. Podoben rezultat je bil opažen tudi pri drugih minimizacijskih faktorjih ter velikostih grafov.
 Ta pojav bi lahko razložili z domnevo, da pri večjem številu domen komunikacijski in usklajevalni stroški med domenami
 postanejo previsoki, kar lahko pripelje do zmanjšane učinkovitosti. Zato je mogoče, da je optimalno število domen za
 izvajanje algoritma manjše, kar se odraža v najkrajšem času izračuna pri treh domenah. 
@@ -959,11 +962,10 @@ dinamiko vpliva števila domen na čas izračuna paralelnega algoritma. Iz prido
 konsistentno prekaša sekvenčno.
 
 Pri analizi vpliva števila domen na čas izračuna paralelnega algoritma smo opazili zmanjšanje časa izračuna z dodajanjem domen do točke
-optimalnega števila, ki je bilo pri šestih domenah. To zmanjšanje časa je verjetno posledica bolj učinkovite porazdelitve izračunov med procesorska jedra,
-ki omogoča hitrejšo obdelavo posameznih delov matrike razdalj. Vendar pa po preseganju števila šestih domen opazimo ponovno povečanje časa izračuna.
+optimalnega števila, ki je bilo pri šestih domenah. Vendar pa po preseganju števila šestih domen opazimo ponovno povečanje časa izračuna.
 Ta pojav lahko pripišemo povečanim komunikacijskim in usklajevalnim stroškom, ki nastanejo pri upravljanju večjega števila vzporednih niti.
 Ti stroški postopoma zmanjšujejo koristi dodatnih domen, kar vodi v suboptimalno učinkovitost.
-Na grafu z 1000 vozlišči smo pognali paralelni algoritem z domenami od 1 do 8. Rezultati so prikazani na sliki \ref{fig:floyd_v_odvisnosti_od_stevila_domen}.
+Na grafu z 1000 vozlišči smo pognali paralelni algoritem z domenami od 1 do 12. Rezultati so prikazani na sliki \ref{fig:floyd_v_odvisnosti_od_stevila_domen}.
 
 
 \begin{figure}[h!]
