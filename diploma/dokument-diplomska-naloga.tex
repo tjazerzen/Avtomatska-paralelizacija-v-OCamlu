@@ -196,10 +196,13 @@ OCaml 500 \cite{ocaml_multicore_500}, ki je bila ključna za razumevanje in izva
 
 \subsection{Kaj lahko od paralelnega programa pričakujemo?}
 
-V praksi se od paralelnega programa običajno pričakuje višja hitrost izvajanja v primerjavi s sekvenčnim programom,
-kjer se naloge izvajajo zaporedno. Teoretično lahko pričakujemo, da program, ki deluje na $n$ procesorjih,
-doseže do $n$-krat večjo hitrost, vendar je ključno upoštevati dodatne računske obremenitve, ki nastanejo pri vzpostavitvi
-paralelnega izvajanja. Te obremenitve vključujejo usklajevanje procesov, upravljanje virov in koordinacijo med procesorskimi enotami.
+V praksi se od paralelnega programa običajno pričakuje krajši čas izvajanja v primerjavi s sekvenčnim programom.
+Teoretično lahko paralelni program, ki teče na $n$ procesorjih, doseže do $n$-krat večjo hitrost v primerjavi s sekvenčnim programom.
+Torej je $t_{par_{opt}} = \frac{t_{seq}}{n}$, kjer
+$t_{par_{opt}}$ predstavlja optimalni čas izvajanja paralelnega programa, $t_{seq}$ čas izvajanja sekvenčnega programa ter $n$ število procesorjev.
+Ta čas v tej diplomski nalogi imenujemo \textit{čas optimalne paralelizacije}.
+Ključno pa je upoštevati dodatne računske obremenitve, ki nastanejo pri vzpostavitvi paralelnega izvajanja.
+Te obremenitve vključujejo usklajevanje procesov, upravljanje virov in koordinacijo med procesorskimi enotami.
 Zaradi teh dejavnikov lahko paralelni program v nekaterih primerih, še posebej pri izvajanju na enem samem jedru,
 postane počasnejši od sekvenčnega ekvivalenta. Ta pojav poudarja pomembnost razmisleka o optimalnem razporejanju
 nalog in upravljanju virov, da se maksimizira izkoristek paralelizacije. Slika \ref{fig:cilj-casovne-zahtevnosti-paralelizacije} prikazuje
@@ -367,7 +370,7 @@ osemjedrnem računalniku.
 Najprej je bila analizirana dinamika časa izračuna Fibonaccijevih števil v odvisnosti od števila domen. 
 Rezultati, prikazani na sliki \ref{fig:fib_par_v_odvisnosti_od_domen}, kažejo, se sprva čas izračuna zmanjšuje
 s povečanjem števila domen, nato pa se zaustavi pri 9 domenah. Nadaljnje povečanje števila domen ne prinese
-dodatnega zmanjšanja časa izračuna. 
+dodatnega zmanjšanja časa izračuna. Tako za sekvenčni kot paralelni izračun je standardna napaka zanemarljiva (manjša od $1\%$ z $95\%$ gotovostjo).
 \begin{figure}[h!]
 \centering
 \caption{Čas izračuna 43. Fibonaccijevega števila v odvisnosti od števila domen}
@@ -378,7 +381,8 @@ dodatnega zmanjšanja časa izračuna.
 Nadaljnja analiza je bila usmerjena na primerjavo časov izračuna med paralelnim in neparalelnim izvajanjem programa. 
 Empirično je bilo ugotovljeno, da neparalelni izračun začne zaostajati pri Fibonaccijevih številih večjih od 38. 
 V nasprotju s tem se čas paralelnega izvajanja povečuje manj intenzivno, kot je razvidno iz slike
-\ref{fig:fib_par_v_odvisnosti_od_n}. Ta razlika potrjuje učinkovitost paralelizacije pri obdelavi večjih nalog.
+\ref{fig:fib_par_v_odvisnosti_od_n}. 
+Ta razlika potrjuje učinkovitost paralelizacije pri obdelavi večjih nalog. Tudi tu je napaka meritev zanemarljiva.
 
 \begin{figure}[h!]
   \centering
@@ -620,7 +624,8 @@ Testiranje paralelnega BFS algoritma na grafih z različnimi velikostmi, vključ
 je pokazalo, da spremembe v številu uporabljenih domen niso imele bistvenega vpliva na čas izračuna.
 Ob uporabi šestih domen je bilo opaženo minimalno skrajšanje časa izračuna, ki pa je v primerjavi z uporabo različnega števila domen predstavljalo
 le marginalno izboljšavo, izmerjeno v nekaj odstotkih. Poleg tega smo ugotovili, da je čas izračuna paralelnega algoritma v primerjavi s sekvenčnim
-pristopom nekoliko daljši. Vseeno pa je bila razlika v času izračuna med paralelnim in sekvenčnim pristopom zanemarljiva.
+pristopom v povprečju celo nekoliko daljši. 
+Kljub temu, ko upoštevamo interval zaupanja velikosti $6\%$, postane razlika v času izračuna med sekvenčnim in paralelnim pristopom zanemarljivo majhna.
 To nakazuje, da paralelizacija algoritma v tem primeru ni prinesla opaznih izboljšav v učinkovitosti, kar velja za vse konfiguracije in oblike grafov.
 Rezultati testov za graf z 6000 vozlišči in 1000000 povezavami so prikazani na sliki \ref{fig:bfs_calculation_time_by_num_domains}.
 
@@ -822,16 +827,16 @@ kompleksnejših grafovskih strukturah.
 
 \subsubsection{Analiza časa izračuna Dijkstrovega algoritma}
 
-Tokrat je bil za analizo izbran minimizacijski faktor 0.3, kar pomeni, da je število povezav v grafu 30\% od števila vseh
+Tokrat je bil za analizo izbran minimizacijski faktor $0.3$, kar pomeni, da je število povezav v grafu $30\%$ od števila vseh
 možnih povezav. V analizi smo najprej primerjali čas izračuna Dijkstrovega algoritma v odvisnosti od števila domen,
 nato pa še primerjali čas izračuna sekvenčne in paralelne izvedbe algoritma. Rezultati pri drugih minimizacijskih
 faktorjih so bili podobni.
 
-Analiza je razkrila, da optimalno število domen za izvajanje paralelnega algoritma ni nujno najvišje možno - najkrajši
-čas izračuna smo dobili pri treh domenah. Podoben rezultat je bil opažen tudi pri drugih minimizacijskih faktorjih ter velikostih grafov.
+Analiza je razkrila, da je paralelni Dijkstrov algoritem najhitrejši z uporabo treh domen. 
+Podoben rezultat je bil opažen tudi pri drugih minimizacijskih faktorjih ter velikostih grafov.
 Ta pojav bi lahko razložili z domnevo, da pri večjem številu domen komunikacijski in usklajevalni stroški med domenami
-postanejo previsoki, kar lahko pripelje do zmanjšane učinkovitosti. Zato je mogoče, da je optimalno število domen za
-izvajanje algoritma manjše, kar se odraža v najkrajšem času izračuna pri treh domenah. 
+postanejo previsoki, kar lahko pripelje do zmanjšane učinkovitosti.
+Ugotovili smo, da imata tako paralelna kot sekvenčna implementacija algoritma interval zaupanja velikosti $2\%$, neodvisno od števila domen ter velikosti grafa.
 Rezultati so prikazani na sliki \ref{fig:dijkstra_calculation_time_by_num_domains}.
 
 \begin{figure}[h!]
@@ -966,6 +971,7 @@ optimalnega števila, ki je bilo pri šestih domenah. Vendar pa po preseganju š
 Ta pojav lahko pripišemo povečanim komunikacijskim in usklajevalnim stroškom, ki nastanejo pri upravljanju večjega števila vzporednih niti.
 Ti stroški postopoma zmanjšujejo koristi dodatnih domen, kar vodi v suboptimalno učinkovitost.
 Na grafu z 1000 vozlišči smo pognali paralelni algoritem z domenami od 1 do 12. Rezultati so prikazani na sliki \ref{fig:floyd_v_odvisnosti_od_stevila_domen}.
+Napaka meritve je tu zanemarljiva (manjša od $1\%$ z $95\%$ gotovostjo).
 
 
 \begin{figure}[h!]
