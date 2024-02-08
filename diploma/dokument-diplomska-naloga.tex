@@ -208,7 +208,7 @@ naša pričakovanja od paralelnega programa.
 \begin{figure}[h!]
   \centering
   \caption{V našem programu si želimo, da bo čas izvedbe našega programa ujet med spodnjo in zgornjo mejo.}
-  \includegraphics[width=13cm]{slike/cilj-casovne-zahtevnosti-paralelizacije.png}
+  \includegraphics[width=13cm]{slike/cilj-casovne-zahtevnosti-paralelizacije.pdf}
   \label{fig:cilj-casovne-zahtevnosti-paralelizacije}
 \end{figure}
 
@@ -369,10 +369,10 @@ Rezultati, prikazani na sliki \ref{fig:fib_par_v_odvisnosti_od_domen}, kažejo, 
 s povečanjem števila domen, nato pa se zaustavi pri 9 domenah. Nadaljnje povečanje števila domen ne prinese
 dodatnega zmanjšanja časa izračuna. 
 \begin{figure}[h!]
-  \centering
-  \caption{Čas izračuna 43. Fibonaccijevega števila v odvisnosti od števila domen}
-  \includegraphics[width=13cm]{slike/fib_par_v_odvisnosti_od_domen.jpg}
-  \label{fig:fib_par_v_odvisnosti_od_domen}
+\centering
+\caption{Čas izračuna 43. Fibonaccijevega števila v odvisnosti od števila domen}
+\includegraphics[width=13cm]{slike/fib_par_v_odvisnosti_od_domen.pdf}
+\label{fig:fib_par_v_odvisnosti_od_domen}
 \end{figure}
 
 Nadaljnja analiza je bila usmerjena na primerjavo časov izračuna med paralelnim in neparalelnim izvajanjem programa. 
@@ -383,7 +383,7 @@ V nasprotju s tem se čas paralelnega izvajanja povečuje manj intenzivno, kot j
 \begin{figure}[h!]
   \centering
   \caption{Čas izračuna Fibonaccijevih števil v odvisnosti od zahtevanega Fibonaccijevega števila: Paralelno in neparalelno}
-  \includegraphics[width=15cm]{slike/fib_par_v_odvisnosti_od_n.jpg}
+  \includegraphics[width=15cm]{slike/fib_par_v_odvisnosti_od_n.pdf}
   \label{fig:fib_par_v_odvisnosti_od_n}
 \end{figure}
 
@@ -624,7 +624,7 @@ Rezultati testov za graf z 6000 vozlišči in 1000000 povezavami so prikazani na
 \begin{figure}[h!]
   \centering
   \caption{Čas izračuna paralelnega BFS algoritma v odvisnosti od števila domen}
-  \includegraphics[width=15cm]{slike/bfs_v_odvisnosti_od_stevila_domen.jpg}
+  \includegraphics[width=15cm]{slike/bfs_v_odvisnosti_od_stevila_domen.pdf}
   \label{fig:bfs_calculation_time_by_num_domains}
 \end{figure}
 
@@ -638,7 +638,7 @@ tudi pri drugih faktorjih minimizacije.
 \begin{figure}[h!]
   \centering
   \caption{Čas izračuna BFS algoritma v odvisnosti od števila vozlišč ter povezav}
-  \includegraphics[width=15cm]{slike/bfs_v_odvisnosti_od_velikosti_grafa.jpg}
+  \includegraphics[width=15cm]{slike/bfs_v_odvisnosti_od_velikosti_grafa.pdf}
   \label{fig:bfs_calculation_time_by_graph_size}
 \end{figure}
 
@@ -834,7 +834,7 @@ Rezultati so prikazani na sliki \ref{fig:dijkstra_calculation_time_by_num_domain
 \begin{figure}[h!]
   \centering
   \caption{Čas izračuna paralelnega Dijkstrovega algoritma v odvisnosti od števila domen}
-  \includegraphics[width=15cm]{slike/dijkstra_v_odvisnosti_od_stevila_domen.jpg}
+  \includegraphics[width=15cm]{slike/dijkstra_v_odvisnosti_od_stevila_domen.pdf}
   \label{fig:dijkstra_calculation_time_by_num_domains}
 \end{figure}
 
@@ -848,7 +848,7 @@ na večjih grafih razlika med časom izračuna sekvenčne in paralelne verzije a
 \begin{figure}[h!]
   \centering
   \caption{Primerjava časov izračuna sekvenčne in paralelne implementacije Dijkstrovega algoritma v odvisnosti od velikosti grafa}
-  \includegraphics[width=15cm]{slike/dijkstra_v_odvisnosti_od_velikosti_grafa.jpg}
+  \includegraphics[width=15cm]{slike/dijkstra_v_odvisnosti_od_velikosti_grafa.pdf}
   \label{fig:dijkstra_calculation_time_by_graph_size}
 \end{figure}
 
@@ -875,8 +875,9 @@ je treba pogosto izračunati najkrajše poti med pari vozlišč, na primer v omr
 Originalni Floyd-Warshallov algoritem je zasnovan na trikratno gnezdeni zanki \texttt{for}, ki sistematično iterira skozi vse pare vozlišč v grafu.
 Vsaka iteracija algoritma posodobi matriko razdalj za vsak par vozlišč, če se najde krajša pot preko predpisanega vmesnega vozlišča.
 
-Implementacija algoritma je preprosta. V \ref{lst:floyd_warshall_seq} je priložena implementacija sekvenčne verzije algoritma, skupaj s pomožno metodo
-\texttt{init\_matrix}, ki grafu priredi matriko razdalj. Metoda \texttt{floyd\_warshall\_seq} pa za vsak par vozlišč $(i, j)$
+Za implementacijo algoritma najprej definiramo metodo \texttt{init\_matrix}, ki uteženemu grafu priredi matriko razdalj.
+Nato definiramo metodo \texttt{update\_distance}, ki posodobi razdaljo med vozliščema $i$ in $j$, če obstaja krajša pot prek vmesnega vozlišča $k$.
+Nazadnje definiramo metodo \texttt{floyd\_warshall\_seq}, ki izvede algoritem na podanem grafu. Ta metoda za vsak par vozlišč $(i, j)$
 posodobi razdaljo, če obstaja krajša pot prek vmesnega vozlišča $k$.
 
 \begin{lstlisting}[label=lst:floyd_warshall_seq]
@@ -926,10 +927,11 @@ neodvisno od posodabljanja drugih parov vozlišč.
 
 Empirično smo poskusili paralelizirati tako zanko \texttt{for i} kot tudi \texttt{for j}, vendar se je izkazalo, da paralelizacija najbolj
 notranje zanke \texttt{for j} tvori preveč paralelnih nalog, kar povzroči preveliko komunikacijsko breme in posledično
-zmanjšanje učinkovitosti. Najboljše rezultate smo dosegli z vzporedno izvedbo zanke \texttt{for i}.
-Implementacija paralelnega algoritma se ne razlikuje precej od sekvenčne verzije. Priložena je v \ref{lst:floyd_warshall_par}.
+celo zmanjšanje učinkovitosti. Najboljše rezultate smo dosegli zgolj z vzporedno izvedbo zanke \texttt{for i}.
+Implementacija paralelne verzije algoritma se torej od sekvenčne razlikuje zgolj v tem, da se v paralelni različici
+zanka \texttt{for i} izvaja vzporedno.
 
-\begin{lstlisting}[label=lst:floyd_warshall_par]
+\begin{lstlisting}
 module FloydWarshallAlgorithms : FloydWarshall = struct
   ...
 
@@ -967,17 +969,17 @@ Na grafu z 1000 vozlišči smo pognali paralelni algoritem z domenami od 1 do 8.
 \begin{figure}[h!]
   \centering
   \caption{Čas izračuna paralelnega Floyd-Warshallovega algoritma v odvisnosti od števila domen}
-  \includegraphics[width=15cm]{slike/floyd_v_odvisnosti_od_stevila_domen.jpg}
+  \includegraphics[width=15cm]{slike/floyd_v_odvisnosti_od_stevila_domen.pdf}
   \label{fig:floyd_v_odvisnosti_od_stevila_domen}
 \end{figure}
 
-Kar zadeva primerjavo med sekvenčno in paralelno verzijo algoritma, je bilo ugotovljeno, da je sekvenčna verzija približno 4-krat počasnejša
-od optimizirane paralelne verzije na grafih z različnimi velikostmi. Rezultati so prikazani na sliki \ref{fig:floyd_v_odvisnosti_od_velikosti_grafa}.
+Kar zadeva primerjavo med sekvenčno in paralelno verzijo algoritma, je bilo ugotovljeno, da sekvenčna verzija v primerjavi s paralelno pri 6 domenah
+potrebuje približno 4-krat več časa za izračun za grafih različnih velikosti in oblik. Rezultati so prikazani na sliki \ref{fig:floyd_v_odvisnosti_od_velikosti_grafa}.
 
 \begin{figure}[h!]
   \centering
-  \caption{Primerjava časov izračuna sekvenčne in paralelne implementacije Floyd-Warshallovega algoritma v odvisnosti od števila vozlišč}
-  \includegraphics[width=15cm]{slike/floyd_v_odvisnosti_od_velikosti_grafa.jpg}
+  \caption{Primerjava časov izračuna sekvenčne in paralelne implementacije Floyd-Warshallovega algoritma v odvisnosti od števila vozlišč. Paralelno verzijo smo pognali s 6 domenami.}
+  \includegraphics[width=15cm]{slike/floyd_v_odvisnosti_od_velikosti_grafa.pdf}
   \label{fig:floyd_v_odvisnosti_od_velikosti_grafa}
 \end{figure}
 
