@@ -102,25 +102,32 @@ info_dijkstra_print ~is_sequential:true
 let () = DijkstraAlgorithms.sequential large_graph large_graph_start_node
 let () = Printf.printf "\n-----------------TIME CALCULATIONS-----------------\n"
 
-let par_calc_time =
-  DijkstraPerformanceAnalysis.par_time large_graph large_graph_start_node
+let par_calc_time_regular =
+  DijkstraPerformanceAnalysis.par_time_regular large_graph large_graph_start_node
     num_domains
 ;;
 
-Printf.printf "Parallel time: %f\n" par_calc_time
+Printf.printf "Parallel time: %f\n" par_calc_time_regular
+
+let par_calc_time_atomic =
+  DijkstraPerformanceAnalysis.par_time_atomic large_graph large_graph_start_node
+    num_domains
+;;
+
+Printf.printf "Parallel time (atomic): %f\n" par_calc_time_atomic
 
 let seq_calc_time =
   DijkstraPerformanceAnalysis.seq_time large_graph large_graph_start_node
 ;;
 
 Printf.printf "Sequential time: %f\n" seq_calc_time
+let () =
+Printf.printf "\n-----------------NUM DOMAINS TO CSV-----------------\n"
 
 let () =
-  Printf.printf "\n-----------------NUM DOMAINS TO CSV-----------------\n"
+DijkstraPerformanceAnalysis.par_calc_time_num_domains_to_csv large_graph
+large_graph_start_node ~max_domains:12
 
-let () =
-  DijkstraPerformanceAnalysis.par_calc_time_num_domains_to_csv large_graph
-    large_graph_start_node ~max_domains:12
 
 let () = Printf.printf "\n-----------------PAR COMB TO CSV-----------------\n"
 
