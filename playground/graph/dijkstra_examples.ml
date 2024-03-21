@@ -71,8 +71,18 @@ let () =
 
 Task.teardown_pool task_pool
 
+let () = Printf.printf "Paralell Dijkstra with mutex...\n\n"
+let task_pool = T.setup_pool ~num_domains:6 ()
+
 let () =
-  Printf.printf "-----------------DIJKSTRA (on larger graph)-----------------\n"
+  Task.run task_pool (fun () ->
+      DijkstraAlgorithms.parallel_with_mutex small_graph node0 task_pool)
+;;
+
+let () = Task.teardown_pool task_pool;;
+
+Printf.printf "-----------------DIJKSTRA (on larger graph)-----------------\n"
+
 
 let num_domains = 3
 let min_factor = 0.3
@@ -107,20 +117,21 @@ let par_calc_time_regular =
     num_domains
 ;;
 
-Printf.printf "Parallel time: %f\n" par_calc_time_regular
+Printf.printf "Parallel time (regular): %f\n" par_calc_time_regular
 
 let par_calc_time_atomic =
-  DijkstraPerformanceAnalysis.par_time_atomic large_graph large_graph_start_node
+  DijkstraPerformanceAnalysis.par_time_with_mutex large_graph large_graph_start_node
     num_domains
 ;;
 
-Printf.printf "Parallel time (atomic): %f\n" par_calc_time_atomic
+Printf.printf "Parallel time (mutex): %f\n" par_calc_time_atomic
 
 let seq_calc_time =
   DijkstraPerformanceAnalysis.seq_time large_graph large_graph_start_node
 ;;
 
 Printf.printf "Sequential time: %f\n" seq_calc_time
+(* 
 let () =
 Printf.printf "\n-----------------NUM DOMAINS TO CSV-----------------\n"
 
@@ -137,4 +148,4 @@ let combinations =
 
 let () =
   DijkstraPerformanceAnalysis.par_calc_time_combinations_to_csv combinations
-    num_domains
+    num_domains *)

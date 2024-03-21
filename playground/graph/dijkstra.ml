@@ -69,16 +69,13 @@ end
 module type Dijkstra = sig
   val sequential : WeightedGraph.t -> Node.t -> unit
   val parallel : WeightedGraph.t -> Node.t -> T.pool -> unit
-  val parallel_with_atomic : WeightedGraph.t -> Node.t -> T.pool -> unit
+  val parallel_with_mutex : WeightedGraph.t -> Node.t -> T.pool -> unit
 end
 
-(* TODO: Call with parallel_for_reduce, or parallel_scan *)
 module DijkstraAlgorithms : Dijkstra = struct
-  let loop (graph : WeightedGraph.t) (start_node : Node.t)
-      ~(task_pool_opt : T.pool option) : unit =
+  let loop_seq graph start_node =
     let update_pq (pq : PQ.t) (neighbours : (Node.t * float) list)
-        (current_cost : float) (new_visited : NodeSet.t)
-        ~(task_pool_opt : T.pool option) =
+        (current_cost : float) (new_visited : NodeSet.t) =
       let pq_ref = ref pq in
       let update_queue_for_neighbor (i : int)
           (neighbours_array : (Node.t * float) array) =
@@ -87,17 +84,10 @@ module DijkstraAlgorithms : Dijkstra = struct
           pq_ref := PQ.insert neighbor (current_cost +. weight) !pq_ref
       in
       let neighbours_array = Array.of_list neighbours in
-      match task_pool_opt with
-      | None ->
-          for i = 0 to Array.length neighbours_array - 1 do
-            update_queue_for_neighbor i neighbours_array
-          done;
-          !pq_ref
-      | Some task_pool ->
-          T.parallel_for task_pool ~start:0
-            ~finish:(Array.length neighbours_array - 1)
-            ~body:(fun i -> update_queue_for_neighbor i neighbours_array);
-          !pq_ref
+      for i = 0 to Array.length neighbours_array - 1 do
+        update_queue_for_neighbor i neighbours_array
+      done;
+      !pq_ref
     in
     let rec loop_inner (pq : PQ.t) (visited : NodeSet.t) : unit =
       if PQ.is_empty pq then ()
@@ -108,39 +98,27 @@ module DijkstraAlgorithms : Dijkstra = struct
           graph |> WeightedGraph.edges |> NodeMap.find current_node
           |> NodeMap.bindings
         in
-        let new_pq =
-          update_pq pq neighbours current_cost new_visited ~task_pool_opt
-        in
+        let new_pq = update_pq pq neighbours current_cost new_visited in
         loop_inner new_pq new_visited
     in
     let pq_start = PQ.empty () |> PQ.insert start_node 0.0 in
     loop_inner pq_start NodeSet.empty
 
-  let loop_with_atomic (graph : WeightedGraph.t) (start_node : Node.t)
-      ~(task_pool_opt : T.pool option) : unit =
+  let loop_par graph start_node task_pool =
     let update_pq (pq : PQ.t) (neighbours : (Node.t * float) list)
-        (current_cost : float) (new_visited : NodeSet.t)
-        ~(task_pool_opt : T.pool option) =
-      let pq = Atomic.make pq in
+        (current_cost : float) (new_visited : NodeSet.t) =
+      let pq_ref = ref pq in
       let update_queue_for_neighbor (i : int)
           (neighbours_array : (Node.t * float) array) =
         let neighbor, weight = neighbours_array.(i) in
         if not (NodeSet.mem neighbor new_visited) then
-          Atomic.set pq
-            (PQ.insert neighbor (current_cost +. weight) (Atomic.get pq))
+          pq_ref := PQ.insert neighbor (current_cost +. weight) !pq_ref
       in
       let neighbours_array = Array.of_list neighbours in
-      match task_pool_opt with
-      | None ->
-          for i = 0 to Array.length neighbours_array - 1 do
-            update_queue_for_neighbor i neighbours_array
-          done;
-          Atomic.get pq
-      | Some task_pool ->
-          T.parallel_for task_pool ~start:0
-            ~finish:(Array.length neighbours_array - 1)
-            ~body:(fun i -> update_queue_for_neighbor i neighbours_array);
-          Atomic.get pq
+      T.parallel_for task_pool ~start:0
+        ~finish:(Array.length neighbours_array - 1)
+        ~body:(fun i -> update_queue_for_neighbor i neighbours_array);
+      !pq_ref
     in
     let rec loop_inner (pq : PQ.t) (visited : NodeSet.t) : unit =
       if PQ.is_empty pq then ()
@@ -151,24 +129,58 @@ module DijkstraAlgorithms : Dijkstra = struct
           graph |> WeightedGraph.edges |> NodeMap.find current_node
           |> NodeMap.bindings
         in
-        let new_pq =
-          update_pq pq neighbours current_cost new_visited ~task_pool_opt
+        let new_pq = update_pq pq neighbours current_cost new_visited in
+        loop_inner new_pq new_visited
+    in
+    let pq_start = PQ.empty () |> PQ.insert start_node 0.0 in
+    loop_inner pq_start NodeSet.empty
+
+  let loop_par_with_mutex graph start_node task_pool =
+    let update_pq (pq : PQ.t) (neighbours : (Node.t * float) list)
+        (current_cost : float) (new_visited : NodeSet.t) =
+      let pq_ref = ref pq in
+      let update_queue_for_neighbor (i : int)
+          (neighbours_array : (Node.t * float) array) =
+        let neighbor, weight = neighbours_array.(i) in
+        if not (NodeSet.mem neighbor new_visited) then
+          pq_ref := PQ.insert neighbor (current_cost +. weight) !pq_ref
+      in
+      let neighbours_array = Array.of_list neighbours in
+      let mutex = Mutex.create () in
+      T.parallel_for task_pool ~start:0
+        ~finish:(Array.length neighbours_array - 1)
+        ~body:(fun i -> 
+          Mutex.lock mutex;
+          update_queue_for_neighbor i neighbours_array;
+          Mutex.unlock mutex
+        );
+      !pq_ref
+    in
+    let rec loop_inner (pq : PQ.t) (visited : NodeSet.t) : unit =
+      if PQ.is_empty pq then ()
+      else
+        let current_cost, current_node, pq = PQ.extract pq in
+        let new_visited = NodeSet.add current_node visited in
+        let neighbours =
+          graph |> WeightedGraph.edges |> NodeMap.find current_node
+          |> NodeMap.bindings
         in
+        let new_pq = update_pq pq neighbours current_cost new_visited in
         loop_inner new_pq new_visited
     in
     let pq_start = PQ.empty () |> PQ.insert start_node 0.0 in
     loop_inner pq_start NodeSet.empty
 
   let sequential (graph : WeightedGraph.t) start_node =
-    loop graph start_node ~task_pool_opt:None
+    loop_seq graph start_node
 
   let parallel (graph : WeightedGraph.t) (start_node : Node.t)
       (task_pool : T.pool) =
-    loop graph start_node ~task_pool_opt:(Some task_pool)
+    loop_par graph start_node task_pool
   
-  let parallel_with_atomic (graph : WeightedGraph.t) (start_node : Node.t)
+  let parallel_with_mutex (graph : WeightedGraph.t) (start_node : Node.t)
       (task_pool : T.pool) =
-    loop_with_atomic graph start_node ~task_pool_opt:(Some task_pool)
+    loop_par_with_mutex graph start_node task_pool
 end
 
 
@@ -176,7 +188,7 @@ module MakeDijkstraPerformanceAnalysis (Dijkstra : Dijkstra) : sig
   val par_time : WeightedGraph.t -> Node.t -> int -> (WeightedGraph.t -> Node.t -> T.pool -> unit) -> float
 
   val par_time_regular : WeightedGraph.t -> Node.t -> int -> float
-  val par_time_atomic : WeightedGraph.t -> Node.t -> int -> float
+  val par_time_with_mutex : WeightedGraph.t -> Node.t -> int -> float
   
   val seq_time : WeightedGraph.t -> Node.t -> float
 
@@ -198,8 +210,8 @@ end = struct
   let par_time_regular graph start_node num_threads =
     par_time graph start_node num_threads Dijkstra.parallel
    
-  let par_time_atomic graph start_node num_threads =
-    par_time graph start_node num_threads Dijkstra.parallel_with_atomic
+  let par_time_with_mutex graph start_node num_threads =
+    par_time graph start_node num_threads Dijkstra.parallel_with_mutex
 
   let seq_time graph start_node =
     let start_time = Unix.gettimeofday () in
@@ -218,8 +230,8 @@ end = struct
       else
         let time_par_regular = par_time_regular graph start_node num_domains in
         Printf.fprintf out_channel "%d,regular,%.3f\n" num_domains time_par_regular;
-        let time_par_atomic = par_time_atomic graph start_node num_domains in
-        Printf.fprintf out_channel "%d,atomic,%.3f\n" num_domains time_par_atomic;
+        let time_par_mutex = par_time_with_mutex graph start_node num_domains in
+        Printf.fprintf out_channel "%d,with_mutex,%.3f\n" num_domains time_par_mutex;
         par_calc_time_num_domains_to_csv_aux (num_domains + 1)
     in
     output_string out_channel "num_domains,par_type,time\n";
@@ -238,12 +250,12 @@ end = struct
       in
       let start_node = Option.get (WeightedGraph.find_node_by_id 1 graph) in
       let par_time_regular = par_time_regular graph start_node num_domains in
-      let par_time_atomic = par_time_atomic graph start_node num_domains in
+      let par_time_with_mutex = par_time_with_mutex graph start_node num_domains in
       let seq_time = seq_time graph start_node in
       Printf.fprintf out_channel "%d,%d,%.3f,%.3f,%.3f\n" num_nodes num_edges
-        par_time_regular par_time_atomic seq_time
+        par_time_regular par_time_with_mutex seq_time
     in
-    output_string out_channel "num_nodes,num_edges,par_time_regular,par_time_atomic,seq_time\n";
+    output_string out_channel "num_nodes,num_edges,par_time_regular,par_time_with_mutex,seq_time\n";
     List.iter calculate_and_write combinations;
     close_out out_channel
 end
