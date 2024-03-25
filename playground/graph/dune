@@ -1,6 +1,13 @@
+; (executable
+;  (name dijkstra)
+;  (libraries base stdio domainslib)
+;  (modules dijkstra graph)
+;  (flags :standard -w "-32-33-70"))
+
 (executable
- (name dijkstra_examples)
- (libraries base stdio domainslib)
- (modules dijkstra graph dijkstra_examples graph_examples)
- (promote (until-clean))
- (flags :standard -w "-32-33-70"))
+  (name dijkstra_examples)
+  (libraries base stdio domainslib)
+  (modules dijkstra graph dijkstra_examples graph_examples)
+  (promote (until-clean))
+  (flags :standard -w "-32-33-70")
+  )

@@ -77,17 +77,15 @@ let task_pool = T.setup_pool ~num_domains:6 ()
 let () =
   Task.run task_pool (fun () ->
       DijkstraAlgorithms.parallel_with_mutex small_graph node0 task_pool)
-;;
 
 let () = Task.teardown_pool task_pool;;
 
 Printf.printf "-----------------DIJKSTRA (on larger graph)-----------------\n"
 
-
 let num_domains = 3
 let min_factor = 0.3
 let large_graph_start_node_id = 2
-let large_graph_vertex_count = 800
+let large_graph_vertex_count = 700
 
 let large_graph_edge_count =
   float_of_int (large_graph_vertex_count * (large_graph_vertex_count - 1) / 2)
@@ -113,15 +111,15 @@ let () = DijkstraAlgorithms.sequential large_graph large_graph_start_node
 let () = Printf.printf "\n-----------------TIME CALCULATIONS-----------------\n"
 
 let par_calc_time_regular =
-  DijkstraPerformanceAnalysis.par_time_regular large_graph large_graph_start_node
-    num_domains
+  DijkstraPerformanceAnalysis.par_time_regular large_graph
+    large_graph_start_node num_domains
 ;;
 
 Printf.printf "Parallel time (regular): %f\n" par_calc_time_regular
 
 let par_calc_time_atomic =
-  DijkstraPerformanceAnalysis.par_time_with_mutex large_graph large_graph_start_node
-    num_domains
+  DijkstraPerformanceAnalysis.par_time_with_mutex large_graph
+    large_graph_start_node num_domains
 ;;
 
 Printf.printf "Parallel time (mutex): %f\n" par_calc_time_atomic
@@ -131,21 +129,20 @@ let seq_calc_time =
 ;;
 
 Printf.printf "Sequential time: %f\n" seq_calc_time
-(* 
-let () =
-Printf.printf "\n-----------------NUM DOMAINS TO CSV-----------------\n"
 
 let () =
-DijkstraPerformanceAnalysis.par_calc_time_num_domains_to_csv large_graph
-large_graph_start_node ~max_domains:12
+  Printf.printf "\n-----------------NUM DOMAINS TO CSV-----------------\n"
 
+(* let () =
+   DijkstraPerformanceAnalysis.par_calc_time_num_domains_to_csv large_graph
+   large_graph_start_node ~max_domains:7 *)
 
-let () = Printf.printf "\n-----------------PAR COMB TO CSV-----------------\n"
+(* let () = Printf.printf "\n-----------------PAR COMB TO CSV-----------------\n"
 
-let combinations =
-  GraphUtils.generate_graph_combinations ~min_vertex:600 ~max_vertex:1000
-    ~min_factor ~step:50
+   let combinations =
+     GraphUtils.generate_graph_combinations ~min_vertex:600 ~max_vertex:1000
+       ~min_factor ~step:50
 
-let () =
-  DijkstraPerformanceAnalysis.par_calc_time_combinations_to_csv combinations
-    num_domains *)
+   let () =
+     DijkstraPerformanceAnalysis.par_calc_time_combinations_to_csv combinations
+       num_domains *)

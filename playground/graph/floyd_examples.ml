@@ -63,20 +63,20 @@ let time_calc_par =
 
 let () =
   print_endline ("Parallel calculation time: " ^ string_of_float time_calc_par)
+(*
+   let () =
+     Printf.printf "\n-----------------NUM DOMAINS TO CSV-----------------\n"
 
-let () =
-  Printf.printf "\n-----------------NUM DOMAINS TO CSV-----------------\n"
+   let () =
+     FloydWarshallAnalysis.par_calc_time_num_domains_to_csv large_graph
+       max_num_domains
 
-let () =
-  FloydWarshallAnalysis.par_calc_time_num_domains_to_csv large_graph
-    max_num_domains
+   let () = Printf.printf "\n-----------------PAR COMB TO CSV-----------------\n"
 
-let () = Printf.printf "\n-----------------PAR COMB TO CSV-----------------\n"
+   let combinations =
+     GraphUtils.generate_graph_combinations ~min_vertex:500 ~max_vertex:1000
+       ~min_factor ~step:50
 
-let combinations =
-  GraphUtils.generate_graph_combinations ~min_vertex:500 ~max_vertex:1000
-    ~min_factor ~step:50
-
-let () =
-  FloydWarshallAnalysis.par_calc_time_combinations_to_csv combinations
-    opt_num_domains
+   let () =
+     FloydWarshallAnalysis.par_calc_time_combinations_to_csv combinations
+       opt_num_domains *)

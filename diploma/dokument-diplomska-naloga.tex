@@ -70,6 +70,7 @@ The analysis showed that parallel implementation can improve efficiency, especia
   \geslo{vrsta s prednostjo}{priority queue}
   \geslo{računska učinkovitost}{computational efficiency}
   \geslo{visokonivojske abstrakcije}{high-level abstractions}
+  \geslo{zaklepalnik}{mutex}
 }
 
 % - ime datoteke z viri (vključno s končnico .bib), če uporabljate BibTeX
@@ -737,93 +738,102 @@ vstavili element z največjo prioriteto ter ga nam bo uspelo vstaviti pod list z
 rečemo, da je drevo izrojeno). To pa se bo zgodilo redko, saj ob vsakem rekurzivnem klicu premešamo poddrevesa.
 Posledično se bo verjetnost, da se bo zgodil najslabši primer, manjšala eksponentno z globino drevesa \cite{okasaki1996}.
 
-\subsubsection{Implementacija paralelnega ter sekvenčnega Dijkstrovega algoritma}
+\subsubsection{Sekvenčni Dijkstrov algoritem}
 
-Osnovna zasnova algoritma tako v vzporedni kot v sekvenčni sledi isti logiki. Razlika je le v tem, da se v paralelni
+Osnovna zasnova algoritma tako v vzporedni kot v sekvenčni izvedbi sledi isti logiki. Razlika je le v tem, da se v paralelni
 implementaciji naslednja vozlišča pregleduje vzporedno, medtem ko se v sekvenčni implementaciji pregledujejo zaporedno.
-
-\textbf{Osnovna logika: } Algoritem začne z izbiro začetnega vozlišča in inicializacijo vrste s prednostjo, kjer so
-vozlišča urejena glede na njihovo razdaljo od začetnega vozlišča. Na vsakem koraku algoritem izvleče vozlišče z najmanjšo
+Algoritem začne z izbiro začetnega vozlišča in inicializacijo vrste s prednostjo,
+kjer so vozlišča urejena glede na njihovo razdaljo od začetnega vozlišča. Na vsakem koraku algoritem izvleče vozlišče z najmanjšo
 razdaljo od začetnega vozlišča in ga pregleda. Nato se za vsakega soseda tega vozlišča izračuna nova razdalja od začetnega
 vozlišča. Ključno vlogo pri zagotavljanju učinkovitosti algoritma igra vrsta s prednostjo, ki omogoča hitro izbiranje
 naslednjega vozlišča za obdelavo glede na njegovo razdaljo. Razlika med implementacijama algoritmov se skriva v tem,
-kako se izvaja pregledovanje sosedov:
+kako se izvaja pregledovanje sosedov trenutnega vozlišča.
 
-\begin{itemize}
-  \item \textbf{Sekvenčna implementacija: } V sekvenčni verziji se vsako posodabljanje razdalj izvaja zaporedno.
-    Za vsako izvlečeno vozlišče algoritem preveri vse njegove sosede in posodobi njihove razdalje, če je to potrebno.
-  \item \textbf{Paralelna implementacija: } Paralelna verzija pri trenutnem vozlišču deli pregledovanje sosedov med
-    več procesorskih niti, kjer vsaka nit vzporedno posodablja razdalje sosednjih vozlišč. Za učinkovito vzporedno
-    izvajanje tudi tu uporabljamo funkcijo \texttt{T.parallel\_for} iz knjižnice Domainslib.
-\end{itemize}
+V sekvenčni verziji se vsako posodabljanje razdalj izvaja zaporedno. Za vsako izvlečeno vozlišče algoritem preveri vse njegove
+sosede in posodobi njihove razdalje, če je to potrebno.
 
 zaradi natančnejših rezultatov testiranja, je bila implementirana verzija Dijkstrovega algoritma, ki se od začetnega vozlišča
 razširi do vseh vozlišč v grafu, saj bi pri Dijkstri, ki potuje od začetnega do končnega vozlišča lahko po naključju
-hitro prišli do konca grafa, kar bi lahko povzročilo napačne rezultate.
+hitro prišli do konca grafa, kar bi lahko vplivalo na rezultate testiranja.
 
 \begin{lstlisting}
 module DijkstraAlgorithms : Dijkstra = struct
-  let loop (graph : WeightedGraph.t) (start_node : Node.t)
-      ~(task_pool_opt : T.pool option) : unit =
-    let update_pq pq neighbours
-        (current_cost : float) (new_visited : NodeSet.t)
-        ~(task_pool_opt : T.pool option) =
+  let dijkstra_seq graph start_node =
+    let update_pq pq neighbours current_cost new_visited =
       let pq_ref = ref pq in
       let update_queue_for_neighbor (i : int)
           (neighbours_array : (Node.t * float) array) =
         let neighbor, weight = neighbours_array.(i) in
         if not (NodeSet.mem neighbor new_visited) then
-          pq_ref := PQ.insert neighbor 
-            (current_cost +. weight) !pq_ref
+          let new_cost = current_cost +. weight in
+          pq_ref := PQ.insert neighbor new_cost !pq_ref
       in
       let neighbours_array = Array.of_list neighbours in
-      match task_pool_opt with
-      | None ->
-          for i = 0 to Array.length neighbours_array - 1 do
-            update_queue_for_neighbor i neighbours_array
-          done;
-          !pq_ref
-      | Some task_pool ->
-          T.parallel_for task_pool ~start:0
-            ~finish:(Array.length neighbours_array - 1)
-            ~body:(fun i -> 
-              update_queue_for_neighbor i neighbours_array);
-          !pq_ref
+      for i = 0 to Array.length neighbours_array - 1 do
+        update_queue_for_neighbor i neighbours_array
+      done;
+      !pq_ref
     in
-    let rec loop_inner 
-        (pq : PQ.t) (visited : NodeSet.t) : unit =
+    let rec loop_inner pq visited =
       if PQ.is_empty pq then ()
       else
-        let cost, node, pq = PQ.extract pq in
-        let new_visited = NodeSet.add node visited in
+        let current_cost, current_node, pq =
+          PQ.extract pq in
+        let new_visited = 
+          NodeSet.add current_node visited in
         let neighbours =
-          graph |> WeightedGraph.edges |> NodeMap.find node
+          graph
+          |> WeightedGraph.edges
+          |> NodeMap.find current_node
           |> NodeMap.bindings
         in
-        let new_pq = update_pq 
-          pq neighbours cost new_visited ~task_pool_opt
-        in
+        let new_pq = update_pq pq neighbours current_cost new_visited in
         loop_inner new_pq new_visited
     in
-    let pq_start = 
-      PQ.empty () |> PQ.insert start_node 0.0 in
+    let pq_start = PQ.empty () 
+      |> PQ.insert start_node 0.0 in
     loop_inner pq_start NodeSet.empty
-
-  let sequential graph start_node =
-    loop graph start_node ~task_pool_opt:None
-
-  let parallel graph start_node task_pool =
-    loop graph start_node ~task_pool_opt:(Some task_pool)
 end
 \end{lstlisting}
 
-V Dijkstrovem algoritmu bistveno prispeva k učinkovitosti uporaba nespremenljive vrste s prednostjo, ki omogoča
-hitrejše izbiranje naslednjega vozlišča za raziskovanje. To je še posebej pomembno v obsežnih grafih z velikim številom
-vozlišč, kjer lahko takšna optimizacija znatno zmanjša skupni čas izračuna. Ključna prednost nespremenljive vrste s
-prednostjo v paralelnem kontekstu je v tem, da odpravlja potrebo po usklajevanju med večimi procesorskimi nitmi,
-s čimer se izognemo težavam, kot je ``dirka podatkov''. To ne samo izboljša varnost in zanesljivost paralelnega izvajanja
-algoritma, temveč tudi ohranja visoko učinkovitost paralelne obdelave, kar je ključno za optimizacijo časa izračuna v
-kompleksnejših grafovskih strukturah.
+\subsubsection{Paralelni Dijkstrov algoritem}
+
+Paralelna verzija pri trenutnem vozlišču deli pregledovanje sosedov med več procesorskih niti, kjer vsaka nit vzporedno posodablja
+razdalje sosednjih vozlišč. Za učinkovito vzporedno izvajanje tudi tu uporabljamo funkcijo \texttt{T.parallel\_for} iz knjižnice Domainslib.
+
+Taka implementacija je obetala dobre rezultate, po dodatnem razmisleku pa smo ugotovili, da tak algoritem porodi napačen rezultat.
+Res: Če bi namreč dve niti hkrati posodobili razdaljo do nekega vozlišča, bi lahko prišlo do napačne razdalje, saj bi ena nit
+posodobila razdaljo, preden bi druga nit imela priložnost posodobiti svojo razdaljo. To bi lahko privedlo do napačne razdalje
+do tega vozlišča. Za primerjavo bo napačna implementacija paralelnega Dijkstrovega algoritma tudi obravnavana v analizi časa izračunov algoritmov.
+
+Da bi rešili problem dirke podatkov v paralelni implementaciji Dijkstrovega algoritma, smo se odločili za uporabo zaklepalnikov (ang. mutex).
+Zaklepalniki so mehanizem, ki poskrbi za sinhronizacijo med več procesorskimi niti ter s tem prepreči dirko podatkov. V našem primeru
+smo zaklepalnike uporabili za sinhronizacijo dostopa do vrste s prednostjo, ki je skupni pomnilnik.
+
+\begin{lstlisting}
+let loop_par_with_mutex graph start_node task_pool =
+  let update_pq pq neighbours current_cost new_visited =
+    ...
+    let mutex = Mutex.create () in
+    T.parallel_for task_pool ~start:0
+      ~finish:(Array.length neighbours_array - 1)
+      ~body:(fun i -> 
+        Mutex.lock mutex;
+        update_queue_for_neighbor i neighbours_array;
+        Mutex.unlock mutex
+      );
+    !pq_ref
+  in
+  let rec loop_inner pq visited =
+    ...
+  in
+  let pq_start = PQ.empty () 
+    |> PQ.insert start_node 0.0 in
+  loop_inner pq_start NodeSet.empty
+\end{lstlisting}
+
+Tu smo z \texttt{\dots} označili dele kode, ki so enaki kot v sekvenčni implementaciji. Dodatno smo dodali zaklepalnik \texttt{mutex},
+ki ga ob vsakem dostopu do vrste s prednostjo zaklenemo, nato pa odklenemo.
 
 \subsubsection{Analiza časa izračuna Dijkstrovega algoritma}
 
@@ -832,41 +842,29 @@ možnih povezav. V analizi smo najprej primerjali čas izračuna Dijkstrovega al
 nato pa še primerjali čas izračuna sekvenčne in paralelne izvedbe algoritma. Rezultati pri drugih minimizacijskih
 faktorjih so bili podobni.
 
-Analiza je razkrila, da je paralelni Dijkstrov algoritem najhitrejši z uporabo treh domen. 
-Podoben rezultat je bil opažen tudi pri drugih minimizacijskih faktorjih ter velikostih grafov.
-Ta pojav bi lahko razložili z domnevo, da pri večjem številu domen komunikacijski in usklajevalni stroški med domenami
-postanejo previsoki, kar lahko pripelje do zmanjšane učinkovitosti.
-Ugotovili smo, da imata tako paralelna kot sekvenčna implementacija algoritma interval zaupanja velikosti $2\%$, neodvisno od števila domen ter velikosti grafa.
-Rezultati so prikazani na sliki \ref{fig:dijkstra_calculation_time_by_num_domains}.
+Analiza je razkrila, da je paralelni Dijkstrov algoritem brez uporabe zaklepalnikov hitrejši od sekvenčne verzije algoritma,
+sekvenčni algoritem pa je hitrejši od paralelnega algoritma z uporabo zaklepalnikov. Tak rezultat bi lahko razložili
+z dodatnimi stroški, ki nastanejo pri uporabi zaklepalnikov, saj se zaradi njih poveča čas izvajanja algoritma.
+Ugotovili smo, da imata obe paralelni implementaciji algoritma interval zaupanja velikosti $7\%$, neodvisno od števila domen ter velikosti grafa, sekvenčna implementacija pa interval zaupanja velikosti $5\%$.
+Žal je paralelna implementacija brez uporabe zaklepalnikov dala napačne rezultate, zato je v tem primeru sekvenčna implementacija
+najboljša izbira.
 
 \begin{figure}[h!]
   \centering
-  \caption{Čas izračuna paralelnega Dijkstrovega algoritma v odvisnosti od števila domen}
+  \caption{Čas izračuna paralelnega Dijkstrovega algoritma v odvisnosti od števila domen za graf z 750 vozlišči in 100000 povezavami}
   \includegraphics[width=15cm]{slike/dijkstra_v_odvisnosti_od_stevila_domen.pdf}
   \label{fig:dijkstra_calculation_time_by_num_domains}
 \end{figure}
 
-Nato smo analizirali še, kako se čas izračuna sekvenčne in paralelne verzije Dijkstrovega algoritma spreminja z rastjo
-velikosti grafa. Rezultati, prikazani na sliki \ref{fig:dijkstra_calculation_time_by_graph_size}, kažejo, da čas izračuna
-obeh verzij algoritma narašča hitreje kot linearno s številom vozlišč in povezav v grafu, kar je skladno s pričakovanji
-za Dijkstrov algoritem. Vidimo, da je paralelni algoritem hitrejši od sekvenčnega. Na primer, pri grafu z 1000 vozlišči
-in 150000 je čas izračuna sekvenčnega algoritma približno 3-krat večji kot pri paralelnem algoritmu. Vidimo tudi, da je
-na večjih grafih razlika med časom izračuna sekvenčne in paralelne verzije algoritma večja.  
+\subsubsection{Zaključek in alternativni pristop k paralelni implementaciji Dijkstrovega algoritma}
 
-\begin{figure}[h!]
-  \centering
-  \caption{Primerjava časov izračuna sekvenčne in paralelne implementacije Dijkstrovega algoritma v odvisnosti od velikosti grafa. Paralelno verzijo smo pognali na 3 domenah.}
-  \includegraphics[width=15cm]{slike/dijkstra_v_odvisnosti_od_velikosti_grafa.pdf}
-  \label{fig:dijkstra_calculation_time_by_graph_size}
-\end{figure}
+Žal nam pravilna implementacija paralelnega Dijkstrovega algoritma ni porodila boljših rezultatov v primerjavi s sekvenčno
+implementacijo. Čeprav ni v obsegu tega dela, bi bilo zanimivo preučiti alternativne pristope k posodabljanju vrste s prednostjo v paralelnem
+Dijkstrovem algoritmu. 
 
-Naša implementacija je pokazala, da paralelizacija Dijkstrovega algoritma lahko izboljša učinkovitost obdelave velikih
-in kompleksnih grafov. Ključnega pomena je najti ravnotežje med številom uporabljenih procesorskih domen in
-komunikacijskimi ter usklajevalnimi stroški, ki nastanejo pri paralelnem izvajanju. Optimalno število domen se spreminja
-glede na lastnosti grafa, kot so velikost in gostota povezav. Naša analiza podpira ugotovitve Crauserja in
-sodelavcev \cite{crauser1998parallelizing}, ki so prav tako uspeli implementirati učinkovito paralelno verzijo Dijkstrovega algoritma.
-Ta študija odpira nove možnosti za nadaljnje raziskovanje učinkovitosti paralelizacije v grafovskih algoritmih in
-poudarja potrebo po prilagodljivem pristopu za dosego optimalnih rezultatov.
+Ena od idej bi bila denimo, da najprej vse sosede, ki jih trenutno še nismo obiskali, paralelno združimo v eno samo vrsto s prednostjo, šele nato pa
+pridobljeno prioritetno vrsto sekvenčno združimo z obstoječo. Vseeno pa bi bil v tem primeru velik izziv tako grajenje nove prioritetne vrste kot učinkovito združevanje
+z obstoječo prioritetno vrsto (posebej zaradi nespremenljivosti naše vrste s prednostjo).
 
 \subsection{Paralelni Floyd-Warshall algoritem}
 
@@ -995,7 +993,7 @@ Zanimivo je, da optimizacija, kjer paraleliziramo obe notranji zanki (\texttt{fo
 Nasprotno, ta pristop je povzročil povečanje časovnega bremena zaradi komunikacijskih stroškov, kar je privedlo do slabših rezultatov
 kot pri sekvenčni izvedbi.
 
-\subsubsection{Zaključek in Alternativni Pristopi za Floyd-Warshallov Algoritem}
+\subsubsection{Zaključek in alternativni pristopi za Floyd-Warshallov algoritem}
 
 Čeprav se je v naši analizi paralelna implementacija Floyd-Warshallovega algoritma izkazala za učinkovitejšo od sekvenčne, obstajajo tudi
 alternativne metode, kot je 2D block mapping algoritem \cite{parallel_floyd_warshall}, ki obetajo nadaljnje optimizacije. Ta pristop, ki deli
@@ -1011,11 +1009,13 @@ Dijkstrov algoritem in Floyd-Warshallov algoritem, v programskem jeziku OCaml z 
 bil posvečen tudi predstavitvi grafa v funkcijskih jezikih, kjer smo razvili nespremenljive podatkovne strukture za učinkovito upravljanje z grafi.
 
 V procesu raziskovanja smo izvedli temeljito analizo časovne učinkovitosti posameznih algoritmov, pri čemer smo primerjali paralelne in sekvenčne izvedbe.
-Pri Dijkstrovem ter Floyd-Warshallovem algoritmu so rezultati pokazali izboljšanje učinkovitosti paralelnih verzij, medtem ko je pri paralelnem BFS algoritmu
-izboljšave zaradi paralelizacije ni bilo. Odkrili smo tudi, da je optimalno število domen za izvajanje paralelnih algoritmov odvisno od narave problema
+Pri Floyd-Warshallovem algoritmu so rezultati pokazali izboljšanje učinkovitosti paralelne različice, medtem ko pri paralelnem BFS in paralelnem Dijkstrovem
+algoritmu izboljšave zaradi paralelizacije nismo opazili. 
+
+Odkrili smo tudi, da je optimalno število domen za izvajanje paralelnih algoritmov odvisno od narave problema
 in strukture grafa.
 
-Za nadaljnje raziskave smo izpostavili potencial uporabe alternativnih pristopov, kot je 2D block mapping, ki obljubljajo nadaljnje
+Za nadaljnje raziskave smo izpostavili potencial uporabe alternativnih pristopov k Dijkstrovemu in Floyd-Warshallovemu algoritmu, ki obljubljajo nadaljnje
 optimizacije paralelnih algoritmov. Ta diplomska naloga tako prispeva k boljšemu razumevanju in izboljšanju paralelne obdelave grafovskih
 algoritmov v funkcijskih jezikih, kar odpira nove možnosti za njihovo uporabo v kompleksnih računalniških problemih.
 Hkrati pa moramo upoštevati, da so bile naše ugotovitve dosežene v specifičnih eksperimentalnih okoliščinah, kar pomeni, da bi v drugačnih

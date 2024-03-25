@@ -149,11 +149,10 @@ module DijkstraAlgorithms : Dijkstra = struct
       let mutex = Mutex.create () in
       T.parallel_for task_pool ~start:0
         ~finish:(Array.length neighbours_array - 1)
-        ~body:(fun i -> 
+        ~body:(fun i ->
           Mutex.lock mutex;
           update_queue_for_neighbor i neighbours_array;
-          Mutex.unlock mutex
-        );
+          Mutex.unlock mutex);
       !pq_ref
     in
     let rec loop_inner (pq : PQ.t) (visited : NodeSet.t) : unit =
@@ -177,19 +176,22 @@ module DijkstraAlgorithms : Dijkstra = struct
   let parallel (graph : WeightedGraph.t) (start_node : Node.t)
       (task_pool : T.pool) =
     loop_par graph start_node task_pool
-  
+
   let parallel_with_mutex (graph : WeightedGraph.t) (start_node : Node.t)
       (task_pool : T.pool) =
     loop_par_with_mutex graph start_node task_pool
 end
 
-
 module MakeDijkstraPerformanceAnalysis (Dijkstra : Dijkstra) : sig
-  val par_time : WeightedGraph.t -> Node.t -> int -> (WeightedGraph.t -> Node.t -> T.pool -> unit) -> float
+  val par_time :
+    WeightedGraph.t ->
+    Node.t ->
+    int ->
+    (WeightedGraph.t -> Node.t -> T.pool -> unit) ->
+    float
 
   val par_time_regular : WeightedGraph.t -> Node.t -> int -> float
   val par_time_with_mutex : WeightedGraph.t -> Node.t -> int -> float
-  
   val seq_time : WeightedGraph.t -> Node.t -> float
 
   val par_calc_time_num_domains_to_csv :
@@ -206,10 +208,10 @@ end = struct
     let end_time = Unix.gettimeofday () in
     T.teardown_pool task_pool;
     end_time -. start_time
-   
+
   let par_time_regular graph start_node num_threads =
     par_time graph start_node num_threads Dijkstra.parallel
-   
+
   let par_time_with_mutex graph start_node num_threads =
     par_time graph start_node num_threads Dijkstra.parallel_with_mutex
 
@@ -219,27 +221,27 @@ end = struct
     let end_time = Unix.gettimeofday () in
     end_time -. start_time
 
-  let par_calc_time_num_domains_to_csv 
-      (graph : WeightedGraph.t)
-      (start_node : Node.t) 
-      ~(max_domains : int) : unit =
-    let out_channel = open_out "computation_time_analysis/dijkstra_par_domains.csv"
+  let par_calc_time_num_domains_to_csv (graph : WeightedGraph.t)
+      (start_node : Node.t) ~(max_domains : int) : unit =
+    let out_channel =
+      open_out "computation_time_analysis/dijkstra_par_domains.csv"
     in
     let rec par_calc_time_num_domains_to_csv_aux num_domains =
       if num_domains > max_domains then ()
       else
         let time_par_regular = par_time_regular graph start_node num_domains in
-        Printf.fprintf out_channel "%d,regular,%.3f\n" num_domains time_par_regular;
+        Printf.fprintf out_channel "%d,regular,%.3f\n" num_domains
+          time_par_regular;
         let time_par_mutex = par_time_with_mutex graph start_node num_domains in
-        Printf.fprintf out_channel "%d,with_mutex,%.3f\n" num_domains time_par_mutex;
+        Printf.fprintf out_channel "%d,with_mutex,%.3f\n" num_domains
+          time_par_mutex;
         par_calc_time_num_domains_to_csv_aux (num_domains + 1)
     in
     output_string out_channel "num_domains,par_type,time\n";
     par_calc_time_num_domains_to_csv_aux 1;
     close_out out_channel
 
-  let par_calc_time_combinations_to_csv 
-      (combinations : (int * int) list)
+  let par_calc_time_combinations_to_csv (combinations : (int * int) list)
       (num_domains : int) : unit =
     let out_channel =
       open_out "computation_time_analysis/dijkstra_par_combinations.csv"
@@ -250,12 +252,15 @@ end = struct
       in
       let start_node = Option.get (WeightedGraph.find_node_by_id 1 graph) in
       let par_time_regular = par_time_regular graph start_node num_domains in
-      let par_time_with_mutex = par_time_with_mutex graph start_node num_domains in
+      let par_time_with_mutex =
+        par_time_with_mutex graph start_node num_domains
+      in
       let seq_time = seq_time graph start_node in
       Printf.fprintf out_channel "%d,%d,%.3f,%.3f,%.3f\n" num_nodes num_edges
         par_time_regular par_time_with_mutex seq_time
     in
-    output_string out_channel "num_nodes,num_edges,par_time_regular,par_time_with_mutex,seq_time\n";
+    output_string out_channel
+      "num_nodes,num_edges,par_time_regular,par_time_with_mutex,seq_time\n";
     List.iter calculate_and_write combinations;
     close_out out_channel
 end
