@@ -28,11 +28,11 @@
 %   V povzetku na kratko opišite vsebinske rezultate dela. Sem ne sodi razlaga
 %   organizacije dela, torej v katerem razdelku je kaj, pač pa le opis vsebine.
 \povzetek{
-Diplomska naloga obravnava paralelizacijo grafovskih algoritmov v funkcijskih programskih jezikih, s poudarkom na OCamlu in uporabi knjižnice Domainslib.
-Delo se osredotoča na razvoj in analizo paralelnih različic klasičnih algoritmov, kot so iskanje v širino (BFS), Dijkstrov algoritem in Floyd-Warshallov algoritem.
-Glavni cilj je primerjava učinkovitosti paralelnih in sekvenčnih implementacij teh algoritmov v kontekstu funkcijskega programiranja.
-Analiza je pokazala, da paralelna implementacija lahko izboljša učinkovitost, še posebej pri obsežnih grafih, čeprav je izbor optimalnega števila procesorskih domen ključnega
-pomena za maksimalno zmogljivost.
+Diplomska naloga obravnava paralelizacijo grafovskih algoritmov v funkcijskih programskih jezikih, s poudarkom na OCamlu in uporabi knjižnice Domainslib. 
+Delo se osredotoča na razvoj in analizo paralelnih različic klasičnih algoritmov, kot so iskanje v širino (BFS), Dijkstrov algoritem in Floyd-Warshallov algoritem. 
+Glavni cilj je primerjava učinkovitosti paralelnih in sekvenčnih implementacij teh algoritmov v kontekstu funkcijskega programiranja. 
+Analiza je pokazala, da paralelna implementacija lahko izboljša učinkovitost, še posebej pri obsežnih grafih.
+Kljub temu pa smo identificirali tudi omejitve pri izboljšavah učinkovitosti zaradi same narave paralelnega izvajanja.
 }
 
 % - povzetek v angleščini
@@ -40,7 +40,8 @@ pomena za maksimalno zmogljivost.
 This thesis addresses the parallelization of graph algorithms in functional programming languages, with a focus on OCaml and the use of the Domainslib library.
 The work concentrates on developing and analyzing parallel versions of classical algorithms, such as breadth-first search (BFS), Dijkstra's algorithm, and the Floyd-Warshall algorithm.
 The primary goal is to compare the effectiveness of parallel and sequential implementations of these algorithms in the context of functional programming.
-The analysis showed that parallel implementation can improve efficiency, especially in extensive graphs, although the choice of the optimal number of processor domains is crucial for maximum performance.
+The analysis showed that parallel implementation can improve efficiency, especially in extensive graphs. 
+However, improvements in efficiency are also identified to have limitations due to the inherent nature of parallel execution.
 }
 
 % - klasifikacijske oznake, ločene z vejicami
@@ -70,7 +71,8 @@ The analysis showed that parallel implementation can improve efficiency, especia
   \geslo{vrsta s prednostjo}{priority queue}
   \geslo{računska učinkovitost}{computational efficiency}
   \geslo{visokonivojske abstrakcije}{high-level abstractions}
-  \geslo{zaklepalnik}{mutex}
+  \geslo{medsebojno izključevanje}{mutex}
+  \geslo{data race}{tvegano stanje}
 }
 
 % - ime datoteke z viri (vključno s končnico .bib), če uporabljate BibTeX
@@ -172,7 +174,7 @@ v zadnjih letih postala tako zanimiva raziskovalna kot tudi aplikativna tema v r
 Vzporednost na nivoju procesorja je moč doseči na dva načina: 
 Tako, da je pomnilnik vsem računalniškim jedrom \textit{skupen}, ali pa da je pomnilnik \textit{porazdeljen}. 
 V tej diplomski nalogi se bomo posvetili zgolj sistemom s skupnim pomnilnikom ter porazdeljeno procesorsko močjo, 
-saj je tovrstne programe tipično manj zahtevno implementirati, kot pa tiste, ki delujejo na porazdeljenem pomnilniku.
+saj je tovrstne programe tipično manj zahtevno implementirati kot pa tiste, ki delujejo na porazdeljenem pomnilniku.
 
 Vse več funkcijskih programskih jezikov, kot so na primer Scala, Haskell in OCaml ima implementirane knjižnice
 in ogrodja za paralelizacijo grafovskih algoritmov:
@@ -188,9 +190,9 @@ V tej diplomski nalogi bomo raziskali implementacijo paralelnih grafovskih algor
 poudarkom na uporabi knjižnice Domainslib. Implementirane bodo paralelne različice klasičnih algoritmov, kot so
 iskanje v širino (BFS), Dijkstrov algoritem in Floyd-Warshallov algoritem.
 
-Zaradi relativno nedavne uvedbe podpore za paralelizacijo v OCamlu, je literature na temo paralelnega programiranja v OCamlu
-omejeno. Ta omejitev je spodbudila k uporabi OCamlove dokumentacije o paralelizaciji \cite{ocaml_paralelisation_documentation}
-in raziskovanju metod in knjižnic, razvitih za druge funkcijske jezike. Konkretno, za razvoj struktur grafov je bila uporabljena knjižnica,
+Zaradi relativno nedavne uvedbe podpore za paralelizacijo v OCamlu, je literatura na temo paralelnega programiranja v OCamlu omejena.
+Zato se to delo naslanja na OCamlovo dokumentacijo o paralelizaciji \cite{ocaml_paralelisation_documentation}
+ter raziskovanju metod in knjižnic, razvitih za druge funkcijske jezike. Konkretno, za razvoj struktur grafov je bila uporabljena knjižnica,
 razvita v Swiftu \cite{functional_swift_graph}, medtem ko so za implementacijo grafovskih algoritmov in oblikovanje knjižnice uporabljene
 tehnike iz Haskellove knjižnice fgl \cite{haskell_fgl}. Med obstoječimi viri v OCamlu je bila kot osrednji vir uporabljena knjižnica
 OCaml 500 \cite{ocaml_multicore_500}, ki je bila ključna za razumevanje in izvajanje paralelne obdelave.
@@ -199,8 +201,8 @@ OCaml 500 \cite{ocaml_multicore_500}, ki je bila ključna za razumevanje in izva
 
 V praksi se od paralelnega programa običajno pričakuje krajši čas izvajanja v primerjavi s sekvenčnim programom.
 Teoretično lahko paralelni program, ki teče na $n$ procesorjih, doseže do $n$-krat večjo hitrost v primerjavi s sekvenčnim programom.
-Torej je $t_{par_{opt}} = \frac{t_{seq}}{n}$, kjer
-$t_{par_{opt}}$ predstavlja optimalni čas izvajanja paralelnega programa, $t_{seq}$ čas izvajanja sekvenčnega programa ter $n$ število procesorjev.
+Torej je $t_{par}^{*} = \frac{t_{seq}}{n}$, kjer
+$t_{par}^{*}$ predstavlja optimalni čas izvajanja paralelnega programa, $t_{seq}$ čas izvajanja sekvenčnega programa ter $n$ število procesorjev.
 Ta čas v tej diplomski nalogi imenujemo \textit{čas optimalne paralelizacije}.
 Ključno pa je upoštevati dodatne računske obremenitve, ki nastanejo pri vzpostavitvi paralelnega izvajanja.
 Te obremenitve vključujejo usklajevanje procesov, upravljanje virov in koordinacijo med procesorskimi enotami.
@@ -234,11 +236,11 @@ so funkcijski programski jeziki bolj primerni za paralelizacijo iz več razlogov
     različni procesi lahko izvajajo vzporedno, ne da bi se pri tem bilo treba ukvarjati s tem, da bi več procesov
     naenkrat posegalo po istem prostoru v pomnilniku, ali z drugimi sinhronizacijskimi težavami.
     Iz praktičnih izkušenj je razvidno, da uporaba spremenljivih podatkovnih struktur v OCamlu, kot sta na primer
-    \texttt{Array} in \texttt{reference}, lahko povzroči težave pri pisanju paralelnih programov, saj to zahteva
+    tabele in reference, lahko povzroči težave pri pisanju paralelnih programov, saj to zahteva
     dodatno usklajevanje stanja med procesi.
 
   \item \textbf{Lažje razumevanje in odpravljanje napak:} 
-    Odsotnost stranskih učinkov prav tako olajša razumevanje kode in odpravljanje napak., kar je še posebej
+    Odsotnost stranskih učinkov prav tako olajša razumevanje kode in odpravljanje napak, kar je še posebej
     pomembno pri paralelnem programiranju, kjer je težko slediti stanju programa.
 
   \item \textbf{Modularnost in ponovna uporabnost:}
@@ -257,7 +259,7 @@ Ko potrebujemo implementacijo določene podatkovne strukture v imperativnem prog
 Razvijalci, ki pa svojo kodo pišejo v funkcijskih programskih jezikih, pa zaradi manjše
 razširjenosti funkcijskih programskih jezikov pogosto te sreče nimajo.
 Dodatno smo zaradi stroge omejitve odsotnosti stranskih učinkov v funkcijskih jezikih primorani, da se izogibamo
-programskim konstruktom, ki pomnilnik spreminjajo, na primer zanka. To pa je v primeru implementacije grafovskih
+programskim konstruktom, ki pomnilnik spreminjajo, na primer zankam. To pa je v primeru implementacije grafovskih
 algoritmov, kjer se moramo npr. sprehoditi po sosedih trenutnega vozlišča, pogosto precej težavno.
 
 Obstajajo primeri, ko podatkovna struktura, uporabljena v imperativnih jezikih, nima neposrednega ekvivalenta v funkcijskih jezikih.
@@ -275,7 +277,9 @@ nato pa se lotimo algoritmov ter podatkovnih struktur na grafih.
 
 Čeprav ne gre za grafovski algoritem, je vseeno poučno, da najprej predstavimo osnovne koncepte
 paralelizacije na kar se da preprostem primeru. Paralelizirali bomo računanje Fibonaccijevih števil.
-Implementirali bomo naivno rekurzivno metodo, ki ima sicer eksponentno časovno zahtevnost, vendar pa je zelo primerna za paralelizacijo.
+
+V nadaljevanju bomo predstavili naivno rekurzivno metodo za izračun Fibonaccijevih števil, ki je znana po svoji eksponentni časovni zahtevnosti.
+Čeprav ta metoda ni najučinkovitejša za računanje Fibonaccijevih števil, je bila namenoma izbrana zaradi svojega potenciala za paralelizacijo.
 Osnovna ideja algoritma je bila povzeta po \cite{parallel_fib_computation} in \cite{multicore_ocaml_article},
 nato pa je bila implementacija prilagojena še za potrebe te diplomske naloge. 
 
@@ -501,7 +505,7 @@ Algoritem izbere in raziskuje vozlišče na čelu vrste, nato pa v vrsto postopo
 Ta proces se nadaljuje, dokler ni več vozlišč za raziskovanje, kar signalizira zaključek algoritma.
 
 V kontekstu funkcijskih programskih jezikov, kjer je rekurzija temeljni gradnik, smo k implementaciji BFS algoritma
-pristopil rekurzivno.
+pristopili rekurzivno.
 Algoritem izvaja iskanje po nivojih, pri čemer sistematično dodaja vsa dosegljiva vozlišča iz trenutnega nivoja v naslednji nivo.
 Splošno, za vsako vozlišče $u$ trenutnega nivoja $L$ se v naslednji nivo $L'$ vključijo vsi njegovi sosedi, ki še niso
 bili obiskani. Paralelna implementacija bo naslednji nivo pridobila vzporedno, sekvenčna pa zaporedoma.
@@ -662,9 +666,9 @@ zlasti v primeru posebnih vrst grafov, kjer bi bili paralelni algoritmi lahko hi
 \subsection{Paralelni Dijkstrov algoritem} \label{section:dijkstra}
 
 Paralelna implementacija Dijkstrovega algoritma za iskanje najkrajših poti v uteženih grafih vključuje hkratno posodabljanje
-prioritetne vrste z vsemi neobiskanimi sosedi trenutnega vozlišča.
+vrste s prednostjo z vsemi neobiskanimi sosedi trenutnega vozlišča.
 
-V naslednjem razdelku bomo najprej raziskali funkcijsko implementacijo prioritetne vrste, ki je potrebna za izvajanje
+V naslednjem razdelku bomo najprej raziskali funkcijsko implementacijo vrste s prednostjo, ki je potrebna za izvajanje
 paralelnega Dijkstrovega algoritma. Nato bomo predstavili sekvenčno in paralelno implementacijo Dijkstrovega algoritma. 
 Na koncu bomo predstavili analizo časovne učinkovitosti paralelnega Dijkstrovega algoritma.
 
@@ -673,7 +677,7 @@ Na koncu bomo predstavili analizo časovne učinkovitosti paralelnega Dijkstrove
 Vrsta s prednostjo igra osrednjo vlogo v Dijkstrovem algoritmu, saj omogoča učinkovit izbor naslednjega vozlišča za raziskovanje. 
 Pri tem je pomembno, da je zaradi skupnega pomnilnika vrsta s prednostjo nespremenljiva, saj je sicer treba
 dodatno skrbeti, da ne pride do konfliktov pri dostopu ter spreminjanju skupnega pomnilnika (ang. thread race). 
-Definirali smo modul PQ, kjer vsak element v kopici predstavlja vozlišče s prioritetno vrednostjo ter levim in desnim poddrevesom
+Definirali smo modul PQ, kjer vsak element v kopici predstavlja vozlišče s prednostno vrednostjo ter levim in desnim poddrevesom
 (označeno s tipom \texttt{t} v \ref{lst:pq_sig}). Implementacija vrste s prednostjo je povzeta po \cite{okasaki1996}.
 
 \begin{lstlisting}[label=lst:pq_sig]
@@ -694,8 +698,8 @@ end
 \end{lstlisting}
 
 Glavni operaciji vrste - vstavljanje in izločanje obe sledita istemu principu. Preko ujemanja vzorcev (ang. pattern matching)
-primerjamo prioriteto trenutnega korena z vrednostjo, ki jo vstavljamo ali izločamo. V odvisnosti od primerjave trenutne
-prioritete z vrednostjo, ki jo vstavljamo ali izločamo, se izvede ustrezna operacija. Za preprečevanje izrojenih dreves
+primerjamo prednostno vrednost trenutnega korena z vrednostjo, ki jo vstavljamo ali izločamo. V odvisnosti od primerjave trenutne
+prednostne vrednosti z vrednostjo, ki jo vstavljamo ali izločamo, se izvede ustrezna operacija. Za preprečevanje izrojenih dreves
 se uporablja rotacija poddreves, kar pomaga ohranjati uravnoteženost. Implementacija funkcije \texttt{insert} je prikazana
 v \ref{lst:pq_insert}.
 
@@ -734,7 +738,7 @@ end
 \end{lstlisting}
 
 V najslabšem primeru je časovna zahtevnost $O(n)$. To se bo namreč zgodilo natanko tedaj, ko bomo ob vsakem vstavljanju
-vstavili element z največjo prioriteto ter ga nam bo uspelo vstaviti pod list z največjo globino v drevesu (tedaj
+vstavili element z največjo prednostno vrednostjo ter ga nam bo uspelo vstaviti pod list z največjo globino v drevesu (tedaj
 rečemo, da je drevo izrojeno). To pa se bo zgodilo redko, saj ob vsakem rekurzivnem klicu premešamo poddrevesa.
 Posledično se bo verjetnost, da se bo zgodil najslabši primer, manjšala eksponentno z globino drevesa \cite{okasaki1996}.
 
@@ -752,7 +756,7 @@ kako se izvaja pregledovanje sosedov trenutnega vozlišča.
 V sekvenčni verziji se vsako posodabljanje razdalj izvaja zaporedno. Za vsako izvlečeno vozlišče algoritem preveri vse njegove
 sosede in posodobi njihove razdalje, če je to potrebno.
 
-zaradi natančnejših rezultatov testiranja, je bila implementirana verzija Dijkstrovega algoritma, ki se od začetnega vozlišča
+Zaradi natančnejših rezultatov testiranja, je bila implementirana verzija Dijkstrovega algoritma, ki se od začetnega vozlišča
 razširi do vseh vozlišč v grafu, saj bi pri Dijkstri, ki potuje od začetnega do končnega vozlišča lahko po naključju
 hitro prišli do konca grafa, kar bi lahko vplivalo na rezultate testiranja.
 
@@ -803,12 +807,12 @@ razdalje sosednjih vozlišč. Za učinkovito vzporedno izvajanje tudi tu uporabl
 
 Taka implementacija je obetala dobre rezultate, po dodatnem razmisleku pa smo ugotovili, da tak algoritem porodi napačen rezultat.
 Res: Če bi namreč dve niti hkrati posodobili razdaljo do nekega vozlišča, bi lahko prišlo do napačne razdalje, saj bi ena nit
-posodobila razdaljo, preden bi druga nit imela priložnost posodobiti svojo razdaljo. To bi lahko privedlo do napačne razdalje
+posodobila razdaljo, preden bi druga nit imela priložnost posodobiti svojo razdaljo. To bi lahko privedlo do nekonsistentne razdalje
 do tega vozlišča. Za primerjavo bo napačna implementacija paralelnega Dijkstrovega algoritma tudi obravnavana v analizi časa izračunov algoritmov.
 
-Da bi rešili problem dirke podatkov v paralelni implementaciji Dijkstrovega algoritma, smo se odločili za uporabo zaklepalnikov (ang. mutex).
-Zaklepalniki so mehanizem, ki poskrbi za sinhronizacijo med več procesorskimi niti ter s tem prepreči dirko podatkov. V našem primeru
-smo zaklepalnike uporabili za sinhronizacijo dostopa do vrste s prednostjo, ki je skupni pomnilnik.
+Da bi rešili problem tveganega stanja v paralelni implementaciji Dijkstrovega algoritma, smo se odločili za uporabo mehanizmov medsebojnega izključevanja.
+Ti mehanizmi zagotavljajo sinhronizacijo med več procesorskimi niti ter s tem preprečijo tvegano stanje. V našem primeru smo mehanizme medsebojnega
+izključevanja uporabili za sinhronizacijo dostopa do vrste s prednostjo.
 
 \begin{lstlisting}
 let loop_par_with_mutex graph start_node task_pool =
@@ -832,8 +836,8 @@ let loop_par_with_mutex graph start_node task_pool =
   loop_inner pq_start NodeSet.empty
 \end{lstlisting}
 
-Tu smo z \texttt{\dots} označili dele kode, ki so enaki kot v sekvenčni implementaciji. Dodatno smo dodali zaklepalnik \texttt{mutex},
-ki ga ob vsakem dostopu do vrste s prednostjo zaklenemo, nato pa odklenemo.
+Tu smo z \texttt{\dots} označili dele kode, ki so enaki kot v sekvenčni implementaciji. 
+Dodali smo mehanizem medsebojnega izključevanja (\texttt{mutex}), ki ga ob vsakem dostopu do vrste s prednostjo zaklenemo, nato pa odklenemo.
 
 \subsubsection{Analiza časa izračuna Dijkstrovega algoritma}
 
@@ -842,11 +846,11 @@ možnih povezav. V analizi smo najprej primerjali čas izračuna Dijkstrovega al
 nato pa še primerjali čas izračuna sekvenčne in paralelne izvedbe algoritma. Rezultati pri drugih minimizacijskih
 faktorjih so bili podobni.
 
-Analiza je razkrila, da je paralelni Dijkstrov algoritem brez uporabe zaklepalnikov hitrejši od sekvenčne verzije algoritma,
-sekvenčni algoritem pa je hitrejši od paralelnega algoritma z uporabo zaklepalnikov. Tak rezultat bi lahko razložili
-z dodatnimi stroški, ki nastanejo pri uporabi zaklepalnikov, saj se zaradi njih poveča čas izvajanja algoritma.
+Analiza je razkrila, da je paralelni Dijkstrov algoritem brez uporabe medsebojnega izključevanja hitrejši od sekvenčne verzije algoritma,
+sekvenčni algoritem pa je hitrejši od paralelnega algoritma z uporabo medsebojnega izključevanja. Tak rezultat bi lahko razložili
+z dodatnimi stroški, ki nastanejo pri uporabi mehanizmov medsebojnega izključevanja, saj se zaradi njih poveča čas izvajanja algoritma.
 Ugotovili smo, da imata obe paralelni implementaciji algoritma interval zaupanja velikosti $7\%$, neodvisno od števila domen ter velikosti grafa, sekvenčna implementacija pa interval zaupanja velikosti $5\%$.
-Žal je paralelna implementacija brez uporabe zaklepalnikov dala napačne rezultate, zato je v tem primeru sekvenčna implementacija
+Žal je paralelna implementacija brez uporabe medsebojnega izključevanja dala napačne rezultate, zato je v tem primeru sekvenčna implementacija
 najboljša izbira.
 
 \begin{figure}[h!]
@@ -863,8 +867,9 @@ implementacijo. Čeprav ni v obsegu tega dela, bi bilo zanimivo preučiti altern
 Dijkstrovem algoritmu. 
 
 Ena od idej bi bila denimo, da najprej vse sosede, ki jih trenutno še nismo obiskali, paralelno združimo v eno samo vrsto s prednostjo, šele nato pa
-pridobljeno prioritetno vrsto sekvenčno združimo z obstoječo. Vseeno pa bi bil v tem primeru velik izziv tako grajenje nove prioritetne vrste kot učinkovito združevanje
-z obstoječo prioritetno vrsto (posebej zaradi nespremenljivosti naše vrste s prednostjo).
+pridobljeno vrstno s prednostjo sekvenčno združimo z obstoječo. 
+Vseeno pa bi bil v tem primeru velik izziv tako grajenje nove vrste s prednostjo kot učinkovito združevanje
+z obstoječo vrsto s prednostjo (posebej zaradi nespremenljivosti naše vrste s prednostjo).
 
 \subsection{Paralelni Floyd-Warshall algoritem}
 
