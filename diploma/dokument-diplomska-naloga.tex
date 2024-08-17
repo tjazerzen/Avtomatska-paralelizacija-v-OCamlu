@@ -907,7 +907,8 @@ module FloydWarshallAlgorithms : FloydWarshall = struct
     for k = 0 to n - 1 do
       for i = 0 to n - 1 do
         for j = 0 to n - 1 do
-          update_distance matrix i j k
+          matrix.(i).(j) <- 
+            min matrix.(i).(j) (matrix.(i).(k) +. matrix.(k).(j))
         done
       done
     done;

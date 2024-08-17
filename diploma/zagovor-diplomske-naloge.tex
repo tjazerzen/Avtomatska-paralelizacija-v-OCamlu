@@ -20,6 +20,12 @@
 
 \setbeamertemplate{navigation symbols}{}
 
+\setbeamertemplate{footline}{
+  \begin{beamercolorbox}[wd=.1\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+    \insertframenumber{} / \inserttotalframenumber\hspace*{2ex} 
+  \end{beamercolorbox}}
+
+
 \newcommand{\bx}{\mathbf{x}}
 \DeclareMathOperator{\Gl}{Gl}
 \DeclareMathOperator{\adj}{adj}
@@ -32,7 +38,7 @@
 {Avtor: Tjaž Eržen\\Mentor: doc. dr. Matija Pretnar}
 
 \date[24. april 2024]
-{Dolga predstavitev pri Diplomskem seminarju, 24. april 2024}
+{Zagovor diplomske naloge, 26. april 2024}
 
 \lstdefinelanguage{OCaml}{
   keywords={let,rec,if,then,else,module},
@@ -85,13 +91,13 @@
         \item Paralelizacija v funkcijskih jezikih
         \item Domainslib
         \item Sistemi s skupnim pomnilnikom
-        \item Dirka podatkov
+        \item Tvegano stanje pomnilnika
     \end{itemize}
 \end{frame}
 
 \begin{frame}{Uvod}
   \begin{figure}
-    \includegraphics[width=6cm]{slike/cilj-casovne-zahtevnosti-paralelizacije.pdf}
+    \includegraphics[width=10cm]{slike/cilj-casovne-zahtevnosti-paralelizacije.pdf}
   \end{figure}
 \end{frame}
 
@@ -104,6 +110,10 @@
     \item Optimizacija: Paralelno računanje $F_{n-1}$ in $F_{n-2}$
     \item Prag sekvenčnosti
   \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Paralelni izračun Fibonaccijevih števil}
   \begin{verbatim}
   module T = Domainslib.Task
 
@@ -152,7 +162,7 @@
   
     let compare node1 node2 = 
       Stdlib.compare node1.id node2.id
-    ...
+
   end
   module NodeSet = Set.Make (Node)
   module NodeMap = Map.Make (Node)
@@ -162,7 +172,7 @@
 \begin{frame}[fragile]
   \frametitle{Predstavitev neuteženega grafa}
   \begin{verbatim}
-    module UnweightedGraph : sig
+  module UnweightedGraph : sig
     type t
   
     val empty : directed:bool -> t
@@ -192,8 +202,12 @@
     \frametitle{BFS algoritem}
     \begin{figure}[h!]
       \centering
-      \includegraphics[width=10cm]{slike/bfs-algorithm-visualization.pdf}
+
     \end{figure}
+
+    \begin{itemize}
+      \item Induktivno raziskovanje slojev grafa
+    \end{itemize}
   \end{frame}
 % \end{frame}
 
@@ -255,6 +269,74 @@ let mapper = fun nodes ->
   \end{verbatim}
 \end{itemize}
   
+\end{frame}
+
+\begin{frame}
+  \frametitle{Čas izračuna paralelnega BFS algoritma v odvisnosti od števila domen}
+  \begin{figure}
+    \centering
+    \includegraphics[width=10cm]{slike/bfs_v_odvisnosti_od_stevila_domen.pdf}
+  \end{figure}
+  
+\end{frame}
+
+\begin{frame}
+  \frametitle{Čas izračuna BFS algoritma v odvisnosti od števila povezav}
+  \begin{figure}
+    \centering
+    \includegraphics[width=10cm]{slike/bfs_v_odvisnosti_od_velikosti_grafa.pdf}
+  \end{figure}
+  
+\end{frame}
+
+\section{Paralelni Floyd-Warshallov algoritem}
+
+\begin{frame}[fragile,t]
+  \frametitle{Floyd-Warshallov algoritem}
+
+  
+  \begin{figure}[!ht]
+    % \centering
+    \includegraphics[width=7cm]{slike/floyd-warshall-visualization.png.pdf}
+  \end{figure}
+  \begin{verbatim}
+  matrix.(i).(j) <-
+    min matrix.(i).(j) (matrix.(i).(k) +. matrix.(k).(j))
+  \end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Paralelni Floyd-Warshallov algoritem}
+  \begin{verbatim}
+let floyd_warshall_par matrix pool =
+  let n = Array.length matrix in
+  for k = 0 to n - 1 do
+    T.parallel_for pool start:0 finish:(n - 1)
+      body:(fun i ->
+        for j = 0 to n - 1 do
+          matrix.(i).(j) <-
+            min matrix.(i).(j) (matrix.(i).(k) +. matrix.(k).(j))
+        done)
+  done;
+  matrix
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Čas izračuna paralelnega Floyd-Warshallovega algoritma v odvisnosti od števila domen}
+  \begin{figure}[h!]
+    \centering
+    \includegraphics[width=10cm]{slike/floyd_v_odvisnosti_od_stevila_domen.pdf}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Primerjava časov izračuna sekvenčne in paralelne implementacije Floyd-Warshallovega algoritma v odvisnosti od števila vozlišč}
+  \begin{figure}[h!]
+    \centering
+    \includegraphics[width=10cm]{slike/floyd_v_odvisnosti_od_velikosti_grafa.pdf}
+  \end{figure}
 \end{frame}
 
 
